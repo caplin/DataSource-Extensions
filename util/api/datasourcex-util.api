@@ -133,10 +133,6 @@ public final class com/caplin/integration/datasourcex/util/SimpleDataSourceConfi
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/caplin/integration/datasourcex/util/SimpleDataSourceConfigKt {
-	public static final field DEFAULT_DATASOURCE_NAME Ljava/lang/String;
-}
-
 public final class com/caplin/integration/datasourcex/util/SimpleDatasourceFactory {
 	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/SimpleDatasourceFactory;
 	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;)Lcom/caplin/datasource/DataSource;

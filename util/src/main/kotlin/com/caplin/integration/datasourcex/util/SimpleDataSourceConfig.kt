@@ -3,8 +3,6 @@ package com.caplin.integration.datasourcex.util
 import java.nio.file.Path
 import java.util.UUID
 
-const val DEFAULT_DATASOURCE_NAME = "caplin-adapter"
-
 sealed interface SimpleDataSourceConfig {
   val logDirectory: Path?
   val name: String

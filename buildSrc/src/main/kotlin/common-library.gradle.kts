@@ -1,3 +1,4 @@
+
 import org.gradle.api.JavaVersion.VERSION_17
 import org.gradle.api.file.DuplicatesStrategy.WARN
 
@@ -36,6 +37,10 @@ dokka {
       jdkVersion.set(17)
       externalDocumentationLinks.register("coroutines") {
         url = uri("https://kotlinlang.org/api/kotlinx.coroutines/")
+      }
+      sourceLink {
+        localDirectory = rootDir
+        remoteUrl.set(uri("https://github.com/caplin/DataSource-Extensions/tree/main"))
       }
     }
   }

@@ -5,7 +5,6 @@ import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATAS
 import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATASRC_NAME
 import com.caplin.datasource.messaging.json.JacksonJsonHandler
 import com.caplin.integration.datasourcex.spring.DataSourceConfigurationProperties
-import com.caplin.integration.datasourcex.util.DEFAULT_DATASOURCE_NAME
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Discovery
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Peer
 import com.caplin.integration.datasourcex.util.SimpleDatasourceFactory.createDataSource
@@ -28,6 +27,7 @@ internal class DataSourceAutoConfiguration {
 
   companion object {
     internal val strippedRemoteLabelCharacters = "[^A-Za-z0-9-_]".toRegex()
+    internal const val DEFAULT_DATASOURCE_NAME = "caplin-adapter"
   }
 
   @Bean
