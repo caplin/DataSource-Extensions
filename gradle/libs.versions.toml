@@ -5,7 +5,7 @@ kotlinCollectionsImmutable = "0.3.8"
 jsonPatch = "1.13"
 
 # Caplin Dependencies
-datasource = "8.0.1+"
+datasource = "8.0.6-1430-651ec808"
 
 # Test Dependencies
 kotest = "5.9.1"

@@ -1,16 +1,20 @@
-pluginManagement {
-    repositories {
-        maven { url = uri("https://artifactory.caplin.com/artifactory/gradle-plugins/") }
-        maven { url = uri("https://artifactory.caplin.com/artifactory/repo1") } // Caplin Maven Central cache
-    }
-}
-
 dependencyResolutionManagement {
-    repositories {
-        maven { url = uri("https://artifactory.caplin.com/artifactory/repo1") } // Caplin Maven Central cache
-        maven { url = uri("https://artifactory.caplin.com/artifactory/thirdparty-repo") }
-        maven { url = uri("https://artifactory.caplin.com/artifactory/caplin-release") }
+  repositories {
+    mavenCentral()
+    maven {
+      url = uri("https://repository.caplin.com/repository/caplin-release")
+      credentials {
+        val caplinUsername: String? by settings
+        val caplinPassword: String? by settings
+        username = checkNotNull(
+            caplinUsername ?: System.getenv("CAPLIN_USERNAME"),
+        ) { "Missing caplinUsername property or CAPLIN_USERNAME environment variable" }
+        password = checkNotNull(
+            caplinPassword ?: System.getenv("CAPLIN_PASSWORD"),
+        ) { "Missing caplinPassword property or CAPLIN_PASSWORD environment variable" }
+      }
     }
+  }
 }
 
 rootProject.name = "datasourcex"

@@ -1,4 +1,4 @@
-FROM gitlab.caplin.com:5050/platform/platformdockerimage/core:8.0.9 AS platform
+FROM docker-release.caplin.com/platform/core:8.0.9 AS platform
 
 USER root
 
