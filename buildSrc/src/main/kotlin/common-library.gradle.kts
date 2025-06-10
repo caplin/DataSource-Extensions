@@ -23,7 +23,12 @@ kotlin { compilerOptions { freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn") 
 
 tasks.jar { duplicatesStrategy = WARN }
 
-tasks.test { useJUnitPlatform() }
+tasks.test {
+  useJUnitPlatform()
+  reports {
+    junitXml.required.set(true)
+  }
+}
 
 dokka {
   dokkaSourceSets {
