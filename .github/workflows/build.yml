@@ -111,7 +111,9 @@ jobs:
           path: docs/build/dokka/html
 
   pages:
-    needs: docs
+    needs:
+      - test
+      - docs
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
