@@ -1,0 +1,9 @@
+.gradle
+.kotlin
+build
+out
+node_modules
+
+*.tar
+*.zip
+*.gz

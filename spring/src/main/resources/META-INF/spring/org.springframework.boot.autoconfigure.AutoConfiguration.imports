@@ -1,0 +1,2 @@
+com.caplin.integration.datasourcex.spring.internal.DataSourceAutoConfiguration
+com.caplin.integration.datasourcex.spring.internal.DataSourceServerAutoConfiguration

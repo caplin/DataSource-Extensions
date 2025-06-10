@@ -1,0 +1,55 @@
+[versions]
+springBoot = "3.5.0+"
+kotlin = "1.9.25" # Keep in sync with Spring - https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
+kotlinCollectionsImmutable = "0.3.8"
+jsonPatch = "1.13"
+
+# Caplin Dependencies
+datasource = "8.0.1+"
+
+# Test Dependencies
+kotest = "5.9.1"
+turbine = "1.2.0"
+mockk = "1.13.14"
+
+# Spring BOM should manage other dependencies versions.
+
+# Plugins
+ktfmtPlugin = "0.21.0"
+dokkaPlugin = "2.0.0"
+binaryCompatibilityValidatorPlugin = "0.17.0"
+koverPlugin = "0.9.1"
+kotlinpoetPlugin = "2.1.0"
+detektPlugin = "1.23.8"
+
+[libraries]
+kotlin-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
+json-patch = { module = "com.github.java-json-tools:json-patch", version.ref = "jsonPatch" }
+
+# Caplin Dependencies
+datasource = { module = "com.caplin.platform.integration.java:datasource", version.ref = "datasource" }
+
+# Test Dependencies
+kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+# Plugins
+detekt-plugin = { module = "io.gitlab.arturbosch.detekt:io.gitlab.arturbosch.detekt.gradle.plugin", version.ref = "detektPlugin" }
+ktfmt-plugin = { module = "com.ncorti.ktfmt.gradle:plugin", version.ref = "ktfmtPlugin" }
+dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokkaPlugin" }
+binary-compatibility-validator-plugin = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binaryCompatibilityValidatorPlugin" }
+kover-plugin = { module = "org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kover.gradle.plugin", version.ref = "koverPlugin" }
+kotlinpoet-plugin = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoetPlugin" }
+kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlin-allopen-plugin = { module = "org.jetbrains.kotlin.plugin.allopen:org.jetbrains.kotlin.plugin.allopen.gradle.plugin", version.ref = "kotlin" }
+
+# BOMs
+spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }
+
+# Kapt
+spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor", version.ref = "springBoot" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }

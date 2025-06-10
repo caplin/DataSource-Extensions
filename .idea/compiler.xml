@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel target="17" />
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="datasourcex.examples.spring" options="-parameters" />
+      <module name="datasourcex.examples.spring-java" options="-parameters" />
+      <module name="datasourcex.examples.spring-java.main" options="-parameters" />
+      <module name="datasourcex.examples.spring-java.test" options="-parameters" />
+      <module name="datasourcex.examples.spring-kotlin" options="-parameters" />
+      <module name="datasourcex.examples.spring-kotlin-chat" options="-parameters" />
+      <module name="datasourcex.examples.spring-kotlin-chat.main" options="-parameters" />
+      <module name="datasourcex.examples.spring-kotlin-chat.test" options="-parameters" />
+      <module name="datasourcex.examples.spring-kotlin.main" options="-parameters" />
+      <module name="datasourcex.examples.spring-kotlin.test" options="-parameters" />
+      <module name="datasourcex.examples.spring.main" options="-parameters" />
+      <module name="datasourcex.examples.spring.test" options="-parameters" />
+      <module name="datasourcex.spring-boot-starter-datasource" options="-proc:none" />
+      <module name="datasourcex.spring-boot-starter-datasource.main" options="-proc:none" />
+      <module name="datasourcex.spring-boot-starter-datasource.samples" options="-proc:none" />
+      <module name="datasourcex.spring-boot-starter-datasource.test" options="-proc:none" />
+    </option>
+  </component>
+</project>

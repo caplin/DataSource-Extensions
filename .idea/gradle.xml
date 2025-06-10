@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/buildSrc" name="buildSrc">
+                <projects>
+                  <project path="$PROJECT_DIR$/buildSrc" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/buildSrc" />
+            <option value="$PROJECT_DIR$/docs" />
+            <option value="$PROJECT_DIR$/examples" />
+            <option value="$PROJECT_DIR$/examples/spring-java" />
+            <option value="$PROJECT_DIR$/examples/spring-kotlin" />
+            <option value="$PROJECT_DIR$/examples/spring-kotlin-chat" />
+            <option value="$PROJECT_DIR$/reactive" />
+            <option value="$PROJECT_DIR$/reactive/api" />
+            <option value="$PROJECT_DIR$/reactive/core" />
+            <option value="$PROJECT_DIR$/reactive/java-flow" />
+            <option value="$PROJECT_DIR$/reactive/kotlin" />
+            <option value="$PROJECT_DIR$/reactive/reactivestreams" />
+            <option value="$PROJECT_DIR$/spring" />
+            <option value="$PROJECT_DIR$/util" />
+            <option value="$PROJECT_DIR$/version-catalog" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

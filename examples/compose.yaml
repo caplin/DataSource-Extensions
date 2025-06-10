@@ -1,0 +1,14 @@
+name: 'caplin'
+
+services:
+  liberator:
+    build:
+      context: docker/liberator
+    environment:
+      SSL_ENABLED: false
+    restart: "unless-stopped"
+    ports:
+      - "19000:19000"
+      - "18080:8080"
+    volumes:
+      - "${LICENSES_DIR}:/app/DeploymentFramework/global_config/licenses"

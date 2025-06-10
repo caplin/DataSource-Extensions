@@ -1,0 +1,200 @@
+public abstract class com/caplin/integration/datasourcex/reactive/api/ActiveConfig {
+	public final fun getObjectMappings ()Ljava/util/Map;
+	public final fun setObjectMappings (Ljava/util/Map;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ActiveConfig$Json : com/caplin/integration/datasourcex/reactive/api/ActiveConfig {
+	public fun <init> ()V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ActiveConfig$Mapping : com/caplin/integration/datasourcex/reactive/api/ActiveConfig {
+	public fun <init> ()V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ActiveConfig$Record : com/caplin/integration/datasourcex/reactive/api/ActiveConfig {
+	public fun <init> ()V
+	public final fun getImages ()Z
+	public final fun getRecordType ()Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public final fun setImages (Z)V
+	public final fun setRecordType (Lcom/caplin/integration/datasourcex/reactive/api/RecordType;)V
+}
+
+public abstract class com/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig {
+	public static final field Companion Lcom/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig$Companion;
+	public static final field ROW_REQUEST_TIMEOUT_DEFAULT J
+	public static final field STRUCTURE_DEBOUNCE_DEFAULT J
+	public final fun getInsertAt ()Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;
+	public final fun getObjectMappings ()Ljava/util/Map;
+	public final fun getRowPathSuffix ()Ljava/lang/String;
+	public final fun getRowRequestTimeout ()Ljava/time/Duration;
+	public final fun getStructureDebounce ()Ljava/time/Duration;
+	public final fun setInsertAt (Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;)V
+	public final fun setObjectMappings (Ljava/util/Map;)V
+	public final fun setRowPathSuffix (Ljava/lang/String;)V
+	public final fun setRowRequestTimeout (Ljava/time/Duration;)V
+	public final fun setStructureDebounce (Ljava/time/Duration;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig$Companion {
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig$Json : com/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig {
+	public fun <init> ()V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig$Record : com/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig {
+	public fun <init> ()V
+	public final fun getRowImages ()Z
+	public final fun getRowRecordType ()Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public final fun setRowImages (Z)V
+	public final fun setRowRecordType (Lcom/caplin/integration/datasourcex/reactive/api/RecordType;)V
+}
+
+public abstract interface annotation class com/caplin/integration/datasourcex/reactive/api/BindMarker : java/lang/annotation/Annotation {
+}
+
+public abstract class com/caplin/integration/datasourcex/reactive/api/BroadcastConfig {
+	public final fun getCache ()Z
+	public final fun setCache (Z)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/BroadcastConfig$Mapping : com/caplin/integration/datasourcex/reactive/api/BroadcastConfig {
+	public fun <init> ()V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/BroadcastConfig$Record : com/caplin/integration/datasourcex/reactive/api/BroadcastConfig {
+	public fun <init> ()V
+	public final fun getRecordType ()Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public final fun setRecordType (Lcom/caplin/integration/datasourcex/reactive/api/RecordType;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/BroadcastEvent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSubject ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/caplin/integration/datasourcex/reactive/api/ChannelConfig {
+	public final fun getChannelType ()Lcom/caplin/integration/datasourcex/reactive/api/ChannelType;
+	public final fun getObjectMappings ()Ljava/util/Map;
+	public final fun setChannelType (Lcom/caplin/integration/datasourcex/reactive/api/ChannelType;)V
+	public final fun setObjectMappings (Ljava/util/Map;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ChannelConfig$Json : com/caplin/integration/datasourcex/reactive/api/ChannelConfig {
+	public fun <init> ()V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ChannelConfig$Record : com/caplin/integration/datasourcex/reactive/api/ChannelConfig {
+	public fun <init> ()V
+	public final fun getImages ()Z
+	public final fun getRecordType ()Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public final fun setImages (Z)V
+	public final fun setRecordType (Lcom/caplin/integration/datasourcex/reactive/api/RecordType;)V
+}
+
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/ChannelSupplier {
+	public abstract fun invoke (Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ChannelType : java/lang/Enum {
+	public static final field BIDIRECTIONAL_STREAM Lcom/caplin/integration/datasourcex/reactive/api/ChannelType;
+	public static final field UNIDIRECTIONAL_STREAM Lcom/caplin/integration/datasourcex/reactive/api/ChannelType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/caplin/integration/datasourcex/reactive/api/ChannelType;
+	public static fun values ()[Lcom/caplin/integration/datasourcex/reactive/api/ChannelType;
+}
+
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/ConfigBlock {
+	public abstract fun invoke (Ljava/lang/Object;)V
+}
+
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/ContainerEvent {
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ContainerEvent$Bulk : com/caplin/integration/datasourcex/reactive/api/ContainerEvent {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvents ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent : com/caplin/integration/datasourcex/reactive/api/ContainerEvent {
+	public abstract fun component1 ()Ljava/lang/String;
+	public abstract fun getKey ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent$DefaultImpls {
+	public static fun component1 (Lcom/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent;)Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent$Remove : com/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent {
+	public fun <init> (Ljava/lang/String;)V
+	public fun component1 ()Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent$Upsert : com/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;)V
+	public fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getKey ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/InsertAt : java/lang/Enum {
+	public static final field HEAD Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;
+	public static final field TAIL Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;
+	public static fun values ()[Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;
+}
+
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/PathSupplier {
+	public abstract fun invoke (Ljava/lang/String;)Ljava/lang/Object;
+}
+
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier {
+	public abstract fun invoke (Ljava/lang/String;Ljava/util/Map;Ljava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier {
+	public abstract fun invoke (Ljava/lang/String;Ljava/util/Map;)Ljava/lang/Object;
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/RecordType : java/lang/Enum {
+	public static final field GENERIC Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public static final field TYPE1 Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public static fun values ()[Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+}
+
+public final class com/caplin/integration/datasourcex/reactive/api/ServiceConfig {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getDiscardTimeout ()Ljava/time/Duration;
+	public final fun getIfLabelPatterns ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRemoteLabelPattern ()Ljava/lang/String;
+	public final fun getRequiredState ()Lcom/caplin/datasource/Service$RequiredState;
+	public final fun getThrottleTime ()Ljava/time/Duration;
+	public final fun setDiscardTimeout (Ljava/time/Duration;)V
+	public final fun setIfLabelPatterns (Ljava/util/List;)V
+	public final fun setRemoteLabelPattern (Ljava/lang/String;)V
+	public final fun setRequiredState (Lcom/caplin/datasource/Service$RequiredState;)V
+	public final fun setThrottleTime (Ljava/time/Duration;)V
+}
+

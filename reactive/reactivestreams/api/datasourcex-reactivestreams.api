@@ -1,0 +1,175 @@
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/Bind {
+	public static final field Companion Lcom/caplin/integration/datasourcex/reactive/reactivestreams/Bind$Companion;
+	public final fun active (Ljava/util/function/Consumer;)V
+	public final synthetic fun active (Lkotlin/jvm/functions/Function1;)V
+	public final fun activeContainer (Ljava/util/function/Consumer;)V
+	public final synthetic fun activeContainer (Lkotlin/jvm/functions/Function1;)V
+	public final fun broadcast (Ljava/util/function/Consumer;)V
+	public final synthetic fun broadcast (Lkotlin/jvm/functions/Function1;)V
+	public final fun channel (Ljava/util/function/Consumer;)V
+	public final synthetic fun channel (Lkotlin/jvm/functions/Function1;)V
+	public final fun to (Ljava/lang/String;Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
+	public final synthetic fun to (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun to$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/Bind;Ljava/lang/String;Ljava/util/function/Consumer;Ljava/util/function/Consumer;ILjava/lang/Object;)V
+	public static synthetic fun to$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/Bind;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static final fun using (Lcom/caplin/datasource/DataSource;Ljava/util/function/Consumer;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/Bind$Companion {
+	public final fun using (Lcom/caplin/datasource/DataSource;Ljava/util/function/Consumer;)V
+	public final synthetic fun using (Lcom/caplin/datasource/DataSource;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindActive {
+	public final fun json (Ljava/util/function/Consumer;)V
+	public final synthetic fun json (Lkotlin/jvm/functions/Function1;)V
+	public final fun mapping (Ljava/util/function/Consumer;)V
+	public final synthetic fun mapping (Lkotlin/jvm/functions/Function1;)V
+	public final fun record (Ljava/util/function/Consumer;)V
+	public final synthetic fun record (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainer {
+	public final fun json (Ljava/util/function/Consumer;)V
+	public final synthetic fun json (Lkotlin/jvm/functions/Function1;)V
+	public final fun record (Ljava/util/function/Consumer;)V
+	public final synthetic fun record (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerJson {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerJson;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerJson;Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerJson;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerJson;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerRecord {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerRecord;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerRecord;Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerRecord;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveContainerRecord;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveJson {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveJson;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/lang/Object;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveJson;Ljava/lang/String;Ljava/lang/Object;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveJson;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveJson;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveMapping {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveMapping;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun path (Ljava/lang/String;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveMapping;Ljava/lang/String;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveMapping;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveMapping;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveRecord {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveRecord;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveRecord;Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveRecord;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindActiveRecord;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesSupplier;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcast {
+	public final fun mapping (Ljava/util/function/Consumer;)V
+	public final synthetic fun mapping (Lkotlin/jvm/functions/Function1;)V
+	public final fun record (Ljava/util/function/Consumer;)V
+	public final synthetic fun record (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastMapping {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lorg/reactivestreams/Publisher;)V
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastMapping;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun path (Ljava/lang/String;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastMapping;Ljava/lang/String;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastMapping;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun pattern (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastMapping;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastRecord {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lorg/reactivestreams/Publisher;)V
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastRecord;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;)V
+	public final fun path (Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun path (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastRecord;Ljava/lang/String;Ljava/util/Map;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastRecord;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lorg/reactivestreams/Publisher;)V
+	public final fun pattern (Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindBroadcastRecord;Ljava/lang/String;Lorg/reactivestreams/Publisher;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindChannel {
+	public final fun json (Ljava/util/function/Consumer;)V
+	public final synthetic fun json (Lkotlin/jvm/functions/Function1;)V
+	public final fun record (Ljava/util/function/Consumer;)V
+	public final synthetic fun record (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelJson {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Ljava/lang/Class;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelJson;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Ljava/lang/Class;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Ljava/lang/Class;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/ChannelSupplier;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelJson;Ljava/lang/String;Ljava/lang/Class;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/ChannelSupplier;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Ljava/lang/Class;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelJson;Ljava/lang/String;Ljava/lang/Class;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;ILjava/lang/Object;)V
+}
+
+public final class com/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelRecord {
+	public final fun namespace (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;)V
+	public static synthetic fun namespace$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelRecord;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;ILjava/lang/Object;)V
+	public final fun path (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/ChannelSupplier;)V
+	public static synthetic fun path$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelRecord;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/ChannelSupplier;ILjava/lang/Object;)V
+	public final fun pattern (Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;)V
+	public static synthetic fun pattern$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/BindChannelRecord;Ljava/lang/String;Lcom/caplin/integration/datasourcex/reactive/api/ConfigBlock;Lcom/caplin/integration/datasourcex/reactive/api/PathVariablesChannelSupplier;ILjava/lang/Object;)V
+}
+

@@ -1,0 +1,78 @@
+public final class com/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties {
+	public fun <init> (Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Provided;Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Managed;)V
+	public final fun getManaged ()Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Managed;
+	public final fun getProvided ()Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Provided;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Discovery {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getClusterName ()Ljava/lang/String;
+	public final fun getHostname ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Incoming {
+	public fun <init> (IZ)V
+	public synthetic fun <init> (IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPort ()I
+	public final fun getWebsocket ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Managed {
+	public fun <init> (Ljava/lang/String;Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Discovery;Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Peer;Ljava/lang/String;Lorg/springframework/core/io/Resource;)V
+	public final fun getDiscovery ()Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Discovery;
+	public final fun getExtraConfigurationFile ()Lorg/springframework/core/io/Resource;
+	public final fun getLogDirectory ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPeer ()Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Peer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Peer {
+	public fun <init> (Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Incoming;Ljava/util/List;Ljava/util/List;Z)V
+	public synthetic fun <init> (Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Incoming;Ljava/util/List;Ljava/util/List;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDevOverride ()Z
+	public final fun getIncoming ()Lcom/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Incoming;
+	public final fun getOutgoing ()Ljava/util/List;
+	public final fun getRequiredServices ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/spring/DataSourceConfigurationProperties$Provided {
+	public fun <init> (Lorg/springframework/core/io/Resource;Ljava/lang/String;)V
+	public final fun getConfigurationFile ()Lorg/springframework/core/io/Resource;
+	public final fun getRemoteLabelPattern ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/DataService : java/lang/annotation/Annotation {
+	public abstract fun discardTimeout ()J
+	public abstract fun remoteLabelPattern ()Ljava/lang/String;
+	public abstract fun timeUnit ()Ljava/util/concurrent/TimeUnit;
+	public abstract fun value ()Ljava/lang/String;
+}
+
+public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/IngressDestinationVariable : java/lang/annotation/Annotation {
+	public abstract fun token ()Ljava/lang/String;
+	public abstract fun value ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/spring/annotations/IngressToken {
+	public static final field CONNECTION_SESSION_ID Ljava/lang/String;
+	public static final field INSTANCE Lcom/caplin/integration/datasourcex/spring/annotations/IngressToken;
+	public static final field PERSISTENT_SESSION_ID Ljava/lang/String;
+	public static final field USER_ID Ljava/lang/String;
+}
+
+public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/RecordMessageMapping : java/lang/annotation/Annotation {
+	public abstract fun recordType ()Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
+	public abstract fun value ()[Ljava/lang/String;
+}
+
+public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/SubjectMapping : java/lang/annotation/Annotation {
+	public abstract fun value ()[Ljava/lang/String;
+}
+
