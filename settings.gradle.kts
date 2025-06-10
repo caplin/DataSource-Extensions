@@ -6,12 +6,8 @@ dependencyResolutionManagement {
       credentials {
         val caplinUsername: String? by settings
         val caplinPassword: String? by settings
-        username = checkNotNull(
-            caplinUsername ?: System.getenv("CAPLIN_USERNAME"),
-        ) { "Missing caplinUsername property or CAPLIN_USERNAME environment variable" }
-        password = checkNotNull(
-            caplinPassword ?: System.getenv("CAPLIN_PASSWORD"),
-        ) { "Missing caplinPassword property or CAPLIN_PASSWORD environment variable" }
+        username = caplinUsername ?: System.getenv("CAPLIN_USERNAME")
+        password = caplinPassword ?: System.getenv("CAPLIN_PASSWORD")
       }
     }
   }
