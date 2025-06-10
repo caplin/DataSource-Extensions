@@ -59,6 +59,9 @@ jobs:
 
       - name: Run tests
         run: ./gradlew --continue check koverXmlReport
+        env:
+          CAPLIN_USERNAME: ${{ secrets.CAPLIN_USERNAME }}
+          CAPLIN_PASSWORD: ${{ secrets.CAPLIN_PASSWORD }}
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v5
@@ -103,6 +106,9 @@ jobs:
 
       - name: Generate documentation
         run: ./gradlew dokkaGenerate
+        env:
+          CAPLIN_USERNAME: ${{ secrets.CAPLIN_USERNAME }}
+          CAPLIN_PASSWORD: ${{ secrets.CAPLIN_PASSWORD }}
 
       - name: Upload documentation
         uses: actions/upload-artifact@v4
@@ -163,3 +169,5 @@ jobs:
         run: ./gradlew publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CAPLIN_USERNAME: ${{ secrets.CAPLIN_USERNAME }}
+          CAPLIN_PASSWORD: ${{ secrets.CAPLIN_PASSWORD }}

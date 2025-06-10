@@ -3,15 +3,15 @@ dependencyResolutionManagement {
     mavenCentral()
     maven {
       url = uri("https://repository.caplin.com/repository/caplin-release")
-      val caplinUsername: String? by settings
-      val caplinPassword: String? by settings
-      val username = caplinUsername ?: System.getenv("CAPLIN_USERNAME")
-      val password = caplinPassword ?: System.getenv("CAPLIN_PASSWORD")
-      if (username != null || password != null) {
-        credentials {
-          this.username = username
-          this.password = password
-        }
+      credentials {
+        val caplinUsername: String? by settings
+        val caplinPassword: String? by settings
+        username = checkNotNull(
+            caplinUsername ?: System.getenv("CAPLIN_USERNAME"),
+        ) { "Missing caplinUsername property or CAPLIN_USERNAME environment variable" }
+        password = checkNotNull(
+            caplinPassword ?: System.getenv("CAPLIN_PASSWORD"),
+        ) { "Missing caplinPassword property or CAPLIN_PASSWORD environment variable" }
       }
     }
   }
