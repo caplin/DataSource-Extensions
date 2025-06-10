@@ -23,9 +23,9 @@ dependencies {
 
 Then refer to the documentation:
 
-* [datasourcex-reactivestreams](http://integration.pages.caplin.com/datasource-extensions/reactive/datasourcex-reactivestreams)
-* [datasourcex-kotlin](http://integration.pages.caplin.com/datasource-extensions/reactive/datasourcex-kotlin)
-* [datasourcex-java-flow](http://integration.pages.caplin.com/datasource-extensions/reactive/datasourcex-java-flow)
+* [datasourcex-reactivestreams](https://caplin.github.io/DataSource-Extension/reactive/datasourcex-reactivestreams)
+* [datasourcex-kotlin](https://caplin.github.io/DataSource-Extension/reactive/datasourcex-kotlin)
+* [datasourcex-java-flow](https://caplin.github.io/DataSource-Extension/reactive/datasourcex-java-flow)
 
 ## Spring
 
@@ -45,5 +45,5 @@ dependencies {
 ```
 
 Then refer to
-the [documentation](http://integration.pages.caplin.com/datasource-extensions/spring-boot-starter-datasource) and
+the [documentation](https://caplin.github.io/DataSource-Extensions/spring-boot-starter-datasource) and
 the [examples](./examples).
