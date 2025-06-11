@@ -48,6 +48,21 @@ public final class com/caplin/integration/datasourcex/spring/DataSourceConfigura
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/DataMessageMapping : java/lang/annotation/Annotation {
+	public abstract fun type ()Lcom/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type;
+	public abstract fun value ()[Ljava/lang/String;
+}
+
+public final class com/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type : java/lang/Enum {
+	public static final field JSON Lcom/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type;
+	public static final field MAPPING Lcom/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type;
+	public static final field RECORD_GENERIC Lcom/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type;
+	public static final field RECORD_TYPE1 Lcom/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type;
+	public static fun values ()[Lcom/caplin/integration/datasourcex/spring/annotations/DataMessageMapping$Type;
+}
+
 public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/DataService : java/lang/annotation/Annotation {
 	public abstract fun discardTimeout ()J
 	public abstract fun remoteLabelPattern ()Ljava/lang/String;
@@ -65,14 +80,5 @@ public final class com/caplin/integration/datasourcex/spring/annotations/Ingress
 	public static final field INSTANCE Lcom/caplin/integration/datasourcex/spring/annotations/IngressToken;
 	public static final field PERSISTENT_SESSION_ID Ljava/lang/String;
 	public static final field USER_ID Ljava/lang/String;
-}
-
-public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/RecordMessageMapping : java/lang/annotation/Annotation {
-	public abstract fun recordType ()Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
-	public abstract fun value ()[Ljava/lang/String;
-}
-
-public abstract interface annotation class com/caplin/integration/datasourcex/spring/annotations/SubjectMapping : java/lang/annotation/Annotation {
-	public abstract fun value ()[Ljava/lang/String;
 }
 

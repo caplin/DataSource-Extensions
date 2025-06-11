@@ -1,9 +1,10 @@
 package com.caplin.integration.datasourcex.spring.internal
 
-import com.caplin.integration.datasourcex.reactive.api.RecordType
+import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping
+import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.Type.MAPPING
+import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.Type.RECORD_GENERIC
+import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.Type.RECORD_TYPE1
 import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationVariable
-import com.caplin.integration.datasourcex.spring.annotations.RecordMessageMapping
-import com.caplin.integration.datasourcex.spring.annotations.SubjectMapping
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.net.URLDecoder
@@ -160,18 +161,26 @@ internal class DataSourceMessageHandler :
     }
 
     val returnType = reactiveAdapterRegistry.resolveElementType(handler.returnType)!!
-    val isSubjectMapping = handler.getMethodAnnotation(SubjectMapping::class.java) != null
+    val isSubjectMapping =
+        handler.getMethodAnnotation(DataMessageMapping::class.java)?.takeIf {
+          it.type == MAPPING
+        } != null
     if (isSubjectMapping) {
       check(String::class.isSuperclassOf(returnType.kotlin)) {
-        "Methods annotated with @${SubjectMapping::class.simpleName} must return a String or stream of Strings"
+        "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
+            "$MAPPING must return a String or stream of Strings"
       }
     }
 
     val recordMessageMappingType =
-        handler.getMethodAnnotation(RecordMessageMapping::class.java)?.recordType
+        handler
+            .getMethodAnnotation(DataMessageMapping::class.java)
+            ?.takeIf { it.type == RECORD_TYPE1 || it.type == RECORD_GENERIC }
+            ?.type
     if (recordMessageMappingType != null) {
       check(Map::class.isSuperclassOf(returnType.kotlin)) {
-        "Methods annotated with @${RecordMessageMapping::class.simpleName} must return a Map or stream of Maps"
+        "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
+            "$recordMessageMappingType must return a Map or stream of Maps"
       }
     }
 
@@ -182,11 +191,13 @@ internal class DataSourceMessageHandler :
 
         recordMessageMappingType != null ->
             when (recordMessageMappingType) {
-              RecordType.GENERIC ->
+              RECORD_GENERIC ->
                   DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.GENERIC
 
-              RecordType.TYPE1 ->
+              RECORD_TYPE1 ->
                   DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.TYPE1
+
+              else -> error("Invalid record type: $recordMessageMappingType")
             }
 
         else -> DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.JSON
@@ -195,16 +206,19 @@ internal class DataSourceMessageHandler :
 
     val channelType by lazy {
       check(!isSubjectMapping) {
-        "Methods annotated with @${SubjectMapping::class.simpleName} cannot accept a payload"
+        "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
+            "$MAPPING cannot accept a payload"
       }
       when {
         recordMessageMappingType != null ->
             when (recordMessageMappingType) {
-              RecordType.GENERIC ->
+              RECORD_GENERIC ->
                   DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.GENERIC
 
-              RecordType.TYPE1 ->
+              RECORD_TYPE1 ->
                   DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.TYPE1
+
+              else -> error("Invalid record type: $recordMessageMappingType")
             }
 
         else -> DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.JSON
