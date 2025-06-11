@@ -45,7 +45,6 @@ annotation class DataMessageMapping(
      * The requesting peer should then additionally request on the returned path. If a stream of
      * Strings is returned, then the remapping can be updated by emitting a second string, and the
      * requesting peer will request on the new path, discarding the previously mapped path.
-     *
      * > Note that the returned path will not pass through `object-map` or authentication module
      * > mappings before being requested.
      */
