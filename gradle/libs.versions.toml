@@ -1,5 +1,5 @@
 [versions]
-springBoot = "3.5.0+"
+springBoot = "3.5.0"
 kotlin = "1.9.25" # Keep in sync with Spring - https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
 kotlinCollectionsImmutable = "0.3.8"
 jsonPatch = "1.13"
@@ -15,12 +15,14 @@ mockk = "1.13.14"
 # Spring BOM should manage other dependencies versions.
 
 # Plugins
-ktfmtPlugin = "0.21.0"
-dokkaPlugin = "2.0.0"
-binaryCompatibilityValidatorPlugin = "0.17.0"
-koverPlugin = "0.9.1"
-kotlinpoetPlugin = "2.1.0"
-detektPlugin = "1.23.8"
+ktfmt-plugin = "0.21.0"
+dokka-plugin = "2.0.0"
+binary-compatibility-validator-plugin = "0.17.0"
+kover-plugin = "0.9.1"
+kotlinpoet-plugin = "2.1.0"
+detekt-plugin = "1.23.8"
+vanniktech-maven-publish-plugin = "0.31.0"
+
 
 [libraries]
 kotlin-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
@@ -36,14 +38,15 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 # Plugins
-detekt-plugin = { module = "io.gitlab.arturbosch.detekt:io.gitlab.arturbosch.detekt.gradle.plugin", version.ref = "detektPlugin" }
-ktfmt-plugin = { module = "com.ncorti.ktfmt.gradle:plugin", version.ref = "ktfmtPlugin" }
-dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokkaPlugin" }
-binary-compatibility-validator-plugin = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binaryCompatibilityValidatorPlugin" }
-kover-plugin = { module = "org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kover.gradle.plugin", version.ref = "koverPlugin" }
-kotlinpoet-plugin = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoetPlugin" }
+detekt-plugin = { module = "io.gitlab.arturbosch.detekt:io.gitlab.arturbosch.detekt.gradle.plugin", version.ref = "detekt-plugin" }
+ktfmt-plugin = { module = "com.ncorti.ktfmt.gradle:plugin", version.ref = "ktfmt-plugin" }
+dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka-plugin" }
+binary-compatibility-validator-plugin = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binary-compatibility-validator-plugin" }
+kover-plugin = { module = "org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kover.gradle.plugin", version.ref = "kover-plugin" }
+kotlinpoet-plugin = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet-plugin" }
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-allopen-plugin = { module = "org.jetbrains.kotlin.plugin.allopen:org.jetbrains.kotlin.plugin.allopen.gradle.plugin", version.ref = "kotlin" }
+vanniktech-maven-publish-plugin = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech-maven-publish-plugin"}
 
 # BOMs
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }

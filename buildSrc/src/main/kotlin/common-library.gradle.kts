@@ -1,10 +1,11 @@
-
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinJvm
+import gradle.kotlin.dsl.accessors._94cffe4e74c4f6a3b1c88c3e0c336ef5.mavenPublishing
 import org.gradle.api.JavaVersion.VERSION_17
 import org.gradle.api.file.DuplicatesStrategy.WARN
 
 plugins {
   id("common-maven")
-  id("common-dokka")
   kotlin("jvm")
   `java-library`
   idea
@@ -12,6 +13,7 @@ plugins {
   id("org.jetbrains.kotlinx.binary-compatibility-validator")
   id("com.ncorti.ktfmt.gradle")
   id("io.gitlab.arturbosch.detekt")
+  id("org.jetbrains.dokka")
 }
 
 java {
@@ -26,9 +28,7 @@ tasks.jar { duplicatesStrategy = WARN }
 
 tasks.test {
   useJUnitPlatform()
-  reports {
-    junitXml.required.set(true)
-  }
+  reports { junitXml.required.set(true) }
 }
 
 dokka {
@@ -46,13 +46,13 @@ dokka {
   }
 }
 
-publishing {
-  publications {
-    register<MavenPublication>("maven") {
-      from(components["java"])
-      versionMapping { allVariants { fromResolutionResult() } }
-    }
-  }
+mavenPublishing {
+  configure(
+      KotlinJvm(
+          javadocJar = JavadocJar.Dokka("dokkaGeneratePublicationHtml"),
+          sourcesJar = true,
+      )
+  )
 }
 
 sourceSets {

@@ -1,6 +1,6 @@
 plugins {
   `kotlin-dsl`
-  id("com.ncorti.ktfmt.gradle") version libs.versions.ktfmtPlugin
+  id("com.ncorti.ktfmt.gradle") version libs.versions.ktfmt.plugin
 }
 
 dependencies {
@@ -12,4 +12,5 @@ dependencies {
   implementation(libs.kotlin.plugin)
   implementation(libs.kotlin.allopen.plugin)
   implementation(libs.kotlinpoet.plugin)
+  implementation(libs.vanniktech.maven.publish.plugin)
 }

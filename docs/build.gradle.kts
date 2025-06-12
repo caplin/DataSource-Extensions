@@ -1,5 +1,5 @@
 plugins {
-  `common-dokka`
+  id("org.jetbrains.dokka")
 }
 
 dependencies {

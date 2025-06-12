@@ -1,26 +1,55 @@
+import com.vanniktech.maven.publish.VersionCatalog
+
 plugins {
-    `common-maven`
-    `version-catalog`
+  `common-maven`
+  `version-catalog`
 }
 
 catalog {
-    versionCatalog {
-        from(files("$rootDir/gradle/libs.versions.toml"))
-        version(rootProject.name, rootProject.version.toString())
-        library("datasourcex-util", project.group.toString(), "datasourcex-util").versionRef(rootProject.name)
-        library("datasourcex-reactive-api", project.group.toString(), "datasourcex-reactive-api").versionRef(rootProject.name)
-        library("datasourcex-reactive-core", project.group.toString(), "datasourcex-reactive-core").versionRef(rootProject.name)
-        library("datasourcex-java-flow", project.group.toString(), "datasourcex-java-flow").versionRef(rootProject.name)
-        library("datasourcex-kotlin", project.group.toString(), "datasourcex-kotlin").versionRef(rootProject.name)
-        library("datasourcex-reactivestreams", project.group.toString(), "datasourcex-reactivestreams").versionRef(rootProject.name)
-        library("datasourcex-spring", project.group.toString(), "datasourcex-spring").versionRef(rootProject.name)
-    }
+  val springBootStarterDataSource = project(":spring-boot-starter-datasource")
+  val util = project(":datasourcex-util")
+  val reactiveApi = project(":reactive:datasourcex-reactive-api")
+  val reactiveCore = project(":reactive:datasourcex-reactive-core")
+  val javaFlow = project(":reactive:datasourcex-java-flow")
+  val kotlin = project(":reactive:datasourcex-kotlin")
+  val reactiveStreams = project(":reactive:datasourcex-reactivestreams")
+  versionCatalog {
+    version("spring-boot", libs.versions.springBoot.get())
+    version(rootProject.name, util.version.toString())
+    library(
+        util.name,
+        project.group.toString(),
+        util.name,
+    ).versionRef(rootProject.name)
+    library(
+        reactiveApi.name,
+        project.group.toString(),
+        reactiveApi.name,
+    ).versionRef(rootProject.name)
+    library(
+        reactiveCore.name,
+        project.group.toString(),
+        reactiveCore.name,
+    ).versionRef(rootProject.name)
+    library(javaFlow.name, project.group.toString(), javaFlow.name).versionRef(
+        rootProject.name,
+    )
+    library(kotlin.name, project.group.toString(), kotlin.name).versionRef(
+        rootProject.name,
+    )
+    library(
+        reactiveStreams.name,
+        project.group.toString(),
+        reactiveStreams.name,
+    ).versionRef(rootProject.name)
+    library(
+        springBootStarterDataSource.name,
+        project.group.toString(),
+        springBootStarterDataSource.name,
+    ).versionRef(rootProject.name)
+  }
 }
 
-publishing {
-    publications {
-        register<MavenPublication>("maven") {
-            from(components["versionCatalog"])
-        }
-    }
+mavenPublishing {
+  configure(VersionCatalog())
 }
