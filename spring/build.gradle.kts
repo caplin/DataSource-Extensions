@@ -4,6 +4,8 @@ plugins {
   id("org.jetbrains.kotlin.kapt")
 }
 
+description = "Spring Boot integration for DataSource"
+
 dependencies {
   api(project(":reactive:datasourcex-kotlin"))
   api("org.springframework:spring-messaging")

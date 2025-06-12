@@ -2,6 +2,8 @@ plugins {
     `common-library`
 }
 
+description = "Utility classes for DataSource extensions"
+
 dependencies {
     api(platform(libs.spring.boot.dependencies))
     api(libs.datasource)

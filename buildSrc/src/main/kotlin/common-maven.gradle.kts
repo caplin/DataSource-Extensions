@@ -14,8 +14,18 @@ mavenPublishing {
   signAllPublications()
 
   pom {
+    name = project.name
+    description = project.description
     url = "https://github.com/caplin/DataSource-Extensions"
     inceptionYear = "2025"
+
+    developers {
+      developer {
+        name = "Ross Anderson"
+        organization = "Caplin Systems Ltd."
+        url.set("https://github.com/rossdanderson")
+      }
+    }
 
     issueManagement {
       url = "https://github.com/caplin/DataSource-Extensions/issues"

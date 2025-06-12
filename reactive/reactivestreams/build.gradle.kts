@@ -2,6 +2,8 @@ plugins {
   `common-reactive-library`
 }
 
+description = "Reactive Streams based Reactive DataSource extensions"
+
 dependencies {
   api("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
 

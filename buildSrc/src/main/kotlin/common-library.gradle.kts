@@ -55,6 +55,14 @@ mavenPublishing {
   )
 }
 
+publishing {
+  publications {
+    withType<MavenPublication> {
+      versionMapping { allVariants { fromResolutionResult() } }
+    }
+  }
+}
+
 sourceSets {
   create("samples") {
     compileClasspath += main.get().output

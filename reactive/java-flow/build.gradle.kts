@@ -2,6 +2,8 @@ plugins {
   `common-reactive-library`
 }
 
+description = "Java Flow based Reactive DataSource extensions"
+
 dependencies {
   api("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
   api(project(":reactive:datasourcex-reactive-api"))

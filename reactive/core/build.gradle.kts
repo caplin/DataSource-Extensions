@@ -2,6 +2,8 @@ plugins {
   `common-library`
 }
 
+description = "Common private implementation for Reactive DataSource extensions"
+
 dependencies {
   api(project(":datasourcex-util"))
   api(project(":reactive:datasourcex-reactive-api"))

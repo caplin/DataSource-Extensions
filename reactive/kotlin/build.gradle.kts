@@ -2,6 +2,8 @@ plugins {
   `common-reactive-library`
 }
 
+description = "Kotlin based Reactive DataSource extensions"
+
 dependencies {
   api(project(":reactive:datasourcex-reactive-api"))
   api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
