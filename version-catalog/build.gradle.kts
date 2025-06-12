@@ -5,6 +5,8 @@ plugins {
   `version-catalog`
 }
 
+description = "Version Catalog for DataSource Extensions"
+
 catalog {
   val springBootStarterDataSource = project(":spring-boot-starter-datasource")
   val util = project(":datasourcex-util")
