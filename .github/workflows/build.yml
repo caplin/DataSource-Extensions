@@ -169,7 +169,7 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG
 
       - name: Publish libraries
-        run: ./gradlew publish
+        run: ./gradlew --no-configuration-cache publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CAPLIN_USERNAME: ${{ secrets.CAPLIN_USERNAME }}
