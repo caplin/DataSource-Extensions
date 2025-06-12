@@ -167,6 +167,7 @@ jobs:
         run: |
           cat <(echo -e "${{ secrets.SONATYPE_GPG_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
+          gpg --export-secret-keys > ~/.gnupg/secring.gpg
 
       - name: Publish libraries
         run: ./gradlew --no-configuration-cache publish
@@ -175,6 +176,7 @@ jobs:
           CAPLIN_USERNAME: ${{ secrets.CAPLIN_USERNAME }}
           CAPLIN_PASSWORD: ${{ secrets.CAPLIN_PASSWORD }}
           ORG_GRADLE_PROJECT_signing.keyId: "BD2A1230"
+          ORG_GRADLE_PROJECT_signing.secretKeyRingFile: "~/.gnupg/secring.gpg"
           ORG_GRADLE_PROJECT_signing.password: ${{ secrets.SONATYPE_GPG_PASSWORD }}
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_PASSWORD }}
