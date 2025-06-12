@@ -15,7 +15,7 @@ mavenPublishing {
 
   pom {
     name = project.name
-    description = project.description
+    description = project.description ?: "Extension Library for Caplin DataSource"
     url = "https://github.com/caplin/DataSource-Extensions"
     inceptionYear = "2025"
 
