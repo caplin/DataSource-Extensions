@@ -1,5 +1,3 @@
-[[_TOC_]]
-
 # Streaming real-time data with Spring Boot
 
 ### Goals
