@@ -45,5 +45,5 @@ dependencies {
 ```
 
 Then refer to
-the [documentation](https://caplin.github.io/DataSource-Extensions/spring-boot-starter-datasource) and
-the [examples](./examples).
+the [documentation](https://caplin.github.io/DataSource-Extensions/spring-boot-starter-datasource),
+[hands-on tutorial](./spring/docs/GUIDE.md) and [examples](./examples).
