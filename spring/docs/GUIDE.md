@@ -3,7 +3,7 @@
 ## Goals
 
 This guide will show you how to use the Caplin platform and [Spring Boot](https://spring.io/projects/spring-boot) to
-rapidly build an application that can deliver on-demand, real time data to a browser or mobile application.
+rapidly build an application that can deliver on-demand, real-time data to a browser or mobile application.
 
 ## Pre-requisites
 
@@ -25,7 +25,7 @@ Now let's create a simple application.
 * It's recommended to choose _Gradle - Kotlin_ for the Project, and _Kotlin_ for the Language, though you may of course
   use _Java_.
 
-* Choose the latest Spring Boot release version, at the time of writing this is 3.5.3.
+* Choose the latest Spring Boot release version; at the time of writing this is 3.5.3.
 
 * Generate the project, unzip it, and then import it into your IDE.
 
@@ -34,9 +34,7 @@ Now let's create a simple application.
   block.
 
 * You will also need to add the Caplin repository to be able to access the Caplin DataSource libraries. To do so, add
-  the following to the `repositories` block. Note the credentials here should be retrieved from your Caplin Account
-  Manager. These are best passed in from the command line, via environment variable or via your global
-  `gradle.properties` file to ensure they are not inadvertently exposed:
+  the following to the `repositories` block.
   ```kotlin
   maven {
     url = uri("https://repository.caplin.com/repository/caplin-release")
@@ -47,13 +45,20 @@ Now let's create a simple application.
   }
   ```
 
+> [!IMPORTANT]
+> Please contact your Caplin Account Manager if you do not have these credentials.
+
+> [!CAUTION]
+> These credentials are best passed in from the command line, via environment variable or via your global
+`gradle.properties` file to ensure they are not inadvertently comitted or exposed.
+
 * Lastly, we'll need to configure the Liberator host that DataSource will connect to, so open
   `src/main/resources/application.properties` and add the line
   `caplin.datasource.managed.peer.outgoing=ws://localhost:19000`
 
 ## Running the Caplin platform
 
-To launch the Caplin platform you can use
+To launch the Caplin platform, you can use
 the [example Docker Compose file](https://github.com/caplin/DataSource-Extensions/tree/main/examples) from the
 repository examples. Please refer to the brief readme for instructions. This will launch a container running a
 preconfigured Liberator and expose two ports; `18080` for inbound front end application connections and `19000` for the
@@ -67,7 +72,8 @@ platform with the StreamLink library (In this case, hosted by our Liberator cont
 `http://localhost:18080/sljs/streamlink.js`) and enables the library's support for handling streaming JSON patches
 behind the scenes.
 
-> For the sake of clarity, we are omitting most error handling code.
+> [!NOTE]
+> For the sake of clarity, we are omitting most error-handling code.
 
 ```html
 
@@ -122,14 +128,12 @@ behind the scenes.
 
 If you open this in your browser, you should see that we have successfully connected to Liberator.
 
-```
-ConnectionStatusEventImpl [LiberatorURL=ws://localhost:18080, connectionState=LOGGEDIN]
-```
+![./img/01-connected.png](./img/01-connected.png)
 
 ## Providing static data
 
 Now let's add some data! In this case our client wants to retrieve the local time and time zone of the server. To handle
-this we'll create a new `@Controller` class providing an aptly named `/serverTime` endpoint.
+this, we'll create a new `@Controller` class providing an aptly named `/serverTime` endpoint.
 
 ```kotlin
 @Controller
@@ -153,7 +157,7 @@ In the resulting logs we should see our application successfully connect to the 
 Peer 0 (localhost/127.0.0.1:19000): is connected
 ```
 
-and we should see log line indicating our subject has been bound correctly
+and we should see a log line indicating our subject has been bound correctly
 
 ```
 Registering [/serverTime] as Static
@@ -174,8 +178,11 @@ streamLink.subscribe(timeSubject, {
 })
 ```
 
-Note that serialization to JSON is handled for us automatically by way of
-Spring's [Jackson](https://github.com/FasterXML/jackson) integration.
+![img/02-static.png](img/02-static.png)
+
+> [!NOTE]
+> Serialization to JSON is automatically handled for us automatically by way of
+Spring Boot's [Jackson](https://github.com/FasterXML/jackson) integration.
 
 ## Providing streaming data
 
@@ -199,6 +206,8 @@ fun serverTime(): Flow<TimeEvent> = flow {
 
 One brief restart of the server application later, and you should see the client updating in real time!
 
+![img/03-streaming.gif](img/03-streaming.gif)
+
 ## Request parameters
 
 Now, imagine that the browser client needs to fetch the local time in a specific time zone. To achieve this we can
@@ -216,7 +225,7 @@ fun zonedTime(@DestinationVariable zoneId: ZoneId): Flow<TimeEvent> = flow {
     }
 ```
 
-To test this we can add to our client code to specify a time zone on a second request.
+To test this, we can add to our client code to specify a time zone on a second request.
 
 > As our parameter contains a `/` character, the zone ID must be URL encoded in order to match our subject defined in
 > the `@MessageMapping`:
@@ -231,7 +240,10 @@ streamLink.subscribe(zonedTimeSubject, {
 })
 ```
 
-After another quick restart of our server, and a refresh of our browser, we now have two time streams being displayed.
+After another quick restart of our server, and a refresh of our browser, we now have two time streams being displayed,
+the second containing our requested timezone.
+
+![img/04-parameterised.gif](img/04-parameterised.gif)
 
 ## Request payloads
 
@@ -257,8 +269,8 @@ fun times(timesRequest: TimesRequest): Flow<List<TimeEvent>> = flow {
 }
 ```
 
-Now for our client we need to do something a bit different for this case - we'll need to establish a channel rather than
-a plain subscription, and then send our request. This is quite simple:
+Now for our client we need to do something a bit different for this case—we'll need to establish a channel rather than
+a plain subscription and then send our request. This is quite simple:
 
 ```javascript
 document.body.innerHTML += `<div class="text-xl p-4 m-4 bg-gray-100 rounded-lg" id="times"></div>`
@@ -274,11 +286,13 @@ timesChannel.send({
 });
 ```
 
-Running this we'll now see all the requested times being displayed and updating in sync.
+Running this, we'll now see all the requested times being displayed and updating in sync.
+
+![img/05-channel.gif](img/05-channel.gif)
 
 ## Two-way communication
 
-Lastly, say we now want our client to have the ability to add new zones to the stream in an ad-hoc manner. Fortunately,
+Lastly, say we now want our client to be able to add new zones to the stream in an ad-hoc manner. Fortunately,
 we can do this with a just few tweaks.
 
 On the client we'll add a simple text entry box and button, the clicking of which will send a message through the
@@ -314,8 +328,11 @@ fun times(zoneRequests: Flow<TimesRequest>): Flow<List<TimeEvent>> = zoneRequest
     }
 ```
 
-One final restart of our application, and by clicking the button we can now see additional times being added to our
+One final restart of our application, and by clicking the button, we can now see additional times being added to our
 stream each time we add a new zone.
+
+
+![img/06-channel-2.gif](img/06-channel-2.gif)
 
 ## What next?
 
