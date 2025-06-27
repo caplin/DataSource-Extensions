@@ -252,7 +252,7 @@ window.addZone = function () {
         zones: [document.getElementById("zone").value]
     });
 }
-document.body.innerHTML += `<div><input type="text" id="zone" value="Chile/EasterIsland"><button type="button" onclick="addZone()">Add zone</button> </div>`
+document.body.innerHTML += `<div class="text-xl p-4 m-4 bg-gray-100 rounded-lg"><input type="text" id="zone" value="Chile/EasterIsland" class="border p-2 rounded mr-2"><button type="button" onclick="addZone()" class="bg-blue-500 text-white px-4 py-2 rounded">Add zone</button></div>`
 ```
 
 And on the server we can update our `/times` endpoint to accept a stream of data from the client by changing our parameter to be either a Flow or Flux accordingly, and then update our responses to include the newly requested zones:
