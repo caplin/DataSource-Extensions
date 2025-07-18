@@ -1,6 +1,4 @@
-plugins {
-  `common-reactive-library`
-}
+plugins { `common-reactive-library` }
 
 description = "Kotlin based Reactive DataSource extensions"
 
@@ -18,9 +16,7 @@ dependencies {
   testImplementation(libs.turbine)
 }
 
-tasks.generateApi {
-  publisherType = "kotlin"
-}
+tasks.generateApi { publisherType = "kotlin" }
 
 dokka {
   dokkaSourceSets.configureEach {

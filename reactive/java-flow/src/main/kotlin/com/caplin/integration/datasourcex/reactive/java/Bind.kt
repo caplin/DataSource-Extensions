@@ -1,6 +1,7 @@
 package com.caplin.integration.datasourcex.reactive.java
 
 import com.caplin.datasource.DataSource
+import com.caplin.integration.datasourcex.reactive.api.BindContext
 import com.caplin.integration.datasourcex.reactive.api.BindMarker
 import com.caplin.integration.datasourcex.reactive.api.ServiceConfig
 import com.caplin.integration.datasourcex.reactive.core.Binder
@@ -17,6 +18,11 @@ import org.reactivestreams.FlowAdapters
 
 @BindMarker
 class Bind internal constructor(private val binder: Binder) {
+
+  val context: BindContext =
+      object : BindContext {
+        override val dataSource = binder.dataSource
+      }
 
   companion object {
     @Suppress("UNCHECKED_CAST")

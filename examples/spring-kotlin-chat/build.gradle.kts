@@ -12,8 +12,4 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter")
 }
 
-dokka {
-  dokkaSourceSets.configureEach {
-    includes.from("README.md")
-  }
-}
+dokka { dokkaSourceSets.configureEach { includes.from("README.md") } }

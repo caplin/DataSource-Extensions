@@ -17,7 +17,7 @@ Add the required dependencies to your project:
 
 ```kotlin
 dependencies {
-    implementation("com.caplin.integration:datasourcex-<java-flow|kotlin|reactivestreams>:<version>")
+    implementation("com.caplin.integration.datasourcex:datasourcex-<java-flow|kotlin|reactivestreams>:<version>")
 }
 ```
 
@@ -40,7 +40,7 @@ Add the following dependency to your project:
 
 ```kotlin
 dependencies {
-    implementation("com.caplin.integration:spring-boot-starter-datasource:<version>")
+    implementation("com.caplin.integration.datasourcex:spring-boot-starter-datasource:<version>")
 }
 ```
 

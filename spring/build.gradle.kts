@@ -28,11 +28,12 @@ dependencies {
   testImplementation(libs.turbine)
 }
 
-val prepareReadme = tasks.register<Copy>("prepareReadme") {
-  from(layout.projectDirectory.file("README.md"))
-  expand("springBootVersion" to libs.versions.springBoot.get())
-  into(layout.buildDirectory.dir("readme"))
-}
+val prepareReadme =
+    tasks.register<Copy>("prepareReadme") {
+      from(layout.projectDirectory.file("README.md"))
+      expand("springBootVersion" to libs.versions.springBoot.get())
+      into(layout.buildDirectory.dir("readme"))
+    }
 
 dokka {
   dokkaSourceSets.configureEach {
@@ -40,6 +41,4 @@ dokka {
   }
 }
 
-apiValidation {
-  ignoredPackages.add("com.caplin.reactive.datasource.spring.internal")
-}
+apiValidation { ignoredPackages.add("com.caplin.reactive.datasource.spring.internal") }

@@ -1,6 +1,4 @@
-plugins {
-  `common-reactive-library`
-}
+plugins { `common-reactive-library` }
 
 description = "Java Flow based Reactive DataSource extensions"
 
@@ -20,9 +18,7 @@ dependencies {
   samplesImplementation("io.projectreactor:reactor-core")
 }
 
-tasks.generateApi {
-  publisherType = "java"
-}
+tasks.generateApi { publisherType = "java" }
 
 dokka {
   dokkaSourceSets.configureEach {

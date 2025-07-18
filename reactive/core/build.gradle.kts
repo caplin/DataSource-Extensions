@@ -1,6 +1,4 @@
-plugins {
-  `common-library`
-}
+plugins { `common-library` }
 
 description = "Common private implementation for Reactive DataSource extensions"
 
@@ -20,6 +18,4 @@ dependencies {
   testImplementation(libs.turbine)
 }
 
-apiValidation {
-  ignoredPackages.add("com.caplin.integration.datasourcex.reactive.core")
-}
+apiValidation { ignoredPackages.add("com.caplin.integration.datasourcex.reactive.core") }

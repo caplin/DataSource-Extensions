@@ -8,6 +8,7 @@ public final class com/caplin/integration/datasourcex/reactive/reactivestreams/B
 	public final synthetic fun broadcast (Lkotlin/jvm/functions/Function1;)V
 	public final fun channel (Ljava/util/function/Consumer;)V
 	public final synthetic fun channel (Lkotlin/jvm/functions/Function1;)V
+	public final fun getContext ()Lcom/caplin/integration/datasourcex/reactive/api/BindContext;
 	public final fun to (Ljava/lang/String;Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
 	public final synthetic fun to (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun to$default (Lcom/caplin/integration/datasourcex/reactive/reactivestreams/Bind;Ljava/lang/String;Ljava/util/function/Consumer;Ljava/util/function/Consumer;ILjava/lang/Object;)V

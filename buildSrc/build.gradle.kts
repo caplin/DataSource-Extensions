@@ -4,6 +4,8 @@ plugins {
 }
 
 dependencies {
+  implementation(libs.kotlinpoet)
+
   implementation(libs.ktfmt.plugin)
   implementation(libs.dokka.plugin)
   implementation(libs.detekt.plugin)
@@ -11,6 +13,5 @@ dependencies {
   implementation(libs.kover.plugin)
   implementation(libs.kotlin.plugin)
   implementation(libs.kotlin.allopen.plugin)
-  implementation(libs.kotlinpoet.plugin)
   implementation(libs.vanniktech.maven.publish.plugin)
 }

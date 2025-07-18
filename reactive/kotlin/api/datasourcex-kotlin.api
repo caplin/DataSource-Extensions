@@ -3,6 +3,7 @@ public final class com/caplin/integration/datasourcex/reactive/kotlin/Bind {
 	public final fun activeContainer (Lkotlin/jvm/functions/Function1;)V
 	public final fun broadcast (Lkotlin/jvm/functions/Function1;)V
 	public final fun channel (Lkotlin/jvm/functions/Function1;)V
+	public final fun getContext ()Lcom/caplin/integration/datasourcex/reactive/api/BindContext;
 	public final fun to (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
 	public static synthetic fun to$default (Lcom/caplin/integration/datasourcex/reactive/kotlin/Bind;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }

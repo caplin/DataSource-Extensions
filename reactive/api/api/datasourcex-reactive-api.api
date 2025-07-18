@@ -50,6 +50,10 @@ public final class com/caplin/integration/datasourcex/reactive/api/ActiveContain
 	public final fun setRowRecordType (Lcom/caplin/integration/datasourcex/reactive/api/RecordType;)V
 }
 
+public abstract interface class com/caplin/integration/datasourcex/reactive/api/BindContext {
+	public abstract fun getDataSource ()Lcom/caplin/datasource/DataSource;
+}
+
 public abstract interface annotation class com/caplin/integration/datasourcex/reactive/api/BindMarker : java/lang/annotation/Annotation {
 }
 

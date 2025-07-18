@@ -1,6 +1,4 @@
-plugins {
-  `common-reactive-library`
-}
+plugins { `common-reactive-library` }
 
 description = "Reactive Streams based Reactive DataSource extensions"
 
@@ -21,9 +19,7 @@ dependencies {
   samplesImplementation("io.projectreactor:reactor-core")
 }
 
-tasks.generateApi {
-  publisherType = "reactivestreams"
-}
+tasks.generateApi { publisherType = "reactivestreams" }
 
 dokka {
   dokkaSourceSets.configureEach {

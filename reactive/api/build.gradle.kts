@@ -1,6 +1,4 @@
-plugins {
-  `common-library`
-}
+plugins { `common-library` }
 
 description = "Common public API for Reactive DataSource extensions"
 
@@ -18,12 +16,6 @@ dependencies {
   testImplementation(libs.turbine)
 }
 
-apiValidation {
-  ignoredPackages.add("com.caplin.integration.datasourcex.reactive.internal")
-}
+apiValidation { ignoredPackages.add("com.caplin.integration.datasourcex.reactive.internal") }
 
-dokka {
-  dokkaSourceSets.configureEach {
-    includes.from("README.md")
-  }
-}
+dokka { dokkaSourceSets.configureEach { includes.from("README.md") } }

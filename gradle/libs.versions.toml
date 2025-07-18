@@ -3,6 +3,7 @@ springBoot = "3.5.0"
 kotlin = "1.9.25" # Keep in sync with Spring - https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
 kotlinCollectionsImmutable = "0.3.8"
 jsonPatch = "1.13"
+kotlinpoet = "2.2.0"
 
 # Caplin Dependencies
 datasource = "8.0.6-1430-651ec808"
@@ -15,11 +16,10 @@ mockk = "1.13.14"
 # Spring BOM should manage other dependencies versions.
 
 # Plugins
-ktfmt-plugin = "0.21.0"
+ktfmt-plugin = "0.23.0"
 dokka-plugin = "2.0.0"
 binary-compatibility-validator-plugin = "0.17.0"
 kover-plugin = "0.9.1"
-kotlinpoet-plugin = "2.1.0"
 detekt-plugin = "1.23.8"
 vanniktech-maven-publish-plugin = "0.31.0"
 
@@ -27,6 +27,7 @@ vanniktech-maven-publish-plugin = "0.31.0"
 [libraries]
 kotlin-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
 json-patch = { module = "com.github.java-json-tools:json-patch", version.ref = "jsonPatch" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 
 # Caplin Dependencies
 datasource = { module = "com.caplin.platform.integration.java:datasource", version.ref = "datasource" }
@@ -43,7 +44,6 @@ ktfmt-plugin = { module = "com.ncorti.ktfmt.gradle:plugin", version.ref = "ktfmt
 dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka-plugin" }
 binary-compatibility-validator-plugin = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binary-compatibility-validator-plugin" }
 kover-plugin = { module = "org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kover.gradle.plugin", version.ref = "kover-plugin" }
-kotlinpoet-plugin = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet-plugin" }
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-allopen-plugin = { module = "org.jetbrains.kotlin.plugin.allopen:org.jetbrains.kotlin.plugin.allopen.gradle.plugin", version.ref = "kotlin" }
 vanniktech-maven-publish-plugin = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech-maven-publish-plugin"}

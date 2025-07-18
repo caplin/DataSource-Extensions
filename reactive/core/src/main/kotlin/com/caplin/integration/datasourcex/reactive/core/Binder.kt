@@ -67,10 +67,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.whileSelect
 
 class Binder
-private constructor(
-    private val dataSource: ScopedDataSource,
-    private val serviceInfo: ServiceInfo?
-) {
+private constructor(val dataSource: ScopedDataSource, private val serviceInfo: ServiceInfo?) {
 
   constructor(dataSource: ScopedDataSource) : this(dataSource, null)
 
