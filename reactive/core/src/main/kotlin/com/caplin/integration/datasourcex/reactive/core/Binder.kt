@@ -38,6 +38,7 @@ import com.caplin.integration.datasourcex.reactive.api.PathVariablesChannelSuppl
 import com.caplin.integration.datasourcex.reactive.api.RecordType
 import com.caplin.integration.datasourcex.reactive.api.ServiceConfig
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
+import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
 import com.caplin.integration.datasourcex.util.getLogger
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -712,7 +713,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
       val (fromPattern, toPattern) = antPatternNamespace.getObjectMap(mappings)
       service.addObjectMap(fromPattern, toPattern)
     }
-    service.addIncludePattern(antPatternNamespace.pattern)
+    service.addIncludeNamespace(antPatternNamespace)
   }
 
   private fun ServiceInfo.finalise(dataSource: DataSource) {
