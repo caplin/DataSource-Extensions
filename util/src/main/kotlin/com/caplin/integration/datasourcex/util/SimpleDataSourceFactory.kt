@@ -9,11 +9,11 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Files
 import java.util.logging.Logger
 
-object SimpleDatasourceFactory {
+object SimpleDataSourceFactory {
 
   private const val MAX_PATH_LENGTH = 32
 
-  private val logger = getLogger<SimpleDatasourceFactory>()
+  private val logger = getLogger<SimpleDataSourceFactory>()
 
   val defaultObjectMapper: ObjectMapper =
       jacksonObjectMapper()
