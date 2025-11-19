@@ -1,6 +1,5 @@
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinJvm
-import gradle.kotlin.dsl.accessors._94cffe4e74c4f6a3b1c88c3e0c336ef5.mavenPublishing
 import org.gradle.api.JavaVersion.VERSION_17
 import org.gradle.api.file.DuplicatesStrategy.WARN
 

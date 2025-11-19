@@ -1,14 +1,24 @@
 package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.DataSource
+import com.caplin.datasource.messaging.json.JacksonJsonHandler
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Files
 import java.util.logging.Logger
 
-object SimpleDatasourceFactory {
+object SimpleDataSourceFactory {
 
   private const val MAX_PATH_LENGTH = 32
 
-  private val logger = getLogger<SimpleDatasourceFactory>()
+  private val logger = getLogger<SimpleDataSourceFactory>()
+
+  val defaultObjectMapper: ObjectMapper =
+      jacksonObjectMapper()
+          .configure(WRITE_DATES_AS_TIMESTAMPS, false)
+          .registerModule(JavaTimeModule())
 
   /**
    * Creates a data source based on the given simple configuration.
@@ -17,13 +27,17 @@ object SimpleDatasourceFactory {
    * @return The created data source.
    */
   @JvmStatic
-  fun createDataSource(simpleConfig: SimpleDataSourceConfig): DataSource {
+  fun createDataSource(
+      simpleConfig: SimpleDataSourceConfig,
+      objectMapper: ObjectMapper = defaultObjectMapper
+  ): DataSource {
     val logPath =
         simpleConfig.logDirectory
             ?: run {
               val tmpLogPath =
                   Files.createTempDirectory(
-                      simpleConfig.name.replace("\\s".toRegex(), "").take(MAX_PATH_LENGTH))
+                      simpleConfig.name.replace("\\s".toRegex(), "").take(MAX_PATH_LENGTH),
+                  )
               logger.warn {
                 "log file path is not specified, writing datasource logs to $tmpLogPath"
               }
@@ -50,15 +64,15 @@ object SimpleDatasourceFactory {
                 |datasrc-dev-override ${simpleConfig.devOverride}
                 |discovery-require-service ${simpleConfig.requiredServices.joinToString(" ")}
                 ${
-                    simpleConfig.incoming?.let { 
-                        """
+              simpleConfig.incoming?.let {
+                """
                         |${if (it.isWebsocket) "datasrc-ws-port" else "datasrc-port"} ${it.port}
                         """
-                    }.orEmpty()
-                }
+              }.orEmpty()
+            }
                 ${
-                    simpleConfig.outgoing.joinToString("\n") {
-                        """
+              simpleConfig.outgoing.joinToString("\n") {
+                """
                         |add-peer
                         |    addr         ${it.hostname}
                         |    port         ${it.port}
@@ -66,8 +80,8 @@ object SimpleDatasourceFactory {
                         |    websocket    ${it.isWebsocket}
                         |end-peer
                         """
-                    }
-                }
+              }
+            }
                 """
         }
 
@@ -99,5 +113,12 @@ object SimpleDatasourceFactory {
             .trimMargin()
 
     return DataSource.fromConfigString(config, Logger.getLogger(DataSource::class.qualifiedName))
+        .apply {
+          extraConfiguration.jsonHandler =
+              JacksonJsonHandler(
+                  Logger.getLogger(JacksonJsonHandler::class.qualifiedName),
+                  objectMapper,
+              )
+        }
   }
 }

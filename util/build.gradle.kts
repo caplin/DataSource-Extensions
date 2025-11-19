@@ -8,6 +8,9 @@ dependencies {
   api("org.slf4j:slf4j-api")
   api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   api("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm")
+  api("com.fasterxml.jackson.core:jackson-core")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   implementation(libs.kotlin.collections.immutable)

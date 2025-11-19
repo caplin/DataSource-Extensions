@@ -7,7 +7,7 @@ import com.caplin.datasource.messaging.json.JacksonJsonHandler
 import com.caplin.integration.datasourcex.spring.DataSourceConfigurationProperties
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Discovery
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Peer
-import com.caplin.integration.datasourcex.util.SimpleDatasourceFactory.createDataSource
+import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.createDataSource
 import com.caplin.integration.datasourcex.util.getLogger
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.nio.file.Paths
