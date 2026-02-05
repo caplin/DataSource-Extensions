@@ -1,6 +1,6 @@
+
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinJvm
-import org.gradle.api.JavaVersion.VERSION_17
 import org.gradle.api.file.DuplicatesStrategy.WARN
 
 plugins {
@@ -10,14 +10,26 @@ plugins {
   idea
   id("org.jetbrains.kotlinx.kover")
   id("org.jetbrains.kotlinx.binary-compatibility-validator")
-  id("com.ncorti.ktfmt.gradle")
-  id("io.gitlab.arturbosch.detekt")
+  id("com.diffplug.spotless")
   id("org.jetbrains.dokka")
 }
 
+val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+val ktfmtVersion = libs.findVersion("ktfmt").get().requiredVersion
+
+spotless {
+  kotlin {
+    ktfmt(ktfmtVersion)
+    target("src/**/*.kt")
+  }
+  kotlinGradle {
+    ktfmt(ktfmtVersion)
+    target("*.gradle.kts")
+  }
+}
+
 java {
-  sourceCompatibility = VERSION_17
-  targetCompatibility = VERSION_17
+  toolchain { languageVersion.set(JavaLanguageVersion.of(17)) }
   withSourcesJar()
 }
 

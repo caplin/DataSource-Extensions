@@ -79,7 +79,8 @@ internal class DataSourceMessageHandler :
             }
             return object : NamedValueInfo(annot, true, ValueConstants.DEFAULT_NONE) {}
           }
-        })
+        }
+    )
     add(HeaderMethodArgumentResolver(conversionService, null))
     add(HeadersMethodArgumentResolver())
 
@@ -100,7 +101,7 @@ internal class DataSourceMessageHandler :
 
   override fun getMappingForMethod(
       method: Method,
-      handlerType: Class<*>
+      handlerType: Class<*>,
   ): CompositeMessageCondition? {
     val methodCondition = getCondition(method)
     if (methodCondition != null) {
@@ -231,15 +232,18 @@ internal class DataSourceMessageHandler :
               when {
                 responseCardinality == 1 ->
                     DataSourceRequestTypeMessageCondition.Companion.streamStaticCondition(
-                        streamType)
+                        streamType
+                    )
 
                 responseCardinality > 1 ->
                     DataSourceRequestTypeMessageCondition.Companion.streamUpdatingCondition(
-                        streamType)
+                        streamType
+                    )
 
                 else ->
                     throw IllegalArgumentException(
-                        "No receive, no response is not supported - ${handler.method}")
+                        "No receive, no response is not supported - ${handler.method}"
+                    )
               }
 
           1 ->
@@ -264,7 +268,8 @@ internal class DataSourceMessageHandler :
               else
                   throw IllegalArgumentException(
                       "Multi receive, single/no response is not supported - return an empty " +
-                          "stream if required - ${handler.method}")
+                          "stream if required - ${handler.method}"
+                  )
 
           else -> error("Invalid cardinality: $requestCardinality $responseCardinality")
         }

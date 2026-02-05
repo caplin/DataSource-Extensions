@@ -7,7 +7,7 @@ import com.caplin.integration.datasourcex.reactive.api.RecordType
 
 internal class RecordContext(
     private val images: Boolean = true,
-    private val recordType: RecordType
+    private val recordType: RecordType,
 ) {
   internal fun Channel.createMessage(fields: Map<out Any, Any>) =
       when (recordType) {

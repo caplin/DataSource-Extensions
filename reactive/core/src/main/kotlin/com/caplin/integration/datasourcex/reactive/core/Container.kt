@@ -96,7 +96,10 @@ internal class Container<T : Any>(
             emit(ContainerState.Completed(e))
           }
           .shareIn(
-              scope = scope, started = SharingStarted.Companion.WhileSubscribed(0, 0), replay = 1)
+              scope = scope,
+              started = SharingStarted.WhileSubscribed(0, 0),
+              replay = 1,
+          )
           .takeWhile { it !is ContainerState.Completed }
 
   val containerEventsFlow: Flow<List<InternalContainerEvent>> = flow {
@@ -110,9 +113,12 @@ internal class Container<T : Any>(
           currentRows = rows
           emit(
               (currentRows.orEmpty() - previousRows.orEmpty()).map(
-                  InternalContainerEvent::Inserted) +
+                  InternalContainerEvent::Inserted
+              ) +
                   (previousRows.orEmpty() - currentRows.orEmpty()).map(
-                      InternalContainerEvent::Removed))
+                      InternalContainerEvent::Removed
+                  )
+          )
         }
   }
 

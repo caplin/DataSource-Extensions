@@ -1,12 +1,13 @@
 [versions]
-springBoot = "3.5.0"
+springBoot = "3.5.10"
 kotlin = "1.9.25" # Keep in sync with Spring - https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
 kotlinCollectionsImmutable = "0.3.8"
 jsonPatch = "1.13"
 kotlinpoet = "2.2.0"
+ktfmt = "0.61"
 
 # Caplin Dependencies
-datasource = "8.0.6-1430-651ec808"
+datasource = "8.0.10-1695-5ddb3798"
 
 # Test Dependencies
 kotest = "5.9.1"
@@ -16,11 +17,10 @@ mockk = "1.13.14"
 # Spring BOM should manage other dependencies versions.
 
 # Plugins
-ktfmt-plugin = "0.23.0"
+spotless-plugin = "8.0.0"
 dokka-plugin = "2.0.0"
 binary-compatibility-validator-plugin = "0.17.0"
 kover-plugin = "0.9.1"
-detekt-plugin = "1.23.8"
 vanniktech-maven-publish-plugin = "0.31.0"
 
 
@@ -39,8 +39,7 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 # Plugins
-detekt-plugin = { module = "io.gitlab.arturbosch.detekt:io.gitlab.arturbosch.detekt.gradle.plugin", version.ref = "detekt-plugin" }
-ktfmt-plugin = { module = "com.ncorti.ktfmt.gradle:plugin", version.ref = "ktfmt-plugin" }
+spotless-plugin = { module = "com.diffplug.spotless:com.diffplug.spotless.gradle.plugin", version.ref = "spotless-plugin" }
 dokka-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka-plugin" }
 binary-compatibility-validator-plugin = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binary-compatibility-validator-plugin" }
 kover-plugin = { module = "org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kover.gradle.plugin", version.ref = "kover-plugin" }

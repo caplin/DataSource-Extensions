@@ -29,7 +29,7 @@ object SimpleDataSourceFactory {
   @JvmStatic
   fun createDataSource(
       simpleConfig: SimpleDataSourceConfig,
-      objectMapper: ObjectMapper = defaultObjectMapper
+      objectMapper: ObjectMapper = defaultObjectMapper,
   ): DataSource {
     val logPath =
         simpleConfig.logDirectory

@@ -113,7 +113,7 @@ fun <V : Any> Flow<Set<V>>.toEvents() = flow {
  */
 fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
     emitPartials: Boolean = false,
-    relaxed: Boolean = false
+    relaxed: Boolean = false,
 ) = flow {
   var emitted = false
   var populated = false

@@ -20,7 +20,8 @@ class Samples {
                     FlowAdapters.toFlowPublisher(
                         Flux.interval(Duration.ofSeconds(1)).map { aLong: Long ->
                           mapOf("Count" to aLong.toString())
-                        }),
+                        }
+                    ),
             ) {
               recordType = RecordType.TYPE1
             }
@@ -36,7 +37,8 @@ class Samples {
                   FlowAdapters.toFlowPublisher(
                       Flux.interval(Duration.ofSeconds(1)).map { count: Long ->
                         JsonObject("$username $myKey $count")
-                      })
+                      }
+                  )
                 },
             )
           }

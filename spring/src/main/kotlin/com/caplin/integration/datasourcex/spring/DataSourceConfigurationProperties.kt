@@ -11,7 +11,7 @@ constructor(
     /** Specifies the configuration for the "provided" mode. */
     val provided: Provided?,
     /** Specifies the configuration for the "managed" mode. */
-    val managed: Managed?
+    val managed: Managed?,
 ) {
   init {
     check(provided == null || managed == null) {
@@ -27,7 +27,7 @@ constructor(
        * The remote label pattern to use for dynamically generated services. If unspecified, then
        * this falls back to the datasrc-local-label value from the provided datasource.conf.
        */
-      val remoteLabelPattern: String?
+      val remoteLabelPattern: String?,
   ) {
     override fun toString(): String {
       return "Provided(configurationFile=$configurationFile, remoteLabelPattern=$remoteLabelPattern)"
@@ -72,7 +72,7 @@ constructor(
       /** The hostname of the Discovery server. */
       val hostname: String,
       /** The name of the Discovery cluster. */
-      val clusterName: String = "caplin"
+      val clusterName: String = "caplin",
   ) {
     override fun toString(): String {
       return "Discovery(hostname='$hostname', clusterName='$clusterName')"
@@ -104,7 +104,7 @@ constructor(
        */
       val port: Int,
       /** Whether the incoming port should allow websocket or plain TCP connections. */
-      val websocket: Boolean = true
+      val websocket: Boolean = true,
   ) {
     override fun toString(): String {
       return "Incoming(port=$port, websocket=$websocket)"

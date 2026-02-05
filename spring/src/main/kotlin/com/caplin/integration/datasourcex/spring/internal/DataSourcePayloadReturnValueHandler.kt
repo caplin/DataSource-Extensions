@@ -30,7 +30,7 @@ internal class DataSourcePayloadReturnValueHandler(
   override fun handleReturnValue(
       returnValue: Any?,
       returnType: MethodParameter,
-      message: Message<*>
+      message: Message<*>,
   ): Mono<Void> {
     if (returnValue == null) {
       val responseRef = getResponseReference(message)
@@ -58,7 +58,9 @@ internal class DataSourcePayloadReturnValueHandler(
   private fun getResponseReference(message: Message<*>): AtomicReference<Flow<Any>>? {
     val headerValue = message.headers[RESPONSE_HEADER]
     Assert.state(
-        headerValue == null || headerValue is AtomicReference<*>, "Expected AtomicReference")
+        headerValue == null || headerValue is AtomicReference<*>,
+        "Expected AtomicReference",
+    )
     return headerValue as? AtomicReference<Flow<Any>>
   }
 }

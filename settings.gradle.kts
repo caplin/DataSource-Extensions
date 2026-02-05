@@ -6,12 +6,18 @@ dependencyResolutionManagement {
       credentials {
         val caplinUsername: String? by settings
         val caplinPassword: String? by settings
-        username = checkNotNull(
-            caplinUsername ?: System.getenv("CAPLIN_USERNAME"),
-        ) { "Missing caplinUsername property or CAPLIN_USERNAME environment variable" }
-        password = checkNotNull(
-            caplinPassword ?: System.getenv("CAPLIN_PASSWORD"),
-        ) { "Missing caplinPassword property or CAPLIN_PASSWORD environment variable" }
+        username =
+            checkNotNull(
+                caplinUsername ?: System.getenv("CAPLIN_USERNAME"),
+            ) {
+              "Missing caplinUsername property or CAPLIN_USERNAME environment variable"
+            }
+        password =
+            checkNotNull(
+                caplinPassword ?: System.getenv("CAPLIN_PASSWORD"),
+            ) {
+              "Missing caplinPassword property or CAPLIN_PASSWORD environment variable"
+            }
       }
     }
   }
@@ -20,30 +26,41 @@ dependencyResolutionManagement {
 rootProject.name = "datasourcex"
 
 include("util")
+
 project(":util").name = "datasourcex-util"
 
 include("reactive:core")
+
 project(":reactive:core").name = "datasourcex-reactive-core"
 
 include("reactive:api")
+
 project(":reactive:api").name = "datasourcex-reactive-api"
 
 include("reactive:java-flow")
+
 project(":reactive:java-flow").name = "datasourcex-java-flow"
 
 include("reactive:kotlin")
+
 project(":reactive:kotlin").name = "datasourcex-kotlin"
 
 include("reactive:reactivestreams")
+
 project(":reactive:reactivestreams").name = "datasourcex-reactivestreams"
 
 include("spring")
+
 project(":spring").name = "spring-boot-starter-datasource"
 
 include("version-catalog")
+
 project(":version-catalog").name = "datasourcex-version-catalog"
 
 include("docs")
+
 include("examples:spring-java")
+
 include("examples:spring-kotlin")
+
 include("examples:spring-kotlin-chat")

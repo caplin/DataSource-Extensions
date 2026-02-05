@@ -21,7 +21,8 @@ class SimpleMapEventKtTest :
                 Upsert("K2", "v3"),
                 Removed("K"),
                 Populated,
-                Upsert("K", "v4"))
+                Upsert("K", "v4"),
+            )
             .runningFoldToMap()
             .test {
               awaitItem() shouldContainExactly mapOf("K2" to "v3")
@@ -37,7 +38,8 @@ class SimpleMapEventKtTest :
                 Upsert("K2", "v3"),
                 Removed("K"),
                 Populated,
-                Upsert("K", "v4"))
+                Upsert("K", "v4"),
+            )
             .runningFoldToMap(emitPartials = true)
             .test {
               awaitItem() shouldContainExactly mapOf("K" to "v1")
@@ -61,7 +63,8 @@ class SimpleMapEventKtTest :
                 Upsert("K", "v2"),
                 Upsert("K2", "v3"),
                 Removed("K"),
-                Upsert("K", "v4"))
+                Upsert("K", "v4"),
+            )
             .runningFoldToMap()
             .test {
               awaitItem() shouldContainExactly mapOf("K" to "v1")
