@@ -2,10 +2,12 @@ package com.caplin.integration.datasourcex.spring.internal
 
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.Service
+import com.caplin.integration.datasourcex.reactive.api.ActiveContainerConfig.Companion.DEFAULT_ITEMS_SUFFIX
 import com.caplin.integration.datasourcex.reactive.api.RecordType
 import com.caplin.integration.datasourcex.reactive.kotlin.bind
 import com.caplin.integration.datasourcex.spring.annotations.DataService
 import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationVariable
+import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeMessageCondition.RequestType
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
 import com.caplin.integration.datasourcex.util.getLogger
@@ -118,27 +120,44 @@ internal class DataSourceServerBootstrap(
                   }
                   .toMap()
 
-          val antPatternNamespace = AntPatternNamespace(pattern)
-          service.addIncludeNamespace(antPatternNamespace)
-          logger.info { "Service $name: Adding include namespace $antPatternNamespace" }
-          if (mappings.isNotEmpty()) {
+          val isContainer =
+              dataSourceRequestType is RequestType.Stream &&
+                  when (dataSourceRequestType.type) {
+                    RequestType.Stream.ObjectType.CONTAINER_JSON,
+                    RequestType.Stream.ObjectType.CONTAINER_TYPE1,
+                    RequestType.Stream.ObjectType.CONTAINER_GENERIC -> true
+                    else -> false
+                  }
 
-            val antPattern = antPatternNamespace.pattern
-            if (antPattern.contains("""/\*\*/""".toRegex())) {
-              logger.warn {
-                "Multi-directory wildcard with suffix (e.g. `prefix/**/suffix`) used in " +
-                    "pattern $antPattern. Object mapping can only by automatically configured " +
-                    "for the first directory level (e.g. `prefix/*/suffix`)."
-              }
+          val namespaces = buildList {
+            add(AntPatternNamespace(pattern))
+            if (isContainer) {
+              add(AntPatternNamespace("$pattern${DEFAULT_ITEMS_SUFFIX}/*"))
             }
+          }
 
-            val (fromPattern, toPattern) = antPatternNamespace.getObjectMap(mappings)
-            service.addObjectMap(fromPattern, toPattern)
-            logger.info { "Service $name: Adding object mapping $fromPattern -> $toPattern" }
+          namespaces.forEach { ns ->
+            service.addIncludeNamespace(ns)
+            logger.info { "Service $name: Adding include namespace $ns" }
+
+            if (mappings.isNotEmpty()) {
+              val antPattern = ns.pattern
+              if (antPattern.contains("""/\*\*/""".toRegex())) {
+                logger.warn {
+                  "Multi-directory wildcard with suffix (e.g. `prefix/**/suffix`) used in " +
+                      "pattern $antPattern. Object mapping can only by automatically configured " +
+                      "for the first directory level (e.g. `prefix/*/suffix`)."
+                }
+              }
+
+              val (fromPattern, toPattern) = ns.getObjectMap(mappings)
+              service.addObjectMap(fromPattern, toPattern)
+              logger.info { "Service $name: Adding object mapping $fromPattern -> $toPattern" }
+            }
           }
 
           when (dataSourceRequestType) {
-            is DataSourceRequestTypeMessageCondition.RequestType.Channel -> {
+            is RequestType.Channel -> {
               fun <I : Any> createFlow(subject: String, receiveFlow: Flow<Any>): Flow<I> =
                   flow {
                         val sendFlow = AtomicReference<Flow<I>>()
@@ -167,7 +186,7 @@ internal class DataSourceServerBootstrap(
                       }
 
               when (val type = dataSourceRequestType.type) {
-                DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.JSON -> {
+                RequestType.Channel.ObjectType.JSON -> {
                   channel {
                     json {
                       pattern(
@@ -181,8 +200,8 @@ internal class DataSourceServerBootstrap(
                   }
                 }
 
-                DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.TYPE1,
-                DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.GENERIC -> {
+                RequestType.Channel.ObjectType.TYPE1,
+                RequestType.Channel.ObjectType.GENERIC -> {
                   channel {
                     record {
                       pattern(
@@ -191,13 +210,9 @@ internal class DataSourceServerBootstrap(
                             channelType = dataSourceRequestType.channelType
                             recordType =
                                 when (type) {
-                                  DataSourceRequestTypeMessageCondition.RequestType.Channel
-                                      .ObjectType
-                                      .TYPE1 -> RecordType.TYPE1
+                                  RequestType.Channel.ObjectType.TYPE1 -> RecordType.TYPE1
 
-                                  DataSourceRequestTypeMessageCondition.RequestType.Channel
-                                      .ObjectType
-                                      .GENERIC -> RecordType.GENERIC
+                                  RequestType.Channel.ObjectType.GENERIC -> RecordType.GENERIC
 
                                   else -> error("Unreachable")
                                 }
@@ -211,7 +226,7 @@ internal class DataSourceServerBootstrap(
               }
             }
 
-            is DataSourceRequestTypeMessageCondition.RequestType.Stream -> {
+            is RequestType.Stream -> {
               fun <I : Any> createFlow(subject: String) =
                   flow {
                         val sendFlow = AtomicReference<Flow<I>>()
@@ -225,11 +240,7 @@ internal class DataSourceServerBootstrap(
                             .awaitSingleOrNull()
 
                         emitAll(sendFlow.get())
-                        if (
-                            dataSourceRequestType
-                                is DataSourceRequestTypeMessageCondition.RequestType.Stream.Static
-                        )
-                            awaitCancellation()
+                        if (dataSourceRequestType is RequestType.Stream.Static) awaitCancellation()
                       }
                       .onStart {
                         logger.info {
@@ -243,14 +254,19 @@ internal class DataSourceServerBootstrap(
                       }
 
               when (val type = dataSourceRequestType.type) {
-                DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.MAPPING ->
+                RequestType.Stream.ObjectType.MAPPING ->
                     active { mapping { pattern(pattern) { subject, _ -> createFlow(subject) } } }
 
-                DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.JSON ->
+                RequestType.Stream.ObjectType.JSON ->
                     active { json { pattern(pattern) { subject, _ -> createFlow(subject) } } }
 
-                DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.TYPE1,
-                DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.GENERIC ->
+                RequestType.Stream.ObjectType.CONTAINER_JSON ->
+                    activeContainer {
+                      json { pattern(pattern) { subject, _ -> createFlow(subject) } }
+                    }
+
+                RequestType.Stream.ObjectType.TYPE1,
+                RequestType.Stream.ObjectType.GENERIC ->
                     active {
                       record {
                         pattern(
@@ -258,13 +274,33 @@ internal class DataSourceServerBootstrap(
                             {
                               recordType =
                                   when (type) {
-                                    DataSourceRequestTypeMessageCondition.RequestType.Stream
-                                        .ObjectType
-                                        .TYPE1 -> RecordType.TYPE1
+                                    RequestType.Stream.ObjectType.TYPE1 -> RecordType.TYPE1
 
-                                    DataSourceRequestTypeMessageCondition.RequestType.Stream
-                                        .ObjectType
-                                        .GENERIC -> RecordType.GENERIC
+                                    RequestType.Stream.ObjectType.GENERIC -> RecordType.GENERIC
+
+                                    else -> error("Unreachable")
+                                  }
+                            },
+                        ) { subject, _ ->
+                          createFlow(subject)
+                        }
+                      }
+                    }
+
+                RequestType.Stream.ObjectType.CONTAINER_TYPE1,
+                RequestType.Stream.ObjectType.CONTAINER_GENERIC ->
+                    activeContainer {
+                      record {
+                        pattern(
+                            pattern,
+                            {
+                              rowRecordType =
+                                  when (type) {
+                                    RequestType.Stream.ObjectType.CONTAINER_TYPE1 ->
+                                        RecordType.TYPE1
+
+                                    RequestType.Stream.ObjectType.CONTAINER_GENERIC ->
+                                        RecordType.GENERIC
 
                                     else -> error("Unreachable")
                                   }
@@ -297,7 +333,7 @@ internal class DataSourceServerBootstrap(
 
   private fun createHeaders(
       route: RouteMatcher.Route,
-      requestType: DataSourceRequestTypeMessageCondition.RequestType,
+      requestType: RequestType,
       sendFlow: AtomicReference<out Flow<Any>>,
   ): MessageHeaders =
       MessageHeaderAccessor()

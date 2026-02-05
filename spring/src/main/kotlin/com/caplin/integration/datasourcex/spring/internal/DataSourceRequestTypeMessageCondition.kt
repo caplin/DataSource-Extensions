@@ -65,6 +65,9 @@ internal class DataSourceRequestTypeMessageCondition(val requestTypes: Set<Reque
         JSON,
         TYPE1,
         GENERIC,
+        CONTAINER_JSON,
+        CONTAINER_TYPE1,
+        CONTAINER_GENERIC,
       }
 
       val type: ObjectType

@@ -7,6 +7,8 @@ sealed class ActiveContainerConfig {
   companion object {
     const val STRUCTURE_DEBOUNCE_DEFAULT: Long = 100L
     const val ROW_REQUEST_TIMEOUT_DEFAULT: Long = 10000L
+
+    const val DEFAULT_ITEMS_SUFFIX = "-items"
   }
 
   /**
@@ -44,7 +46,7 @@ sealed class ActiveContainerConfig {
    * items with the paths `/container/a-items/{rowKey}` where `{rowKey}` is provided by
    * [ContainerEvent.RowEvent.key].
    */
-  var rowPathSuffix: String = "-items"
+  var rowPathSuffix: String = DEFAULT_ITEMS_SUFFIX
 
   class Json : ActiveContainerConfig()
 

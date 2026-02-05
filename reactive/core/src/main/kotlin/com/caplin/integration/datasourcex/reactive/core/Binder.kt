@@ -634,6 +634,12 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                                       }
                                     }
                                   }
+
+                              println(
+                                  containerMessage.operations.joinToString {
+                                    "${it.type} ${it.elementSubject}"
+                                  }
+                              )
                               publish(containerMessage)
                             }
                       } finally {

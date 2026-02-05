@@ -1,10 +1,12 @@
 package com.caplin.integration.datasourcex.spring.internal
 
+import com.caplin.integration.datasourcex.reactive.api.ContainerEvent
 import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping
 import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.Type.MAPPING
 import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.Type.RECORD_GENERIC
 import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.Type.RECORD_TYPE1
 import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationVariable
+import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeMessageCondition.RequestType
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.net.URLDecoder
@@ -41,7 +43,7 @@ import org.springframework.util.SimpleRouteMatcher
 import org.springframework.util.StringValueResolver
 import reactor.core.publisher.Mono
 
-internal class DataSourceMessageHandler :
+internal open class DataSourceMessageHandler :
     EmbeddedValueResolverAware, AbstractMethodMessageHandler<CompositeMessageCondition>() {
 
   var conversionService: ConversionService = DefaultFormattingConversionService()
@@ -148,8 +150,7 @@ internal class DataSourceMessageHandler :
             conditions[1] is DestinationPatternsMessageCondition,
         "Unexpected message condition types",
     )
-    if (conditions[0] !== DataSourceRequestTypeMessageCondition.Companion.emptyCondition)
-        return composite
+    if (conditions[0] !== DataSourceRequestTypeMessageCondition.emptyCondition) return composite
     val responseCardinality = getCardinality(handler.returnType)
     var requestCardinality = 0
     var elementType: Class<*>? = null
@@ -179,33 +180,50 @@ internal class DataSourceMessageHandler :
             ?.takeIf { it.type == RECORD_TYPE1 || it.type == RECORD_GENERIC }
             ?.type
     if (recordMessageMappingType != null) {
-      check(Map::class.isSuperclassOf(returnType.kotlin)) {
+      check(
+          Map::class.isSuperclassOf(returnType.kotlin) ||
+              ContainerEvent::class.isSuperclassOf(returnType.kotlin)
+      ) {
         "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
-            "$recordMessageMappingType must return a Map or stream of Maps"
+            "$recordMessageMappingType must return a Map or stream of Maps (or ContainerEvent)"
+      }
+    }
+
+    val isContainer = ContainerEvent::class.isSuperclassOf(returnType.kotlin)
+    if (isContainer) {
+      check(!isSubjectMapping) {
+        "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
+            "$MAPPING cannot return ContainerEvent"
       }
     }
 
     val streamType by lazy {
       when {
-        isSubjectMapping ->
-            DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.MAPPING
+        isSubjectMapping -> RequestType.Stream.ObjectType.MAPPING
 
         recordMessageMappingType != null ->
             when (recordMessageMappingType) {
               RECORD_GENERIC ->
-                  DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.GENERIC
+                  if (isContainer) RequestType.Stream.ObjectType.CONTAINER_GENERIC
+                  else RequestType.Stream.ObjectType.GENERIC
 
               RECORD_TYPE1 ->
-                  DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.TYPE1
+                  if (isContainer) RequestType.Stream.ObjectType.CONTAINER_TYPE1
+                  else RequestType.Stream.ObjectType.TYPE1
 
               else -> error("Invalid record type: $recordMessageMappingType")
             }
 
-        else -> DataSourceRequestTypeMessageCondition.RequestType.Stream.ObjectType.JSON
+        else ->
+            if (isContainer) RequestType.Stream.ObjectType.CONTAINER_JSON
+            else RequestType.Stream.ObjectType.JSON
       }
     }
 
     val channelType by lazy {
+      check(!isContainer) {
+        "Methods returning ${ContainerEvent::class.simpleName} are not supported for channels"
+      }
       check(!isSubjectMapping) {
         "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
             "$MAPPING cannot accept a payload"
@@ -213,16 +231,14 @@ internal class DataSourceMessageHandler :
       when {
         recordMessageMappingType != null ->
             when (recordMessageMappingType) {
-              RECORD_GENERIC ->
-                  DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.GENERIC
+              RECORD_GENERIC -> RequestType.Channel.ObjectType.GENERIC
 
-              RECORD_TYPE1 ->
-                  DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.TYPE1
+              RECORD_TYPE1 -> RequestType.Channel.ObjectType.TYPE1
 
               else -> error("Invalid record type: $recordMessageMappingType")
             }
 
-        else -> DataSourceRequestTypeMessageCondition.RequestType.Channel.ObjectType.JSON
+        else -> RequestType.Channel.ObjectType.JSON
       }
     }
 
@@ -231,14 +247,10 @@ internal class DataSourceMessageHandler :
           0 ->
               when {
                 responseCardinality == 1 ->
-                    DataSourceRequestTypeMessageCondition.Companion.streamStaticCondition(
-                        streamType
-                    )
+                    DataSourceRequestTypeMessageCondition.streamStaticCondition(streamType)
 
                 responseCardinality > 1 ->
-                    DataSourceRequestTypeMessageCondition.Companion.streamUpdatingCondition(
-                        streamType
-                    )
+                    DataSourceRequestTypeMessageCondition.streamUpdatingCondition(streamType)
 
                 else ->
                     throw IllegalArgumentException(
@@ -248,23 +260,22 @@ internal class DataSourceMessageHandler :
 
           1 ->
               if (responseCardinality > 0)
-                  DataSourceRequestTypeMessageCondition.Companion.channelRequestStreamCondition(
+                  DataSourceRequestTypeMessageCondition.channelRequestStreamCondition(
                       elementType,
                       channelType,
                   )
               else
-                  DataSourceRequestTypeMessageCondition.Companion.channelFireAndForgetCondition(
+                  DataSourceRequestTypeMessageCondition.channelFireAndForgetCondition(
                       elementType,
                       channelType,
                   )
 
           2 ->
               if (responseCardinality > 0)
-                  DataSourceRequestTypeMessageCondition.Companion
-                      .channelBidirectionalStreamCondition(
-                          elementType,
-                          channelType,
-                      )
+                  DataSourceRequestTypeMessageCondition.channelBidirectionalStreamCondition(
+                      elementType,
+                      channelType,
+                  )
               else
                   throw IllegalArgumentException(
                       "Multi receive, single/no response is not supported - return an empty " +
@@ -290,7 +301,7 @@ internal class DataSourceMessageHandler :
       val vars = routeMatcher.matchAndExtract(pattern, destination)
       val decodedVars =
           vars?.mapValues {
-            URLDecoder.decode(it.value, DataSourceServerBootstrap.Companion.bootstrapCharset)
+            URLDecoder.decode(it.value, DataSourceServerBootstrap.bootstrapCharset)
           }
       if (!CollectionUtils.isEmpty(vars)) {
         val mha = MessageHeaderAccessor.getAccessor(message, MessageHeaderAccessor::class.java)
@@ -313,7 +324,7 @@ internal class DataSourceMessageHandler :
     val patterns: Array<String> = processDestinations(messageMapping.value)
 
     return CompositeMessageCondition(
-        DataSourceRequestTypeMessageCondition.Companion.emptyCondition,
+        DataSourceRequestTypeMessageCondition.emptyCondition,
         DestinationPatternsMessageCondition(patterns, routeMatcher),
     )
   }
