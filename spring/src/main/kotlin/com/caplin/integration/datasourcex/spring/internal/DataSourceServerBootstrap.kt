@@ -2,7 +2,7 @@ package com.caplin.integration.datasourcex.spring.internal
 
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.Service
-import com.caplin.integration.datasourcex.reactive.api.ActiveContainerConfig.Companion.DEFAULT_ITEMS_SUFFIX
+import com.caplin.integration.datasourcex.reactive.api.ActiveContainerConfig.Companion.ITEMS_SUFFIX_DEFAULT
 import com.caplin.integration.datasourcex.reactive.api.RecordType
 import com.caplin.integration.datasourcex.reactive.kotlin.bind
 import com.caplin.integration.datasourcex.spring.annotations.DataService
@@ -132,7 +132,7 @@ internal class DataSourceServerBootstrap(
           val namespaces = buildList {
             add(AntPatternNamespace(pattern))
             if (isContainer) {
-              add(AntPatternNamespace("$pattern${DEFAULT_ITEMS_SUFFIX}/*"))
+              add(AntPatternNamespace("$pattern${ITEMS_SUFFIX_DEFAULT}/*"))
             }
           }
 
