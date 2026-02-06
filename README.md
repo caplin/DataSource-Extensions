@@ -30,7 +30,7 @@ Then refer to the documentation:
 ## Spring
 
 This module provides a starter for integrating Caplin DataSource with your
-[Spring Boot](https://spring.io/projects/spring-boot) application, and integration with
+[Spring Boot 3.5](https://spring.io/projects/spring-boot) application, and integration with
 [Spring Messaging](https://docs.spring.io/spring-boot/docs/current/reference/html/messaging.html)
 for publishing data from annotated functions.
 

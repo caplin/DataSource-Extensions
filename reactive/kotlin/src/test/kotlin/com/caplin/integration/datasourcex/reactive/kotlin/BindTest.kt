@@ -46,7 +46,7 @@ class BindTest :
     FunSpec({
       isolationMode = IsolationMode.InstancePerTest
 
-      suspend fun <T : Any?> MutableSharedFlow<ValueOrCompletion<T>>.emitUpdate(event: T) {
+      suspend fun <T> MutableSharedFlow<ValueOrCompletion<T>>.emitUpdate(event: T) {
         emit(Value(event))
       }
 

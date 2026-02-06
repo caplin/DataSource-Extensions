@@ -4,6 +4,9 @@ sealed interface ContainerEvent<out T : Any> {
 
   /** Send a number of updates in one. This may be more efficient on the wire. */
   class Bulk<out T : Any>(val events: List<RowEvent<T>>) : ContainerEvent<T> {
+
+    constructor(vararg events: RowEvent<T>) : this(events.toList())
+
     operator fun component1(): List<RowEvent<T>> = events
 
     override fun equals(other: Any?): Boolean {

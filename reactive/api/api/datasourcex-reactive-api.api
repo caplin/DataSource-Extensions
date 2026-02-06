@@ -21,6 +21,7 @@ public final class com/caplin/integration/datasourcex/reactive/api/ActiveConfig$
 
 public abstract class com/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig {
 	public static final field Companion Lcom/caplin/integration/datasourcex/reactive/api/ActiveContainerConfig$Companion;
+	public static final field ITEMS_SUFFIX_DEFAULT Ljava/lang/String;
 	public static final field ROW_REQUEST_TIMEOUT_DEFAULT J
 	public static final field STRUCTURE_DEBOUNCE_DEFAULT J
 	public final fun getInsertAt ()Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;
@@ -123,6 +124,7 @@ public abstract interface class com/caplin/integration/datasourcex/reactive/api/
 
 public final class com/caplin/integration/datasourcex/reactive/api/ContainerEvent$Bulk : com/caplin/integration/datasourcex/reactive/api/ContainerEvent {
 	public fun <init> (Ljava/util/List;)V
+	public fun <init> ([Lcom/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent;)V
 	public final fun component1 ()Ljava/util/List;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEvents ()Ljava/util/List;
