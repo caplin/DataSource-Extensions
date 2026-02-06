@@ -28,7 +28,9 @@ class CompletingSharedFlowTest :
                     scope = this + Job(),
                     started =
                         SharingStarted.WhileSubscribed(
-                            stopTimeoutMillis = 100, replayExpirationMillis = 0),
+                            stopTimeoutMillis = 100,
+                            replayExpirationMillis = 0,
+                        ),
                     replay = 2,
                 )
 

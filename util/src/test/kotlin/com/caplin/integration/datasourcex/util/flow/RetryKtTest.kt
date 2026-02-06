@@ -71,7 +71,8 @@ class RetryKtTest :
               startCount.get() shouldBeEqual 5
 
               channel.send(
-                  Value("B")) // Emission of a valid value resets our delay to the initial value
+                  Value("B")
+              ) // Emission of a valid value resets our delay to the initial value
               awaitItem() shouldBeEqual "B"
 
               channel.send(Completion(IllegalArgumentException()))

@@ -1,6 +1,14 @@
 plugins {
   id("org.jetbrains.kotlinx.kover")
+  id("com.diffplug.spotless")
   base
+}
+
+spotless {
+  kotlinGradle {
+    ktfmt(libs.versions.ktfmt.get())
+    target("*.gradle.kts")
+  }
 }
 
 dependencies {
@@ -13,12 +21,4 @@ dependencies {
   kover(project(":datasourcex-util"))
 }
 
-kover {
-  reports {
-    filters {
-      excludes {
-        packages("samples")
-      }
-    }
-  }
-}
+kover { reports { filters { excludes { packages("samples") } } } }

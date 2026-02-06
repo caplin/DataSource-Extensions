@@ -49,7 +49,7 @@ internal class DataSourcePayloadMethodArgumentResolver(
 
   private fun handleMissingBody(
       param: MethodParameter,
-      message: Message<*>
+      message: Message<*>,
   ): MethodArgumentResolutionException =
       MethodArgumentResolutionException(
           message,

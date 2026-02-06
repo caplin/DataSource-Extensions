@@ -88,12 +88,15 @@ internal class DataSourceAutoConfiguration {
                                 ?.bufferedReader()
                                 ?.readText(),
                     )
-                  })
+                  }
+          )
         }
         .apply {
           extraConfiguration.jsonHandler =
               JacksonJsonHandler(
-                  Logger.getLogger(JacksonJsonHandler::class.qualifiedName), objectMapper)
+                  Logger.getLogger(JacksonJsonHandler::class.qualifiedName),
+                  objectMapper,
+              )
         }
   }
 
@@ -111,17 +114,19 @@ internal class DataSourceAutoConfiguration {
                     checkNotNull(
                         dataSource.configuration.getStringValue(DATASRC_LOCAL_LABEL).takeIf {
                           it.isNotBlank()
-                        }) {
-                          "$DATASRC_LOCAL_LABEL must be set"
                         }
+                    ) {
+                      "$DATASRC_LOCAL_LABEL must be set"
+                    }
                 DataSourceInfo(
                     name =
                         checkNotNull(
                             dataSource.configuration.getStringValue(DATASRC_NAME).takeIf {
                               it.isNotBlank()
-                            }) {
-                              "$DATASRC_NAME must be set"
-                            },
+                            }
+                        ) {
+                          "$DATASRC_NAME must be set"
+                        },
                     label = label,
                     remoteLabelPattern =
                         dataSourceConfigurationProperties.provided?.remoteLabelPattern ?: label,
@@ -135,7 +140,9 @@ internal class DataSourceAutoConfiguration {
   ): DataSourceInfo {
     val name =
         (managed.name ?: applicationName ?: DEFAULT_DATASOURCE_NAME).replace(
-            strippedRemoteLabelCharacters, "")
+            strippedRemoteLabelCharacters,
+            "",
+        )
     return DataSourceInfo(
         name = name,
         label = "$name-${UUID.randomUUID()}",

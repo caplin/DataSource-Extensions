@@ -23,7 +23,8 @@ class AntRegexPathMatcherTest :
         val posixMatched =
             antRegexPathMatcher.posixExtendedPattern.toRegex().matchEntire(path) != null
         println(
-            "$antPattern as ${antRegexPathMatcher.posixExtendedPattern} for $path: $posixMatched")
+            "$antPattern as ${antRegexPathMatcher.posixExtendedPattern} for $path: $posixMatched"
+        )
 
         val match = antMatcher.match(antPattern, path)
         match shouldBe matched
@@ -149,7 +150,9 @@ class AntRegexPathMatcherTest :
             "/hotels/1/bookings/2",
         ) shouldContainExactly mapOf("hotel" to "1", "booking" to "2")
         extractUriTemplateVariables(
-            "/**/hotels/**/{hotel}", "/foo/hotels/bar/1") shouldContainExactly mapOf("hotel" to "1")
+            "/**/hotels/**/{hotel}",
+            "/foo/hotels/bar/1",
+        ) shouldContainExactly mapOf("hotel" to "1")
         extractUriTemplateVariables("/{page}.html", "/42.html") shouldContainExactly
             mapOf("page" to "42")
         extractUriTemplateVariables("/{page}.*", "/42.html") shouldContainExactly

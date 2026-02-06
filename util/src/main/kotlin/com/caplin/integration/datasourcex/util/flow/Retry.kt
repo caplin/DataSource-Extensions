@@ -28,6 +28,7 @@ fun <T : Any?> Flow<T>.retryWithExponentialBackoff(
                 true
               } else false
             }
-            .onEach { nextDelay = minMillis })
+            .onEach { nextDelay = minMillis }
+    )
   }
 }

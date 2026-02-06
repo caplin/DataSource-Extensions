@@ -11,5 +11,4 @@ public record Payload(
     @Nullable String sessionId,
     String parameter1,
     int parameter2,
-    UUID uuid) {
-}
+    UUID uuid) {}

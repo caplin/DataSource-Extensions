@@ -109,7 +109,8 @@ fun interface CompletingSharedFlowCache<K : Any, T : Any?> {
                               }
                               .onCompletion { channel.send(Reset(item.key)) }
                               .shareIn(scope, started, replay)
-                        })
+                        }
+                    )
 
                 is Reset -> map.remove(item.key)
               }

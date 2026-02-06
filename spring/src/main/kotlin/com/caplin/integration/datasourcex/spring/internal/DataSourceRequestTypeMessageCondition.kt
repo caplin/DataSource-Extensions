@@ -10,24 +10,27 @@ internal class DataSourceRequestTypeMessageCondition(val requestTypes: Set<Reque
   companion object {
     fun channelFireAndForgetCondition(
         payloadType: Class<*>?,
-        type: RequestType.Channel.ObjectType
+        type: RequestType.Channel.ObjectType,
     ) =
         DataSourceRequestTypeMessageCondition(
-            setOf(RequestType.Channel(ChannelType.UNIDIRECTIONAL_STREAM, payloadType, true, type)))
+            setOf(RequestType.Channel(ChannelType.UNIDIRECTIONAL_STREAM, payloadType, true, type))
+        )
 
     fun channelRequestStreamCondition(
         payloadType: Class<*>?,
-        type: RequestType.Channel.ObjectType
+        type: RequestType.Channel.ObjectType,
     ) =
         DataSourceRequestTypeMessageCondition(
-            setOf(RequestType.Channel(ChannelType.UNIDIRECTIONAL_STREAM, payloadType, false, type)))
+            setOf(RequestType.Channel(ChannelType.UNIDIRECTIONAL_STREAM, payloadType, false, type))
+        )
 
     fun channelBidirectionalStreamCondition(
         payloadType: Class<*>?,
-        type: RequestType.Channel.ObjectType
+        type: RequestType.Channel.ObjectType,
     ) =
         DataSourceRequestTypeMessageCondition(
-            setOf(RequestType.Channel(ChannelType.BIDIRECTIONAL_STREAM, payloadType, false, type)))
+            setOf(RequestType.Channel(ChannelType.BIDIRECTIONAL_STREAM, payloadType, false, type))
+        )
 
     fun streamUpdatingCondition(type: RequestType.Stream.ObjectType) =
         DataSourceRequestTypeMessageCondition(setOf(RequestType.Stream.Updating(type)))

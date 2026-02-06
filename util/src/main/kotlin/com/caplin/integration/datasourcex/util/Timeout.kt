@@ -17,7 +17,7 @@ import kotlinx.coroutines.selects.select
  */
 suspend fun <T> withTimeout(
     duration: java.time.Duration,
-    block: suspend CoroutineScope.() -> T
+    block: suspend CoroutineScope.() -> T,
 ): T = withTimeout(duration.toMillis(), block)
 
 /**
@@ -27,7 +27,7 @@ suspend fun <T> withTimeout(
  */
 suspend fun <T> withTimeout(
     duration: kotlin.time.Duration,
-    block: suspend CoroutineScope.() -> T
+    block: suspend CoroutineScope.() -> T,
 ): T = withTimeout(duration.inWholeMilliseconds, block)
 
 /**

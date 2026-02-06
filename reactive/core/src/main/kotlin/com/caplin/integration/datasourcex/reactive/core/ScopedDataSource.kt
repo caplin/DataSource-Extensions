@@ -10,7 +10,7 @@ import kotlinx.coroutines.plus
 class ScopedDataSource
 internal constructor(
     private val dataSource: DataSource,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
 ) : DataSource by dataSource, CoroutineScope by coroutineScope {
 
   companion object {

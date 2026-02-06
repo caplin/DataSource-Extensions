@@ -74,7 +74,7 @@ internal class ChatServiceImpl : ChatService {
   override fun sendMessage(
       roomId: String,
       userId: String,
-      message: String
+      message: String,
   ): CompletableFuture<UUID> {
     return CompletableFuture.supplyAsync(
         {

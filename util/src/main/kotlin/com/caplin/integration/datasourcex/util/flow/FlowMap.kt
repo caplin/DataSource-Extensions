@@ -114,7 +114,7 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
 
   private data class FlowMapEvent<K : Any, V : Any>(
       val state: State<K, V>,
-      val events: List<EntryEvent<K, V>>
+      val events: List<EntryEvent<K, V>>,
   )
 
   private val state = MutableStateFlow(State(0L, initialMap))

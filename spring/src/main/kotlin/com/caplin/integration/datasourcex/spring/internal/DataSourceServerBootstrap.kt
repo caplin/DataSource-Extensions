@@ -84,7 +84,8 @@ internal class DataSourceServerBootstrap(
                     .setDiscardTimeout(
                         dataService?.let {
                           Duration.of(it.discardTimeout, it.timeUnit.toChronoUnit())
-                        } ?: Duration.ofMinutes(1))
+                        } ?: Duration.ofMinutes(1)
+                    )
               }
 
           val messageCondition =
@@ -108,9 +109,10 @@ internal class DataSourceServerBootstrap(
                       val variableName =
                           checkNotNull(
                               destinationVariable.value.takeIf { it.isNotEmpty() }
-                                  ?: parameter?.parameterName) {
-                                "Unable to resolve name for $parameter"
-                              }
+                                  ?: parameter?.parameterName
+                          ) {
+                            "Unable to resolve name for $parameter"
+                          }
                       variableName to destinationVariable.token
                     }
                   }
@@ -145,7 +147,8 @@ internal class DataSourceServerBootstrap(
                                 MessageBuilder.createMessage(
                                     receiveFlow,
                                     createHeaders(route, dataSourceRequestType, sendFlow),
-                                ))
+                                )
+                            )
                             .awaitSingleOrNull()
 
                         @Suppress("UNCHECKED_CAST")
@@ -217,12 +220,15 @@ internal class DataSourceServerBootstrap(
                                 MessageBuilder.createMessage(
                                     emptyPayload,
                                     createHeaders(route, dataSourceRequestType, sendFlow),
-                                ))
+                                )
+                            )
                             .awaitSingleOrNull()
 
                         emitAll(sendFlow.get())
-                        if (dataSourceRequestType
-                            is DataSourceRequestTypeMessageCondition.RequestType.Stream.Static)
+                        if (
+                            dataSourceRequestType
+                                is DataSourceRequestTypeMessageCondition.RequestType.Stream.Static
+                        )
                             awaitCancellation()
                       }
                       .onStart {
@@ -298,7 +304,9 @@ internal class DataSourceServerBootstrap(
           .apply {
             setLeaveMutable(true)
             setHeader(
-                DataSourceRequestTypeMessageCondition.Companion.REQUEST_TYPE_HEADER, requestType)
+                DataSourceRequestTypeMessageCondition.Companion.REQUEST_TYPE_HEADER,
+                requestType,
+            )
             setHeader(DestinationPatternsMessageCondition.LOOKUP_DESTINATION_HEADER, route)
             setHeader(DataSourcePayloadReturnValueHandler.Companion.RESPONSE_HEADER, sendFlow)
           }

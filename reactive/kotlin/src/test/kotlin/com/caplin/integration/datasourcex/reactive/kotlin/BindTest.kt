@@ -91,7 +91,9 @@ class BindTest :
 
       val requestedContainerSubjects =
           mutableMapOf<
-              String, MutableSharedFlow<ValueOrCompletion<ContainerEvent<Map<String, String>>>>>()
+              String,
+              MutableSharedFlow<ValueOrCompletion<ContainerEvent<Map<String, String>>>>,
+          >()
       val genericContainerFunction:
           (String, Map<String, String>) -> Flow<ContainerEvent<Map<String, String>>> =
           { containerSubject: String, _: Map<String, String> ->

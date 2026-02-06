@@ -61,7 +61,7 @@ class ChatController(
   @MessageMapping("/get/{roomId}/{messageId}")
   suspend fun get(
       @DestinationVariable roomId: String,
-      @DestinationVariable messageId: UUID
+      @DestinationVariable messageId: UUID,
   ): Message =
       chatService.getMessage(roomId, messageId).await().let {
         Message(it.userId, it.message, it.timestamp)
