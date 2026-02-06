@@ -48,7 +48,7 @@ class StreamsController {
       @IngressDestinationVariable(IngressToken.USER_ID) userId: String,
       @DestinationVariable parameter1: String,
       @DestinationVariable parameter2: Int,
-  ) = createPayloadFlow(null, userId, parameter1, parameter2)
+  ) = createPayloadFlow(userId, null, parameter1, parameter2)
 
   /**
    * Streams an infinite sequence of Payload objects, where each payload contains an incrementing
@@ -65,7 +65,7 @@ class StreamsController {
       @IngressDestinationVariable(IngressToken.PERSISTENT_SESSION_ID) sessionId: String,
       @DestinationVariable parameter1: String,
       @DestinationVariable parameter2: Int,
-  ) = createPayloadFlow(sessionId, userId, parameter1, parameter2)
+  ) = createPayloadFlow(userId, sessionId, parameter1, parameter2)
 
   /**
    * Streams a sequence of [ContainerEvent]s of [Payload] objects.

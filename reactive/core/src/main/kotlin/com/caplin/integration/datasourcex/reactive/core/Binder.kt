@@ -634,7 +634,6 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                                       }
                                     }
                                   }
-
                               publish(containerMessage)
                             }
                       } finally {

@@ -47,7 +47,7 @@ public class StreamsController {
       @IngressDestinationVariable(token = IngressToken.USER_ID) String userId,
       @DestinationVariable String parameter1,
       @DestinationVariable int parameter2) {
-    return createPayloadFlux(null, userId, parameter1, parameter2);
+    return createPayloadFlux(userId, null, parameter1, parameter2);
   }
 
   /**
@@ -64,7 +64,7 @@ public class StreamsController {
       @IngressDestinationVariable(token = IngressToken.PERSISTENT_SESSION_ID) String sessionId,
       @DestinationVariable String parameter1,
       @DestinationVariable int parameter2) {
-    return createPayloadFlux(sessionId, userId, parameter1, parameter2);
+    return createPayloadFlux(userId, sessionId, parameter1, parameter2);
   }
 
   /**
