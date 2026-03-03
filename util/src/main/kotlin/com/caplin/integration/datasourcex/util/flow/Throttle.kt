@@ -22,7 +22,7 @@ import kotlinx.coroutines.selects.whileSelect
 fun <T : Any> Flow<T>.throttleLatest(timeMillis: Long): Flow<T> = channelFlow {
   val receiveChannel = produce { collect { send(it) } }
 
-  send(receiveChannel.receive())
+  send(receiveChannel.receiveCatching().getOrNull() ?: return@channelFlow)
 
   var delayJob: Job? = launch { delay(timeMillis) }
 
