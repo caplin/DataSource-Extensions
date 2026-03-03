@@ -6,10 +6,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
-import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.whileSelect
 
@@ -19,37 +20,41 @@ import kotlinx.coroutines.selects.whileSelect
  * immediately.
  */
 @Suppress("UNCHECKED_CAST")
-fun <T : Any> Flow<T>.throttleLatest(timeMillis: Long): Flow<T> = channelFlow {
-  val receiveChannel = produce { collect { send(it) } }
+fun <T : Any> Flow<T>.throttleLatest(timeMillis: Long): Flow<T> = flow {
+  coroutineScope {
+    val receiveChannel = produceIn(this)
 
-  send(receiveChannel.receiveCatching().getOrNull() ?: return@channelFlow)
+    emit(receiveChannel.receiveCatching().getOrNull() ?: return@coroutineScope)
 
-  var delayJob: Job? = launch { delay(timeMillis) }
+    var delayJob: Job? = launch { delay(timeMillis) }
 
-  var queuedEvent: Any? = UNSET
-  whileSelect {
-    receiveChannel.onReceiveCatching { channelResult ->
-      channelResult
-          .onSuccess { event ->
-            if (delayJob == null) {
-              send(event)
-              delayJob = launch { delay(timeMillis) }
-            } else queuedEvent = event
-          }
-          .onFailure {
-            queuedEvent?.takeIf { event -> event != UNSET }?.let { event -> send(event as T) }
-          }
-          .isSuccess
-    }
-    delayJob?.onJoin?.invoke {
-      delayJob =
-          if (queuedEvent == UNSET) null
-          else {
-            send(queuedEvent as T)
-            queuedEvent = UNSET
-            launch { delay(timeMillis) }
-          }
-      true
+    var queuedEvent: Any? = UNSET
+    whileSelect {
+      receiveChannel.onReceiveCatching { channelResult ->
+        channelResult
+            .onSuccess { event ->
+              if (delayJob == null) {
+                emit(event)
+                delayJob = launch { delay(timeMillis) }
+              } else queuedEvent = event
+            }
+            .onFailure {
+              if (queuedEvent !== UNSET) {
+                emit(queuedEvent as T)
+              }
+            }
+            .isSuccess
+      }
+      delayJob?.onJoin?.invoke {
+        delayJob =
+            if (queuedEvent === UNSET) null
+            else {
+              emit(queuedEvent as T)
+              queuedEvent = UNSET
+              launch { delay(timeMillis) }
+            }
+        true
+      }
     }
   }
 }
