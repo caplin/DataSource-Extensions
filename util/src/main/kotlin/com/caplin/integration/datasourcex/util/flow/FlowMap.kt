@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -133,11 +132,13 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
         version = it.state.version
         emit(it)
         if (held != null) {
-          var i = 1
-          do {
-            val next = held?.remove(expectedVersion + i++)
-            if (next != null) emit(next)
-          } while (next != null && held?.isNotEmpty() == true)
+          var nextVersion = version + 1
+          while (held?.containsKey(nextVersion) == true) {
+            val next = held!!.remove(nextVersion)!!
+            emit(next)
+            version = next.state.version
+            nextVersion = version + 1
+          }
           if (held?.isEmpty() == true) held = null
         }
       } else if (it.state.version > expectedVersion) {
@@ -152,36 +153,57 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
   override fun asFlow(predicate: ((K, V) -> Boolean)?): Flow<MapEvent<K, V>> = flow {
     val emittedKeys = if (predicate != null) mutableSetOf<K>() else null
 
-    suspend fun processEvents(mapEvents: List<MapEvent<K, V>>) {
-      mapEvents.forEach { mapEvent ->
-        if (emittedKeys == null || predicate == null) emit(mapEvent)
-        else
-            when (mapEvent) {
-              is Removed -> if (emittedKeys.remove(mapEvent.key)) emit(mapEvent)
-              is Upsert ->
-                  if (predicate(mapEvent.key, mapEvent.newValue)) {
-                    val newValue =
-                        if (emittedKeys.add(mapEvent.key))
-                            Upsert(mapEvent.key, null, mapEvent.newValue)
-                        else mapEvent
-                    emit(newValue)
-                  } else if (emittedKeys.remove(mapEvent.key))
-                      emit(Removed(mapEvent.key, mapEvent.oldValue!!))
-
-              else -> {}
-            }
-      }
-    }
-
     var first = true
-    orderedSignal.filterNotNull().collect { flowMapEvent ->
+    orderedSignal.collect { flowMapEvent ->
       if (first) {
-        flowMapEvent.state.map.entries
-            .map { Upsert(it.key, null, it.value) }
-            .let { processEvents(it) }
+        val map = flowMapEvent.state.map
+        if (predicate == null) {
+          for (entry in map.entries) {
+            emit(Upsert(entry.key, null, entry.value))
+          }
+        } else {
+          for (entry in map.entries) {
+            val key = entry.key
+            val value = entry.value
+            if (predicate(key, value)) {
+              emittedKeys!!.add(key)
+              emit(Upsert(key, null, value))
+            }
+          }
+        }
         emit(Populated)
         first = false
-      } else processEvents(flowMapEvent.events)
+      } else {
+        val events = flowMapEvent.events
+        if (predicate == null) {
+          for (event in events) {
+            emit(event)
+          }
+        } else {
+          for (event in events) {
+            when (event) {
+              is Removed -> {
+                if (emittedKeys!!.remove(event.key)) emit(event)
+              }
+
+              is Upsert -> {
+                val key = event.key
+                val newValue = event.newValue
+                if (predicate(key, newValue)) {
+                  val wasEmitted = !emittedKeys!!.add(key)
+                  if (wasEmitted) {
+                    emit(event)
+                  } else {
+                    emit(Upsert(key, null, newValue))
+                  }
+                } else if (emittedKeys!!.remove(key)) {
+                  emit(Removed(key, event.oldValue!!))
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
