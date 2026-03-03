@@ -186,4 +186,22 @@ class FlowMapTest :
           awaitItem() shouldBeEqual Upsert("2", "Ax", "Axx")
         }
       }
+
+      test("FlowMap putAll and clear") {
+        val map = mutableFlowMapOf("1" to "A")
+
+        map.asFlow().test {
+          awaitItem() shouldBeEqual Upsert("1", null, "A")
+          awaitItem() shouldBeEqual Populated
+
+          map.putAll(mapOf("2" to "B", "3" to "C"))
+          awaitItem() shouldBeEqual Upsert("2", null, "B")
+          awaitItem() shouldBeEqual Upsert("3", null, "C")
+
+          map.clear()
+          awaitItem() shouldBeEqual Removed("1", "A")
+          awaitItem() shouldBeEqual Removed("2", "B")
+          awaitItem() shouldBeEqual Removed("3", "C")
+        }
+      }
     })

@@ -128,14 +128,14 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
       is Removed -> {
         set = oldSet.remove(setEvent.value)
         val changed = oldSet !== set
-        if (relaxed && !changed) error("Received $setEvent but this did not exist")
+        if (!relaxed && !changed) error("Received $setEvent but this did not exist")
         if (changed && (populated || emitPartials)) emit = true
       }
 
       is Insert -> {
         set = oldSet.add(setEvent.value)
         val changed = oldSet !== set
-        if (relaxed && !changed) error("Received $setEvent but this already existed")
+        if (!relaxed && !changed) error("Received $setEvent but this already existed")
         if (changed && (populated || emitPartials)) emit = true
       }
 

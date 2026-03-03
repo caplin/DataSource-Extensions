@@ -45,7 +45,7 @@ fun <T, K, R> Flow<T>.demultiplexBy(
                       keyResponseChannels[key] = keyResponseChannel
                       flow { flowProducer(key, keyResponseChannel.consumeAsFlow()) }
                           .onEach { response -> send(response) }
-                          .onCompletion { completedKeysChannel.send(key) }
+                          .onCompletion { completedKeysChannel.trySend(key) }
                           .launchIn(this@callbackFlow)
                     }
                   }

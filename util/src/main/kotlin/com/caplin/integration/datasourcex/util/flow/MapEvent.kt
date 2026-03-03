@@ -10,11 +10,13 @@ import com.caplin.integration.datasourcex.util.serializable
 import java.io.Serializable
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.selects.whileSelect
+import kotlinx.coroutines.selects.select
 
 /**
  * Events representing a mutation to a [Map].
@@ -209,45 +211,57 @@ fun <K : Any, V : Any> Flow<MapEvent<K, V>>.conflateKeys() = channelFlow {
   fun nextValueToSend(): MapEvent<K, V>? =
       unsentValues.entries.firstOrNull()?.value ?: Populated.takeIf { unsentPopulated }
 
-  whileSelect {
-    nextValueToSend()?.let { value ->
-      onSend(value) {
-        when (value) {
-          is EntryEvent -> unsentValues.remove(value.key)
-          is Populated -> unsentPopulated = false
-        }
-        true
-      }
-    }
-    upstream.onReceive { event ->
-      when (event) {
-        is Populated -> unsentPopulated = true
-        is EntryEvent -> {
-          val key = event.key
-          val oldEvent = unsentValues[key]
-          if (oldEvent == null) {
-            unsentValues[key] = event // Nothing to conflate
-          } else {
-            val oldValue = oldEvent.oldValue
-            when (event) {
-              is Removed -> {
-                when (oldEvent) {
-                  is Removed -> error("Two Removed events for the same key")
-                  is Upsert -> if (oldValue != null) unsentValues[key] = Removed(key, oldValue)
-                }
-              }
+  var upstreamClosed = false
+  while (true) {
+    val value = nextValueToSend()
+    if (upstreamClosed && value == null) break
 
-              is Upsert -> {
-                when (oldEvent) {
-                  is Removed -> unsentValues[key] = Upsert(key, null, event.newValue)
-                  is Upsert -> unsentValues[key] = Upsert(key, oldValue, event.newValue)
-                }
-              }
-            }
+    select<Unit> {
+      if (value != null) {
+        onSend(value) {
+          when (value) {
+            is EntryEvent<K, V> -> unsentValues.remove(value.key)
+            is Populated -> unsentPopulated = false
           }
         }
       }
-      true
+      if (!upstreamClosed) {
+        upstream.onReceiveCatching { result ->
+          result
+              .onSuccess { event ->
+                when (event) {
+                  is Populated -> unsentPopulated = true
+                  is EntryEvent -> {
+                    val key = event.key
+                    val oldEvent = unsentValues[key]
+                    if (oldEvent == null) {
+                      unsentValues[key] = event // Nothing to conflate
+                    } else {
+                      val oldValue = oldEvent.oldValue
+                      when (event) {
+                        is Removed -> {
+                          when (oldEvent) {
+                            is Removed -> error("Two Removed events for the same key")
+                            is Upsert ->
+                                if (oldValue != null) unsentValues[key] = Removed(key, oldValue)
+                                else unsentValues.remove(key)
+                          }
+                        }
+
+                        is Upsert -> {
+                          when (oldEvent) {
+                            is Removed -> unsentValues[key] = Upsert(key, null, event.newValue)
+                            is Upsert -> unsentValues[key] = Upsert(key, oldValue, event.newValue)
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              .onFailure { upstreamClosed = true }
+        }
+      }
     }
   }
 }
