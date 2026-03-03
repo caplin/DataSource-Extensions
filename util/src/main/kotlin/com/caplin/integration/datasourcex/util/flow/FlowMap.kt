@@ -133,11 +133,12 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
         emit(it)
         if (held != null) {
           var nextVersion = version + 1
-          while (held?.containsKey(nextVersion) == true) {
-            val next = held!!.remove(nextVersion)!!
+          var next: FlowMapEvent<K, V>? = held?.remove(nextVersion)
+          while (next != null) {
             emit(next)
             version = next.state.version
             nextVersion = version + 1
+            next = held?.remove(nextVersion)
           }
           if (held?.isEmpty() == true) held = null
         }
@@ -158,16 +159,16 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
       if (first) {
         val map = flowMapEvent.state.map
         if (predicate == null) {
-          for (entry in map.entries) {
+          for (entry in map) {
             emit(Upsert(entry.key, null, entry.value))
           }
         } else {
-          for (entry in map.entries) {
-            val key = entry.key
-            val value = entry.value
-            if (predicate(key, value)) {
-              emittedKeys!!.add(key)
-              emit(Upsert(key, null, value))
+          for (entry in map) {
+            val k = entry.key
+            val v = entry.value
+            if (predicate(k, v)) {
+              emittedKeys!!.add(k)
+              emit(Upsert(k, null, v))
             }
           }
         }
