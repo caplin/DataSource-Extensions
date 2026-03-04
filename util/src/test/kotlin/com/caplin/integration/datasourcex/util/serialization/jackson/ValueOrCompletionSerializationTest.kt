@@ -38,4 +38,33 @@ class ValueOrCompletionSerializationTest :
         deserialized.shouldBeInstanceOf<ValueOrCompletion.Completion>()
         deserialized.throwable?.message shouldBe "error"
       }
+
+      context("Value and Completion specifically") {
+        test("Value") {
+          val event: ValueOrCompletion.Value<String> = ValueOrCompletion.Value("value")
+          val json = mapper.writeValueAsString(event)
+          val deserialized =
+              mapper.readValue(json, object : TypeReference<ValueOrCompletion.Value<String>>() {})
+          deserialized shouldBe event
+        }
+
+        test("Completion (null)") {
+          val event: ValueOrCompletion.Completion = ValueOrCompletion.Completion(null)
+          val json = mapper.writeValueAsString(event)
+          val deserialized =
+              mapper.readValue(json, object : TypeReference<ValueOrCompletion.Completion>() {})
+          deserialized.shouldBeInstanceOf<ValueOrCompletion.Completion>()
+          deserialized.throwable shouldBe null
+        }
+
+        test("Completion (error)") {
+          val event: ValueOrCompletion.Completion =
+              ValueOrCompletion.Completion(RuntimeException("error"))
+          val json = mapper.writeValueAsString(event)
+          val deserialized =
+              mapper.readValue(json, object : TypeReference<ValueOrCompletion.Completion>() {})
+          deserialized.shouldBeInstanceOf<ValueOrCompletion.Completion>()
+          deserialized.throwable?.message shouldBe "error"
+        }
+      }
     })

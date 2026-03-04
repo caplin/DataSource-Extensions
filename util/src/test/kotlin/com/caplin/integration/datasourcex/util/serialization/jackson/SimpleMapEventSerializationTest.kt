@@ -34,4 +34,30 @@ class SimpleMapEventSerializationTest :
             mapper.readValue(json, object : TypeReference<SimpleMapEvent<String, String>>() {})
         deserialized shouldBe event
       }
+
+      context("EntryEvent specifically") {
+        test("Upsert") {
+          val event: SimpleMapEvent.EntryEvent<String, String> =
+              SimpleMapEvent.EntryEvent.Upsert("key", "value")
+          val json = mapper.writeValueAsString(event)
+          val deserialized =
+              mapper.readValue(
+                  json,
+                  object : TypeReference<SimpleMapEvent.EntryEvent<String, String>>() {},
+              )
+          deserialized shouldBe event
+        }
+
+        test("Removed") {
+          val event: SimpleMapEvent.EntryEvent<String, String> =
+              SimpleMapEvent.EntryEvent.Removed("key")
+          val json = mapper.writeValueAsString(event)
+          val deserialized =
+              mapper.readValue(
+                  json,
+                  object : TypeReference<SimpleMapEvent.EntryEvent<String, String>>() {},
+              )
+          deserialized shouldBe event
+        }
+      }
     })

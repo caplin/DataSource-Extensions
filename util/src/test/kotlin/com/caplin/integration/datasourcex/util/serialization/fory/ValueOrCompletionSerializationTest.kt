@@ -28,4 +28,20 @@ class ValueOrCompletionSerializationTest :
         val deserialized = fory.deserialize(bytes)
         deserialized shouldBe event
       }
+
+      context("Value and Completion specifically") {
+        test("Value") {
+          val event: ValueOrCompletion.Value<String> = ValueOrCompletion.Value("value")
+          val bytes = fory.serialize(event)
+          val deserialized = fory.deserialize(bytes)
+          deserialized shouldBe event
+        }
+
+        test("Completion") {
+          val event: ValueOrCompletion.Completion = ValueOrCompletion.Completion(null)
+          val bytes = fory.serialize(event)
+          val deserialized = fory.deserialize(bytes)
+          deserialized shouldBe event
+        }
+      }
     })

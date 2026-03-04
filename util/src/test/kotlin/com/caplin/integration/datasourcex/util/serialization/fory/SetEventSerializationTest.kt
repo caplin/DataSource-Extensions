@@ -35,4 +35,20 @@ class SetEventSerializationTest :
         val deserialized = fory.deserialize(bytes)
         deserialized shouldBe event
       }
+
+      context("EntryEvent specifically") {
+        test("Insert") {
+          val event: SetEvent.EntryEvent<String> = SetEvent.EntryEvent.Insert("value")
+          val bytes = fory.serialize(event)
+          val deserialized = fory.deserialize(bytes)
+          deserialized shouldBe event
+        }
+
+        test("Removed") {
+          val event: SetEvent.EntryEvent<String> = SetEvent.EntryEvent.Removed("value")
+          val bytes = fory.serialize(event)
+          val deserialized = fory.deserialize(bytes)
+          deserialized shouldBe event
+        }
+      }
     })

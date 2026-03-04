@@ -35,4 +35,22 @@ class SimpleMapEventSerializationTest :
         val deserialized = fory.deserialize(bytes)
         deserialized shouldBe event
       }
+
+      context("EntryEvent specifically") {
+        test("Upsert") {
+          val event: SimpleMapEvent.EntryEvent<String, String> =
+              SimpleMapEvent.EntryEvent.Upsert("key", "value")
+          val bytes = fory.serialize(event)
+          val deserialized = fory.deserialize(bytes)
+          deserialized shouldBe event
+        }
+
+        test("Removed") {
+          val event: SimpleMapEvent.EntryEvent<String, String> =
+              SimpleMapEvent.EntryEvent.Removed("key")
+          val bytes = fory.serialize(event)
+          val deserialized = fory.deserialize(bytes)
+          deserialized shouldBe event
+        }
+      }
     })

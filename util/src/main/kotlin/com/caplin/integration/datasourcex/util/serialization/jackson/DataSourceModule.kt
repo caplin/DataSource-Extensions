@@ -5,6 +5,8 @@ import com.caplin.integration.datasourcex.util.flow.MapEvent
 import com.caplin.integration.datasourcex.util.flow.SetEvent
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
@@ -31,14 +33,12 @@ object DataSourceModule : SimpleModule() {
     @Suppress("UNCHECKED_CAST")
     addSerializer(
         MapEvent.EntryEvent::class.java,
-        mapEventSerializer
-            as com.fasterxml.jackson.databind.JsonSerializer<MapEvent.EntryEvent<*, *>>,
+        mapEventSerializer as JsonSerializer<MapEvent.EntryEvent<*, *>>,
     )
     @Suppress("UNCHECKED_CAST")
     addDeserializer(
         MapEvent.EntryEvent::class.java,
-        mapEventDeserializer
-            as com.fasterxml.jackson.databind.JsonDeserializer<MapEvent.EntryEvent<*, *>>,
+        mapEventDeserializer as JsonDeserializer<MapEvent.EntryEvent<*, *>>,
     )
 
     val simpleMapEventSerializer = SimpleMapEventSerializer()
@@ -50,14 +50,12 @@ object DataSourceModule : SimpleModule() {
     @Suppress("UNCHECKED_CAST")
     addSerializer(
         SimpleMapEvent.EntryEvent::class.java,
-        simpleMapEventSerializer
-            as com.fasterxml.jackson.databind.JsonSerializer<SimpleMapEvent.EntryEvent<*, *>>,
+        simpleMapEventSerializer as JsonSerializer<SimpleMapEvent.EntryEvent<*, *>>,
     )
     @Suppress("UNCHECKED_CAST")
     addDeserializer(
         SimpleMapEvent.EntryEvent::class.java,
-        simpleMapEventDeserializer
-            as com.fasterxml.jackson.databind.JsonDeserializer<SimpleMapEvent.EntryEvent<*, *>>,
+        simpleMapEventDeserializer as JsonDeserializer<SimpleMapEvent.EntryEvent<*, *>>,
     )
 
     val setEventSerializer = SetEventSerializer()
@@ -69,13 +67,12 @@ object DataSourceModule : SimpleModule() {
     @Suppress("UNCHECKED_CAST")
     addSerializer(
         SetEvent.EntryEvent::class.java,
-        setEventSerializer as com.fasterxml.jackson.databind.JsonSerializer<SetEvent.EntryEvent<*>>,
+        setEventSerializer as JsonSerializer<SetEvent.EntryEvent<*>>,
     )
     @Suppress("UNCHECKED_CAST")
     addDeserializer(
         SetEvent.EntryEvent::class.java,
-        setEventDeserializer
-            as com.fasterxml.jackson.databind.JsonDeserializer<SetEvent.EntryEvent<*>>,
+        setEventDeserializer as JsonDeserializer<SetEvent.EntryEvent<*>>,
     )
 
     val valueOrCompletionSerializer = ValueOrCompletionSerializer()
@@ -87,27 +84,23 @@ object DataSourceModule : SimpleModule() {
     @Suppress("UNCHECKED_CAST")
     addSerializer(
         ValueOrCompletion.Value::class.java,
-        valueOrCompletionSerializer
-            as com.fasterxml.jackson.databind.JsonSerializer<ValueOrCompletion.Value<*>>,
+        valueOrCompletionSerializer as JsonSerializer<ValueOrCompletion.Value<*>>,
     )
     @Suppress("UNCHECKED_CAST")
     addDeserializer(
         ValueOrCompletion.Value::class.java,
-        valueOrCompletionDeserializer
-            as com.fasterxml.jackson.databind.JsonDeserializer<ValueOrCompletion.Value<*>>,
+        valueOrCompletionDeserializer as JsonDeserializer<ValueOrCompletion.Value<*>>,
     )
 
     @Suppress("UNCHECKED_CAST")
     addSerializer(
         ValueOrCompletion.Completion::class.java,
-        valueOrCompletionSerializer
-            as com.fasterxml.jackson.databind.JsonSerializer<ValueOrCompletion.Completion>,
+        valueOrCompletionSerializer as JsonSerializer<ValueOrCompletion.Completion>,
     )
     @Suppress("UNCHECKED_CAST")
     addDeserializer(
         ValueOrCompletion.Completion::class.java,
-        valueOrCompletionDeserializer
-            as com.fasterxml.jackson.databind.JsonDeserializer<ValueOrCompletion.Completion>,
+        valueOrCompletionDeserializer as JsonDeserializer<ValueOrCompletion.Completion>,
     )
   }
 }

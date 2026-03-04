@@ -31,4 +31,22 @@ class SetEventSerializationTest :
         val deserialized = mapper.readValue(json, object : TypeReference<SetEvent<String>>() {})
         deserialized shouldBe event
       }
+
+      context("EntryEvent specifically") {
+        test("Insert") {
+          val event: SetEvent.EntryEvent<String> = SetEvent.EntryEvent.Insert("value")
+          val json = mapper.writeValueAsString(event)
+          val deserialized =
+              mapper.readValue(json, object : TypeReference<SetEvent.EntryEvent<String>>() {})
+          deserialized shouldBe event
+        }
+
+        test("Removed") {
+          val event: SetEvent.EntryEvent<String> = SetEvent.EntryEvent.Removed("value")
+          val json = mapper.writeValueAsString(event)
+          val deserialized =
+              mapper.readValue(json, object : TypeReference<SetEvent.EntryEvent<String>>() {})
+          deserialized shouldBe event
+        }
+      }
     })
