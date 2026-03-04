@@ -25,8 +25,7 @@ import kotlinx.coroutines.flow.transformWhile
 sealed interface ValueOrCompletion<out T> {
 
   @Suppress("UNCHECKED_CAST")
-  suspend fun <R> map(block: suspend (T) -> R): ValueOrCompletion<R> =
-      this as ValueOrCompletion<R>
+  suspend fun <R> map(block: suspend (T) -> R): ValueOrCompletion<R> = this as ValueOrCompletion<R>
 
   class Value<out T>(val value: T) : ValueOrCompletion<T> {
     operator fun component1(): T = value

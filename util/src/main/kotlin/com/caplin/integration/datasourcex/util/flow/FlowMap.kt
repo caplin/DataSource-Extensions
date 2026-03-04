@@ -90,7 +90,8 @@ interface FlowMap<K : Any, V : Any> : MapFlow<K, V>, Map<K, V> {
 sealed interface FlowMapStreamEvent<out K : Any, out V : Any> {
   /** Emitted on initial collection, containing the entire initial [map] state. */
   @JvmInline
-  value class InitialState<K : Any, V : Any>(val map: PersistentMap<K, V>) : FlowMapStreamEvent<K, V>
+  value class InitialState<K : Any, V : Any>(val map: PersistentMap<K, V>) :
+      FlowMapStreamEvent<K, V>
 
   /** Emitted for subsequent updates, containing only the delta ([event]). */
   @JvmInline

@@ -14,10 +14,8 @@ import org.apache.fory.config.Language
 
 class FlowMapSerializationTest :
     FunSpec({
-
       context("Jackson Serialization") {
-        val mapper: ObjectMapper = jacksonObjectMapper()
-            .registerDataSourceModule()
+        val mapper: ObjectMapper = jacksonObjectMapper().registerDataSourceModule()
 
         test("serialize and deserialize InitialState") {
           val map = mutableFlowMapOf("1" to "A", "2" to "B")
@@ -26,7 +24,10 @@ class FlowMapSerializationTest :
 
           val json = mapper.writeValueAsString(initialState)
           val deserialized: FlowMapStreamEvent<String, String> =
-              mapper.readValue(json, object : TypeReference<FlowMapStreamEvent<String, String>>() {})
+              mapper.readValue(
+                  json,
+                  object : TypeReference<FlowMapStreamEvent<String, String>>() {},
+              )
 
           deserialized.shouldBeInstanceOf<FlowMapStreamEvent.InitialState<String, String>>()
           deserialized.map shouldContainExactly mapOf("1" to "A", "2" to "B")
@@ -38,7 +39,10 @@ class FlowMapSerializationTest :
 
           val json = mapper.writeValueAsString(event)
           val deserialized: FlowMapStreamEvent<String, String> =
-              mapper.readValue(json, object : TypeReference<FlowMapStreamEvent<String, String>>() {})
+              mapper.readValue(
+                  json,
+                  object : TypeReference<FlowMapStreamEvent<String, String>>() {},
+              )
 
           deserialized.shouldBeInstanceOf<FlowMapStreamEvent.EventUpdate<String, String>>()
           deserialized.event.shouldBeInstanceOf<Upsert<String, String>>()
@@ -61,7 +65,10 @@ class FlowMapSerializationTest :
 
       context("Apache Fory Serialization") {
         val fory =
-            Fory.builder().withLanguage(Language.JAVA).requireClassRegistration(false).build()
+            Fory.builder()
+                .withLanguage(Language.JAVA)
+                .requireClassRegistration(false)
+                .build()
                 .registerDataSourceSerializers()
 
         test("serialize and deserialize InitialState (raw PersistentMap)") {
