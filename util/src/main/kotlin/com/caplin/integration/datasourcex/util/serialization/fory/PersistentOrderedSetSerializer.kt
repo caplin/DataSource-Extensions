@@ -8,24 +8,27 @@ import org.apache.fory.serializer.collection.CollectionSerializer
 
 /** A Fory [CollectionSerializer] for [PersistentSet] (Ordered implementation). */
 internal class PersistentOrderedSetSerializer(fory: Fory, type: Class<PersistentSet<*>>) :
-    CollectionSerializer<PersistentSet<*>>(fory, type) {
-
-  override fun write(buffer: MemoryBuffer, value: PersistentSet<*>) {
-    fory.writeRef(buffer, LinkedHashSet(value))
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun read(buffer: MemoryBuffer): PersistentSet<*> {
-    val collection = fory.readRef(buffer) as Collection<Any>
-    return collection.toPersistentSet()
-  }
+    CollectionSerializer<PersistentSet<*>>(fory, type, true) {
 
   override fun newCollection(buffer: MemoryBuffer): MutableCollection<*> {
-    return LinkedHashSet<Any>()
+    val numElements = buffer.readVarUint32Small7()
+    setNumElements(numElements)
+    val set = LinkedHashSet<Any?>(numElements)
+    refResolver.reference(set)
+    return set
+  }
+
+  override fun newCollection(collection: Collection<*>): MutableCollection<*> {
+    return LinkedHashSet<Any?>(collection.size)
   }
 
   @Suppress("UNCHECKED_CAST")
   override fun onCollectionRead(collection: Collection<*>): PersistentSet<*> {
+    return (collection as Collection<Any>).toPersistentSet()
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  fun onCollectionCopy(collection: Collection<*>): PersistentSet<*> {
     return (collection as Collection<Any>).toPersistentSet()
   }
 }

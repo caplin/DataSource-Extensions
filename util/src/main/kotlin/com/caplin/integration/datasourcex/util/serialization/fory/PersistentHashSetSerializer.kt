@@ -8,24 +8,27 @@ import org.apache.fory.serializer.collection.CollectionSerializer
 
 /** A Fory [CollectionSerializer] for [PersistentSet] (Hash implementation). */
 internal class PersistentHashSetSerializer(fory: Fory, type: Class<PersistentSet<*>>) :
-    CollectionSerializer<PersistentSet<*>>(fory, type) {
-
-  override fun write(buffer: MemoryBuffer, value: PersistentSet<*>) {
-    fory.writeRef(buffer, HashSet(value))
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun read(buffer: MemoryBuffer): PersistentSet<*> {
-    val collection = fory.readRef(buffer) as Collection<Any>
-    return collection.toPersistentHashSet()
-  }
+    CollectionSerializer<PersistentSet<*>>(fory, type, true) {
 
   override fun newCollection(buffer: MemoryBuffer): MutableCollection<*> {
-    return HashSet<Any>()
+    val numElements = buffer.readVarUint32Small7()
+    setNumElements(numElements)
+    val set = HashSet<Any?>(numElements)
+    refResolver.reference(set)
+    return set
+  }
+
+  override fun newCollection(collection: Collection<*>): MutableCollection<*> {
+    return HashSet<Any?>(collection.size)
   }
 
   @Suppress("UNCHECKED_CAST")
   override fun onCollectionRead(collection: Collection<*>): PersistentSet<*> {
+    return (collection as Collection<Any>).toPersistentHashSet()
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  fun onCollectionCopy(collection: Collection<*>): PersistentSet<*> {
     return (collection as Collection<Any>).toPersistentHashSet()
   }
 }
