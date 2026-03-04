@@ -21,7 +21,7 @@ fun <T, R> Flow<T>.timeoutFirstOrDefault(millis: Long, default: () -> R): Flow<R
   val receiveChannel = produce { collect { send(it) } }
 
   select {
-    receiveChannel.onReceive { result -> send(result as R) }
+    receiveChannel.onReceiveCatching { result -> result.getOrNull()?.let { send(it as R) } }
     onTimeout(millis) { send(default()) }
   }
   receiveChannel.consumeEach { send(it as R) }

@@ -24,6 +24,9 @@ internal class FlowMapStreamEventSerializer :
         gen.writeFieldName("event")
         provider.defaultSerializeValue(value.event, gen)
       }
+      is FlowMapStreamEvent.Cleared -> {
+        gen.writeStringField("type", "cleared")
+      }
     }
     gen.writeEndObject()
   }

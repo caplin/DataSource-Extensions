@@ -12,6 +12,7 @@ internal class FlowMapStreamEventSerializer(fory: Fory, type: Class<FlowMapStrea
   private enum class Type {
     INITIAL_STATE,
     EVENT_UPDATE,
+    CLEARED,
   }
 
   override fun write(buffer: MemoryBuffer, value: FlowMapStreamEvent<*, *>) {
@@ -23,6 +24,9 @@ internal class FlowMapStreamEventSerializer(fory: Fory, type: Class<FlowMapStrea
       is FlowMapStreamEvent.EventUpdate -> {
         buffer.writeByte(Type.EVENT_UPDATE.ordinal.toByte())
         fory.writeRef(buffer, value.event)
+      }
+      is FlowMapStreamEvent.Cleared -> {
+        buffer.writeByte(Type.CLEARED.ordinal.toByte())
       }
     }
   }
@@ -37,6 +41,7 @@ internal class FlowMapStreamEventSerializer(fory: Fory, type: Class<FlowMapStrea
         val event = fory.readRef(buffer) as MapEvent.EntryEvent<Any, Any>
         FlowMapStreamEvent.EventUpdate(event)
       }
+      Type.CLEARED -> FlowMapStreamEvent.Cleared
     }
   }
 }

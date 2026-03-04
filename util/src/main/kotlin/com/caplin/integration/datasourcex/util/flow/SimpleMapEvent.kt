@@ -113,6 +113,8 @@ fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.runningFoldToMap(
   var populated = false
   var map = persistentMapOf<K, V>()
 
+  if (emitPartials) emit(map)
+
   collect { mapEvent ->
     var emit = false
     when (mapEvent) {
@@ -130,8 +132,9 @@ fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.runningFoldToMap(
       }
 
       is Populated -> {
+        if (populated) error("Populated event already received")
         populated = true
-        if (!emitted || !emitPartials) emit = true
+        if (!emitted && !emitPartials) emit = true
       }
     }
     if (emit) {

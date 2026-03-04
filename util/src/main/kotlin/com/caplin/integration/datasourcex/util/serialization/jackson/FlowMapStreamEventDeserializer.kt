@@ -31,6 +31,7 @@ internal class FlowMapStreamEventDeserializer :
                 as MapEvent.EntryEvent<Any, Any>
         FlowMapStreamEvent.EventUpdate(event)
       }
+      "cleared" -> FlowMapStreamEvent.Cleared
       else -> throw JsonMappingException.from(p, "Unknown type: $type")
     }
   }

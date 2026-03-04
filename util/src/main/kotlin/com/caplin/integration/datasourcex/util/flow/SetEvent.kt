@@ -159,13 +159,17 @@ fun <V : Any, R> Flow<SetEvent<V>>.flatMapLatestAndMerge(
   val jobs = ConcurrentHashMap<V, Job>()
   collect { setEvent ->
     when (setEvent) {
-      is EntryEvent<V> -> {
+      is Insert<V> -> {
         jobs[setEvent.value]?.cancelAndJoin()
         jobs[setEvent.value] =
             entryEventTransformer(setEvent)
                 .onEach { send(it) }
-                .onCompletion { throwable -> if (throwable == null) jobs.remove(setEvent.value) }
+                .onCompletion { jobs.remove(setEvent.value) }
                 .launchIn(this@channelFlow)
+      }
+
+      is Removed<V> -> {
+        jobs.remove(setEvent.value)?.cancelAndJoin()
       }
 
       is Populated -> {}

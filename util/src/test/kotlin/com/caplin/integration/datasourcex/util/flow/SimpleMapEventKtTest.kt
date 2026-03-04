@@ -42,6 +42,7 @@ class SimpleMapEventKtTest :
             )
             .runningFoldToMap(emitPartials = true)
             .test {
+              awaitItem() shouldContainExactly emptyMap()
               awaitItem() shouldContainExactly mapOf("K" to "v1")
               awaitItem() shouldContainExactly mapOf("K" to "v2")
               awaitItem() shouldContainExactly mapOf("K" to "v2", "K2" to "v3")

@@ -95,6 +95,11 @@ sealed interface FlowMapStreamEvent<out K : Any, out V : Any> {
   /** Emitted for subsequent updates, containing only the delta ([event]). */
   @JvmInline
   value class EventUpdate<K : Any, V : Any>(val event: EntryEvent<K, V>) : FlowMapStreamEvent<K, V>
+
+  /** Emitted when the map is cleared. */
+  object Cleared : FlowMapStreamEvent<Nothing, Nothing> {
+    override fun toString(): String = "Cleared"
+  }
 }
 
 interface MapFlow<K : Any, V : Any> {
@@ -150,6 +155,11 @@ fun <K : Any, V : Any> Flow<FlowMapStreamEvent<K, V>>.runningFoldToMap(): Flow<M
         emit(map!!)
       }
 
+      is FlowMapStreamEvent.Cleared -> {
+        map = persistentMapOf()
+        emit(map!!)
+      }
+
       is FlowMapStreamEvent.EventUpdate -> {
         val currentMap = map ?: error("InitialState must be received before EventUpdate")
         when (val mapEvent = streamEvent.event) {
@@ -180,6 +190,7 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
   private data class FlowMapEvent<K : Any, V : Any>(
       val state: State<K, V>,
       val events: List<EntryEvent<K, V>>,
+      val isClear: Boolean = false,
   )
 
   private val state = MutableStateFlow(State(0L, initialMap))
@@ -281,9 +292,13 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
         emit(FlowMapStreamEvent.InitialState(flowMapEvent.state.map))
         first = false
       } else {
-        val events = flowMapEvent.events
-        for (event in events) {
-          emit(FlowMapStreamEvent.EventUpdate(event))
+        if (flowMapEvent.isClear) {
+          emit(FlowMapStreamEvent.Cleared)
+        } else {
+          val events = flowMapEvent.events
+          for (event in events) {
+            emit(FlowMapStreamEvent.EventUpdate(event))
+          }
         }
       }
     }
@@ -334,14 +349,20 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
   override fun containsKey(key: K): Boolean = state.value.map.containsKey(key)
 
   override fun putAll(from: Map<out K, V>) {
-    val (prev, next) = state.updateAndGetPrevAndNext { State(it.version + 1, it.map.putAll(from)) }
-
-    val events =
-        from.mapNotNull { (key, newValue) ->
-          val oldValue = prev.map[key]
-          if (newValue != oldValue) Upsert(key, oldValue, newValue) else null
+    val (prev, next) =
+        state.updateAndGetPrevAndNext {
+          val nextMap = it.map.putAll(from)
+          if (nextMap === it.map) it else State(it.version + 1, nextMap)
         }
-    if (events.isNotEmpty()) signal.tryEmit(FlowMapEvent(next, events))
+
+    if (prev != next) {
+      val events =
+          from.mapNotNull { (key, newValue) ->
+            val oldValue = prev.map[key]
+            if (newValue != oldValue) Upsert(key, oldValue, newValue) else null
+          }
+      if (events.isNotEmpty()) signal.tryEmit(FlowMapEvent(next, events))
+    }
   }
 
   override fun clear() {
@@ -350,7 +371,9 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
           if (it.map.isEmpty()) it else State(it.version + 1, it.map.clear())
         }
     if (prev.map.isNotEmpty())
-        signal.tryEmit(FlowMapEvent(next, prev.map.map { Removed(it.key, it.value) }))
+        signal.tryEmit(
+            FlowMapEvent(next, prev.map.map { Removed(it.key, it.value) }, isClear = true)
+        )
   }
 }
 
