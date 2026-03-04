@@ -6,8 +6,6 @@ import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Upsert
 import com.caplin.integration.datasourcex.util.flow.MapEvent.Populated
-import com.caplin.integration.datasourcex.util.serializable
-import java.io.Serializable
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.onFailure
@@ -26,7 +24,7 @@ import kotlinx.coroutines.selects.select
  * This does not support maps with `null` values or keys, consider using [java.util.Optional] if
  * this is required.
  */
-sealed interface MapEvent<out K : Any, out V : Any> : Serializable {
+sealed interface MapEvent<out K : Any, out V : Any> {
 
   /**
    * Indicates that a consistent view of the map has been emitted and only updates will be seen from
@@ -36,8 +34,6 @@ sealed interface MapEvent<out K : Any, out V : Any> : Serializable {
    * event.
    */
   object Populated : MapEvent<Nothing, Nothing> {
-    private fun readResolve(): Any = Populated
-
     override fun toString(): String {
       return "Populated()"
     }
@@ -140,7 +136,7 @@ fun <K : Any, V : Any> Flow<MapEvent<K, V>>.runningFoldToMap(
   var populated = false
   var map = persistentMapOf<K, V>()
 
-  if (emitPartials) emit(map.serializable())
+  if (emitPartials) emit(map)
 
   collect { mapEvent ->
     var emit = false
@@ -165,7 +161,7 @@ fun <K : Any, V : Any> Flow<MapEvent<K, V>>.runningFoldToMap(
     }
     if (emit) {
       emitted = true
-      emit(map.serializable())
+      emit(map)
     }
   }
 }
@@ -182,12 +178,12 @@ fun <K : Any, V : Any> Flow<EntryEvent<K, V>>.runningFoldToMap(): Flow<Map<K, V>
             map.remove(mapEvent.key).also { newMap ->
               check(newMap !== map) { "Attempted to remove non existent key ${mapEvent.key}" }
             }
-        emit(map.serializable())
+        emit(map)
       }
 
       is Upsert -> {
         map = map.put(mapEvent.key, mapEvent.newValue)
-        emit(map.serializable())
+        emit(map)
       }
     }
   }

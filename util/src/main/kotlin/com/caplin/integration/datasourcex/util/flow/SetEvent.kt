@@ -4,8 +4,6 @@ import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent
 import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent.Insert
 import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.SetEvent.Populated
-import com.caplin.integration.datasourcex.util.serializable
-import java.io.Serializable
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.Job
@@ -17,11 +15,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 
-sealed interface SetEvent<out V : Any> : Serializable {
+sealed interface SetEvent<out V : Any> {
 
   object Populated : SetEvent<Nothing> {
-    private fun readResolve(): Any = Populated
-
     override fun toString(): String {
       return "Populated()"
     }
@@ -119,7 +115,7 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
   var populated = false
   var set = persistentSetOf<V>()
 
-  if (emitPartials) emit(set.serializable())
+  if (emitPartials) emit(set)
 
   collect { setEvent ->
     var emit = false
@@ -147,7 +143,7 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
     }
     if (emit) {
       emitted = true
-      emit(set.serializable())
+      emit(set)
     }
   }
 }

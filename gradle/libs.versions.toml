@@ -3,8 +3,11 @@ springBoot = "3.5.10"
 kotlin = "1.9.25" # Keep in sync with Spring - https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
 kotlinCollectionsImmutable = "0.3.8"
 jsonPatch = "1.13"
+jmh = "1.37"
+jmh-plugin = "0.7.3"
 kotlinpoet = "2.2.0"
 ktfmt = "0.61"
+fory = "0.15.0"
 
 # Caplin Dependencies
 datasource = "8.0.10-1695-5ddb3798"
@@ -28,6 +31,10 @@ vanniktech-maven-publish-plugin = "0.31.0"
 kotlin-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
 json-patch = { module = "com.github.java-json-tools:json-patch", version.ref = "jsonPatch" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+fory-core = { module = "org.apache.fory:fory-core", version.ref = "fory" }
+fory-kotlin = { module = "org.apache.fory:fory-kotlin", version.ref = "fory" }
+jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
 
 # Caplin Dependencies
 datasource = { module = "com.caplin.platform.integration.java:datasource", version.ref = "datasource" }
@@ -55,3 +62,4 @@ spring-boot-configuration-processor = { module = "org.springframework.boot:sprin
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
+jmh = { id = "me.champeau.jmh", version.ref = "jmh-plugin" }

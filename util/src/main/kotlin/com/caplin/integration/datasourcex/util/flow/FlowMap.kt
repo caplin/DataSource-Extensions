@@ -86,6 +86,17 @@ interface FlowMap<K : Any, V : Any> : MapFlow<K, V>, Map<K, V> {
   fun asMap(): PersistentMap<K, V>
 }
 
+/** An event emitted by [MapFlow.asFlowWithState]. */
+sealed interface FlowMapStreamEvent<out K : Any, out V : Any> {
+  /** Emitted on initial collection, containing the entire initial [map] state. */
+  @JvmInline
+  value class InitialState<K : Any, V : Any>(val map: PersistentMap<K, V>) : FlowMapStreamEvent<K, V>
+
+  /** Emitted for subsequent updates, containing only the delta ([event]). */
+  @JvmInline
+  value class EventUpdate<K : Any, V : Any>(val event: MapEvent<K, V>) : FlowMapStreamEvent<K, V>
+}
+
 interface MapFlow<K : Any, V : Any> {
   /**
    * A [Flow] of events that can be used to reconstitute the current and future state of the
@@ -96,8 +107,28 @@ interface MapFlow<K : Any, V : Any> {
    * A [Removed] will be sent if an entry used to match, but no longer does.
    *
    * Events can be conflated with [conflateKeys].
+   *
+   * **Note:** This method is useful when individual entry tracking or filtering is required.
+   * However, for maps with a large initial state, it has higher overhead because it emits an
+   * individual [Upsert] event for every existing entry before emitting [Populated]. If you only
+   * need the current map state and subsequent updates, consider using [asFlowWithState] for better
+   * performance.
    */
   fun asFlow(predicate: ((K, V) -> Boolean)? = null): Flow<MapEvent<K, V>>
+
+  /**
+   * A [Flow] that emits a [FlowMapStreamEvent] to represent the state and its mutations over time.
+   *
+   * On initial collection, it emits a single [FlowMapStreamEvent.InitialState] with the full
+   * initial map state. Later events are emitted as [FlowMapStreamEvent.EventUpdate] containing the
+   * [Upsert] or [Removed] deltas.
+   *
+   * **Note:** This is the preferred method for performance-sensitive subscribers who need the
+   * current state immediately, as it avoids the overhead of processing individual events to
+   * reconstruct the initial map, while also avoiding the serialization cost of sending the full map
+   * on every subsequent update.
+   */
+  fun asFlowWithState(): Flow<FlowMapStreamEvent<K, V>>
 
   /**
    * A [Flow] of the latest value for the provided [key] or `null` if no value is present.
@@ -203,6 +234,21 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
               }
             }
           }
+        }
+      }
+    }
+  }
+
+  override fun asFlowWithState(): Flow<FlowMapStreamEvent<K, V>> = flow {
+    var first = true
+    orderedSignal.collect { flowMapEvent ->
+      if (first) {
+        emit(FlowMapStreamEvent.InitialState(flowMapEvent.state.map))
+        first = false
+      } else {
+        val events = flowMapEvent.events
+        for (event in events) {
+          emit(FlowMapStreamEvent.EventUpdate(event))
         }
       }
     }

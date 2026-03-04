@@ -2,7 +2,6 @@ package com.caplin.integration.datasourcex.util.flow
 
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Completion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Value
-import java.io.Serializable
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -23,17 +22,17 @@ import kotlinx.coroutines.flow.transformWhile
  * @see materializeUnboxed
  * @see dematerializeUnboxed
  */
-sealed interface ValueOrCompletion<out T : Any?> : Serializable {
+sealed interface ValueOrCompletion<out T> {
 
   @Suppress("UNCHECKED_CAST")
-  suspend fun <R : Any?> map(block: suspend (T) -> R): ValueOrCompletion<R> =
+  suspend fun <R> map(block: suspend (T) -> R): ValueOrCompletion<R> =
       this as ValueOrCompletion<R>
 
-  class Value<out T : Any?>(val value: T) : ValueOrCompletion<T> {
+  class Value<out T>(val value: T) : ValueOrCompletion<T> {
     operator fun component1(): T = value
 
     @Suppress("UNCHECKED_CAST")
-    override suspend fun <R : Any?> map(block: suspend (T) -> R): ValueOrCompletion<R> {
+    override suspend fun <R> map(block: suspend (T) -> R): ValueOrCompletion<R> {
       val result = block(value)
       return when {
         result === value -> this as ValueOrCompletion<R>
