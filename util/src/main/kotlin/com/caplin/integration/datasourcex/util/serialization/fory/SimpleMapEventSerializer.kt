@@ -32,7 +32,7 @@ internal class SimpleMapEventSerializer(fory: Fory, type: Class<SimpleMapEvent<*
   }
 
   override fun read(buffer: MemoryBuffer): SimpleMapEvent<*, *> {
-    return when (Type.values()[buffer.readByte().toInt()]) {
+    return when (Type.entries[buffer.readByte().toInt()]) {
       Type.POPULATED -> SimpleMapEvent.Populated
       Type.UPSERT -> {
         val key = fory.readRef(buffer) as Any

@@ -31,7 +31,7 @@ internal class SetEventSerializer(fory: Fory, type: Class<SetEvent<*>>) :
   }
 
   override fun read(buffer: MemoryBuffer): SetEvent<*> {
-    return when (Type.values()[buffer.readByte().toInt()]) {
+    return when (Type.entries[buffer.readByte().toInt()]) {
       Type.POPULATED -> SetEvent.Populated
       Type.INSERT -> {
         val value = fory.readRef(buffer) as Any

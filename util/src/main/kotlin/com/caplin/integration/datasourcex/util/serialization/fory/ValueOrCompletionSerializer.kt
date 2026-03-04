@@ -28,7 +28,7 @@ internal class ValueOrCompletionSerializer(fory: Fory, type: Class<ValueOrComple
   }
 
   override fun read(buffer: MemoryBuffer): ValueOrCompletion<*> {
-    return when (Type.values()[buffer.readByte().toInt()]) {
+    return when (Type.entries[buffer.readByte().toInt()]) {
       Type.VALUE -> {
         val value = fory.readRef(buffer) as Any
         ValueOrCompletion.Value(value)

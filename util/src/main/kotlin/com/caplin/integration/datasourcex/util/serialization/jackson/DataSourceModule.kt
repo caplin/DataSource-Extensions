@@ -16,22 +16,98 @@ fun ObjectMapper.registerDataSourceModule(): ObjectMapper = registerModule(DataS
  * without requiring annotations on the classes themselves.
  */
 object DataSourceModule : SimpleModule() {
-  private fun readResolve(): Any = DataSourceModule
+  @Suppress("unused") private fun readResolve(): Any = DataSourceModule
 
   init {
     addSerializer(FlowMapStreamEvent::class.java, FlowMapStreamEventSerializer())
     addDeserializer(FlowMapStreamEvent::class.java, FlowMapStreamEventDeserializer())
 
-    addSerializer(MapEvent::class.java, MapEventSerializer())
-    addDeserializer(MapEvent::class.java, MapEventDeserializer())
+    val mapEventSerializer = MapEventSerializer()
+    val mapEventDeserializer = MapEventDeserializer()
 
-    addSerializer(SimpleMapEvent::class.java, SimpleMapEventSerializer())
-    addDeserializer(SimpleMapEvent::class.java, SimpleMapEventDeserializer())
+    addSerializer(MapEvent::class.java, mapEventSerializer)
+    addDeserializer(MapEvent::class.java, mapEventDeserializer)
 
-    addSerializer(SetEvent::class.java, SetEventSerializer())
-    addDeserializer(SetEvent::class.java, SetEventDeserializer())
+    @Suppress("UNCHECKED_CAST")
+    addSerializer(
+        MapEvent.EntryEvent::class.java,
+        mapEventSerializer
+            as com.fasterxml.jackson.databind.JsonSerializer<MapEvent.EntryEvent<*, *>>,
+    )
+    @Suppress("UNCHECKED_CAST")
+    addDeserializer(
+        MapEvent.EntryEvent::class.java,
+        mapEventDeserializer
+            as com.fasterxml.jackson.databind.JsonDeserializer<MapEvent.EntryEvent<*, *>>,
+    )
 
-    addSerializer(ValueOrCompletion::class.java, ValueOrCompletionSerializer())
-    addDeserializer(ValueOrCompletion::class.java, ValueOrCompletionDeserializer())
+    val simpleMapEventSerializer = SimpleMapEventSerializer()
+    val simpleMapEventDeserializer = SimpleMapEventDeserializer()
+
+    addSerializer(SimpleMapEvent::class.java, simpleMapEventSerializer)
+    addDeserializer(SimpleMapEvent::class.java, simpleMapEventDeserializer)
+
+    @Suppress("UNCHECKED_CAST")
+    addSerializer(
+        SimpleMapEvent.EntryEvent::class.java,
+        simpleMapEventSerializer
+            as com.fasterxml.jackson.databind.JsonSerializer<SimpleMapEvent.EntryEvent<*, *>>,
+    )
+    @Suppress("UNCHECKED_CAST")
+    addDeserializer(
+        SimpleMapEvent.EntryEvent::class.java,
+        simpleMapEventDeserializer
+            as com.fasterxml.jackson.databind.JsonDeserializer<SimpleMapEvent.EntryEvent<*, *>>,
+    )
+
+    val setEventSerializer = SetEventSerializer()
+    val setEventDeserializer = SetEventDeserializer()
+
+    addSerializer(SetEvent::class.java, setEventSerializer)
+    addDeserializer(SetEvent::class.java, setEventDeserializer)
+
+    @Suppress("UNCHECKED_CAST")
+    addSerializer(
+        SetEvent.EntryEvent::class.java,
+        setEventSerializer as com.fasterxml.jackson.databind.JsonSerializer<SetEvent.EntryEvent<*>>,
+    )
+    @Suppress("UNCHECKED_CAST")
+    addDeserializer(
+        SetEvent.EntryEvent::class.java,
+        setEventDeserializer
+            as com.fasterxml.jackson.databind.JsonDeserializer<SetEvent.EntryEvent<*>>,
+    )
+
+    val valueOrCompletionSerializer = ValueOrCompletionSerializer()
+    val valueOrCompletionDeserializer = ValueOrCompletionDeserializer()
+
+    addSerializer(ValueOrCompletion::class.java, valueOrCompletionSerializer)
+    addDeserializer(ValueOrCompletion::class.java, valueOrCompletionDeserializer)
+
+    @Suppress("UNCHECKED_CAST")
+    addSerializer(
+        ValueOrCompletion.Value::class.java,
+        valueOrCompletionSerializer
+            as com.fasterxml.jackson.databind.JsonSerializer<ValueOrCompletion.Value<*>>,
+    )
+    @Suppress("UNCHECKED_CAST")
+    addDeserializer(
+        ValueOrCompletion.Value::class.java,
+        valueOrCompletionDeserializer
+            as com.fasterxml.jackson.databind.JsonDeserializer<ValueOrCompletion.Value<*>>,
+    )
+
+    @Suppress("UNCHECKED_CAST")
+    addSerializer(
+        ValueOrCompletion.Completion::class.java,
+        valueOrCompletionSerializer
+            as com.fasterxml.jackson.databind.JsonSerializer<ValueOrCompletion.Completion>,
+    )
+    @Suppress("UNCHECKED_CAST")
+    addDeserializer(
+        ValueOrCompletion.Completion::class.java,
+        valueOrCompletionDeserializer
+            as com.fasterxml.jackson.databind.JsonDeserializer<ValueOrCompletion.Completion>,
+    )
   }
 }
