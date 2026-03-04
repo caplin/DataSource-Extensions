@@ -11,8 +11,16 @@ class ReadWriteLock {
   private val readerMutex = Mutex()
   private val writerMutex = Mutex()
 
+  /**
+   * Executes the given [block] of code within a write lock. Suspends until the write lock can be
+   * acquired.
+   */
   suspend fun <R> withWriteLock(block: suspend () -> R): R = writerMutex.withLock(null) { block() }
 
+  /**
+   * Executes the given [block] of code within a read lock. Suspends until the read lock can be
+   * acquired.
+   */
   suspend fun <R> withReadLock(block: suspend () -> R): R =
       withContext(NonCancellable) {
         readLock()
@@ -23,6 +31,7 @@ class ReadWriteLock {
         }
       }
 
+  /** Acquires a read lock. Suspends if a write lock is currently held. */
   suspend fun readLock() =
       withContext(NonCancellable) {
         readerMutex.withLock {
@@ -31,6 +40,7 @@ class ReadWriteLock {
         }
       }
 
+  /** Releases a previously acquired read lock. */
   suspend fun readUnlock() =
       withContext(NonCancellable) {
         readerMutex.withLock {
@@ -39,7 +49,9 @@ class ReadWriteLock {
         }
       }
 
+  /** Acquires a write lock. Suspends if any read or write locks are currently held. */
   suspend fun writeLock() = writerMutex.lock()
 
+  /** Releases a previously acquired write lock. */
   fun writeUnlock() = writerMutex.unlock()
 }

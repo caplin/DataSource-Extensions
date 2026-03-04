@@ -15,19 +15,26 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 
+/** Events representing a mutation to a [Set]. */
 sealed interface SetEvent<out V : Any> {
 
+  /**
+   * Indicates that a consistent view of the set has been emitted and only updates will be seen from
+   * now on.
+   */
   object Populated : SetEvent<Nothing> {
     override fun toString(): String {
       return "Populated()"
     }
   }
 
+  /** Mutation event for a specific entry. */
   sealed interface EntryEvent<out V : Any> : SetEvent<V> {
     val value: V
 
     operator fun component1(): V = value
 
+    /** An event indicating a value has been inserted into the set. */
     class Insert<out V : Any>(override val value: V) : EntryEvent<V> {
 
       override fun equals(other: Any?): Boolean {
@@ -48,6 +55,7 @@ sealed interface SetEvent<out V : Any> {
       }
     }
 
+    /** An event indicating a value has been removed from the set. */
     class Removed<out V : Any>(override val value: V) : EntryEvent<V> {
 
       override fun equals(other: Any?): Boolean {
@@ -148,11 +156,22 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
   }
 }
 
+/**
+ * Transforms a flow of sets into a merged flow by applying [entryEventTransformer] to each entry
+ * event (insert or remove). When a value is inserted, a new flow is created and merged. When a
+ * value is removed, the corresponding flow is cancelled.
+ */
 @JvmName("flatMapLatestAndMergeSet")
 fun <V : Any, R> Flow<Set<V>>.flatMapLatestAndMerge(
     entryEventTransformer: (EntryEvent<V>) -> Flow<R>
 ): Flow<R> = toEvents().flatMapLatestAndMerge(entryEventTransformer)
 
+/**
+ * Transforms a flow of [SetEvent] into a merged flow by applying [entryEventTransformer] to each
+ * entry event. When an [Insert] event is received, a new flow is created and its emissions are
+ * merged into the resulting flow. When a [Removed] event is received, the previously created flow
+ * for that value is cancelled.
+ */
 fun <V : Any, R> Flow<SetEvent<V>>.flatMapLatestAndMerge(
     entryEventTransformer: (EntryEvent<V>) -> Flow<R>
 ) = channelFlow {

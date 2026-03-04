@@ -10,12 +10,20 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Files
 import java.util.logging.Logger
 
+/**
+ * A factory for creating [DataSource] instances from simplified configurations. Allows easy setup
+ * for tests and examples.
+ */
 object SimpleDataSourceFactory {
 
   private const val MAX_PATH_LENGTH = 32
 
   private val logger = getLogger<SimpleDataSourceFactory>()
 
+  /**
+   * The default [ObjectMapper] used for serializing and deserializing JSON payloads. It is
+   * pre-configured with the JavaTime module and DataSource serialization extensions.
+   */
   val defaultObjectMapper: ObjectMapper =
       jacksonObjectMapper()
           .configure(WRITE_DATES_AS_TIMESTAMPS, false)

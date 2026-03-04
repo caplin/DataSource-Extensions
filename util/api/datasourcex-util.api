@@ -191,6 +191,11 @@ public final class com/caplin/integration/datasourcex/util/flow/FlowMapKt {
 public abstract interface class com/caplin/integration/datasourcex/util/flow/FlowMapStreamEvent {
 }
 
+public final class com/caplin/integration/datasourcex/util/flow/FlowMapStreamEvent$Cleared : com/caplin/integration/datasourcex/util/flow/FlowMapStreamEvent {
+	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/flow/FlowMapStreamEvent$Cleared;
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/caplin/integration/datasourcex/util/flow/FlowMapStreamEvent$EventUpdate : com/caplin/integration/datasourcex/util/flow/FlowMapStreamEvent {
 	public static final synthetic fun box-impl (Lcom/caplin/integration/datasourcex/util/flow/MapEvent$EntryEvent;)Lcom/caplin/integration/datasourcex/util/flow/FlowMapStreamEvent$EventUpdate;
 	public static fun constructor-impl (Lcom/caplin/integration/datasourcex/util/flow/MapEvent$EntryEvent;)Lcom/caplin/integration/datasourcex/util/flow/MapEvent$EntryEvent;
