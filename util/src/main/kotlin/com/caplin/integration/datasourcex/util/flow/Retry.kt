@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.retry
  * be modified by proving [onRetry] - if a call to this returns `false` it will stop retrying and
  * propagate the error downstream.
  */
-fun <T : Any?> Flow<T>.retryWithExponentialBackoff(
+fun <T> Flow<T>.retryWithExponentialBackoff(
     minMillis: Long = 100L,
     maxMillis: Long = 60000L,
     onRetry: (suspend (Throwable, Long) -> Boolean) = { _, _ -> true },

@@ -90,12 +90,11 @@ interface FlowMap<K : Any, V : Any> : MapFlow<K, V>, Map<K, V> {
 sealed interface FlowMapStreamEvent<out K : Any, out V : Any> {
   /** Emitted on initial collection, containing the entire initial [map] state. */
   @JvmInline
-  value class InitialState<K : Any, V : Any>(val map: PersistentMap<K, V>) :
-      FlowMapStreamEvent<K, V>
+  value class InitialState<K : Any, V : Any>(val map: Map<K, V>) : FlowMapStreamEvent<K, V>
 
   /** Emitted for subsequent updates, containing only the delta ([event]). */
   @JvmInline
-  value class EventUpdate<K : Any, V : Any>(val event: MapEvent<K, V>) : FlowMapStreamEvent<K, V>
+  value class EventUpdate<K : Any, V : Any>(val event: EntryEvent<K, V>) : FlowMapStreamEvent<K, V>
 }
 
 interface MapFlow<K : Any, V : Any> {
@@ -137,6 +136,41 @@ interface MapFlow<K : Any, V : Any> {
    * Events can be conflated with [conflate].
    */
   fun valueFlow(key: K): Flow<V?>
+}
+
+/** Folds a flow of [FlowMapStreamEvent]s into a flow of [Map]. */
+@JvmName("runningFoldToMapFlowMapStreamEvent")
+fun <K : Any, V : Any> Flow<FlowMapStreamEvent<K, V>>.runningFoldToMap(): Flow<Map<K, V>> = flow {
+  var map: PersistentMap<K, V>? = null
+
+  collect { streamEvent ->
+    when (streamEvent) {
+      is FlowMapStreamEvent.InitialState -> {
+        map = streamEvent.map.toPersistentMap()
+        emit(map!!)
+      }
+
+      is FlowMapStreamEvent.EventUpdate -> {
+        val currentMap = map ?: error("InitialState must be received before EventUpdate")
+        when (val mapEvent = streamEvent.event) {
+          is Removed -> {
+            map =
+                currentMap.remove(mapEvent.key).also { newMap ->
+                  check(newMap !== currentMap) {
+                    "Attempted to remove non existent key ${mapEvent.key}"
+                  }
+                }
+            emit(map!!)
+          }
+
+          is Upsert -> {
+            map = currentMap.put(mapEvent.key, mapEvent.newValue)
+            emit(map!!)
+          }
+        }
+      }
+    }
+  }
 }
 
 private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :

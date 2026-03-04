@@ -61,6 +61,20 @@ class FlowMapTest :
         }
       }
 
+      test("FlowMap asFlowWithState running fold to map") {
+        val map = mutableFlowMapOf("1" to "A", "2" to "B")
+
+        map.asFlowWithState().runningFoldToMap().test {
+          awaitItem() shouldContainExactly mapOf("1" to "A", "2" to "B")
+
+          map.put("3", "C")
+          awaitItem() shouldContainExactly mapOf("1" to "A", "2" to "B", "3" to "C")
+
+          map.remove("1")
+          awaitItem() shouldContainExactly mapOf("2" to "B", "3" to "C")
+        }
+      }
+
       test("FlowMap asFlow with predicate") {
         val map = mutableFlowMapOf("1" to "AL", "2" to "B")
 

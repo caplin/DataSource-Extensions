@@ -2,7 +2,7 @@ package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.messaging.json.JacksonJsonHandler
-import com.caplin.integration.datasourcex.util.flow.registerDataSourceModule
+import com.caplin.integration.datasourcex.util.serialization.jackson.registerDataSourceModule
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
