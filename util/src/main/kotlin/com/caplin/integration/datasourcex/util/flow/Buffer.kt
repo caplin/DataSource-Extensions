@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.selects.onTimeout
 import kotlinx.coroutines.selects.whileSelect
-import kotlinx.coroutines.yield
 
 /**
  * Buffers all elements emitted until there is a period of no emissions greater than
@@ -36,7 +35,6 @@ fun <T> Flow<T>.bufferingDebounce(timeoutMillis: Long): Flow<List<T>> = channelF
             if (bufferedItems.isNotEmpty()) {
               send(bufferedItems)
               bufferedItems = mutableListOf()
-              yield()
             }
             it?.let { throw it }
           }
