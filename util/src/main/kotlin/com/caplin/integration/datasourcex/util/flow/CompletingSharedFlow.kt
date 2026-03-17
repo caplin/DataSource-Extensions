@@ -40,7 +40,7 @@ import kotlinx.coroutines.flow.transformWhile
  * @see loading
  * @see CompletingSharedFlowCache
  */
-fun interface LoadingCompletingSharedFlowCache<K : Any, T : Any?> {
+fun interface LoadingCompletingSharedFlowCache<K : Any, T> {
 
   /**
    * If the requested key [K] is not found in the cache when the [CompletingSharedFlow] returned by
@@ -52,7 +52,7 @@ fun interface LoadingCompletingSharedFlowCache<K : Any, T : Any?> {
 }
 
 /** Converts this [CompletingSharedFlowCache] to a [LoadingCompletingSharedFlowCache]. */
-fun <K : Any, T : Any?> CompletingSharedFlowCache<K, T>.loading(
+fun <K : Any, T> CompletingSharedFlowCache<K, T>.loading(
     supplier: (K) -> Flow<T>
 ): LoadingCompletingSharedFlowCache<K, T> = LoadingCompletingSharedFlowCache { key ->
   get(key, supplier)
@@ -62,7 +62,7 @@ fun <K : Any, T : Any?> CompletingSharedFlowCache<K, T>.loading(
  * A cache of flows which each follow the behaviour of [shareInCompleting] - i.e. they share a
  * single upstream and pass completion and errors on to the downstream.
  */
-fun interface CompletingSharedFlowCache<K : Any, T : Any?> {
+fun interface CompletingSharedFlowCache<K : Any, T> {
 
   /**
    * If the requested key [K] is not found in the cache when the [CompletingSharedFlow] returned by
@@ -73,20 +73,20 @@ fun interface CompletingSharedFlowCache<K : Any, T : Any?> {
 
   companion object {
 
-    private interface MapActorAction<K : Any, T : Any?> {
+    private interface MapActorAction<K : Any, T> {
 
       val key: K
 
-      data class Fetch<K : Any, T : Any?>(
+      data class Fetch<K : Any, T>(
           override val key: K,
           val supplier: (K) -> Flow<T>,
           val response: CompletableDeferred<SharedFlow<Any?>> = CompletableDeferred(),
       ) : MapActorAction<K, T>
 
-      data class Reset<K : Any, T : Any?>(override val key: K) : MapActorAction<K, T>
+      data class Reset<K : Any, T>(override val key: K) : MapActorAction<K, T>
     }
 
-    operator fun <K : Any, T : Any?> invoke(
+    operator fun <K : Any, T> invoke(
         scope: CoroutineScope,
         started: SharingStarted,
         replay: Int,
@@ -175,7 +175,7 @@ fun <T> CompletingSharedFlow<T>.onSubscription(
  * Similar to [shareIn], but completions and errors are also propagated to the downstream
  * subscribers.
  */
-fun <T : Any?> Flow<T>.shareInCompleting(
+fun <T> Flow<T>.shareInCompleting(
     scope: CoroutineScope,
     started: SharingStarted,
     replay: Int = 0,

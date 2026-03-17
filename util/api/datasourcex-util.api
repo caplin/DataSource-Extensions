@@ -127,9 +127,11 @@ public final class com/caplin/integration/datasourcex/util/SimpleDataSourceConfi
 
 public final class com/caplin/integration/datasourcex/util/SimpleDataSourceFactory {
 	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/SimpleDataSourceFactory;
-	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/caplin/datasource/DataSource;
-	public static synthetic fun createDataSource$default (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/fasterxml/jackson/databind/ObjectMapper;ILjava/lang/Object;)Lcom/caplin/datasource/DataSource;
-	public final fun getDefaultObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
+	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;)Lcom/caplin/datasource/DataSource;
+	public static synthetic fun createDataSource$default (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;ILjava/lang/Object;)Lcom/caplin/datasource/DataSource;
+	public static final fun createJackson2JsonHandler (Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/caplin/datasource/messaging/json/JacksonJsonHandler;
+	public final fun getDefaultJackson2JsonHandler ()Lcom/caplin/datasource/messaging/json/JacksonJsonHandler;
+	public final fun getDefaultJackson2ObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
 }
 
 public final class com/caplin/integration/datasourcex/util/TimeoutKt {
@@ -462,13 +464,14 @@ public final class com/caplin/integration/datasourcex/util/flow/ValueOrCompletio
 
 public final class com/caplin/integration/datasourcex/util/serialization/fory/DataSourceModuleKt {
 	public static final fun registerDataSourceSerializers (Lorg/apache/fory/Fory;)Lorg/apache/fory/Fory;
+	public static final fun registerPersistentCollectionSerializers (Lorg/apache/fory/Fory;)Lorg/apache/fory/Fory;
 }
 
-public final class com/caplin/integration/datasourcex/util/serialization/jackson/DataSourceModule : com/fasterxml/jackson/databind/module/SimpleModule {
-	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/serialization/jackson/DataSourceModule;
+public final class com/caplin/integration/datasourcex/util/serialization/jackson2/DataSourceModule : com/fasterxml/jackson/databind/module/SimpleModule {
+	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/serialization/jackson2/DataSourceModule;
 }
 
-public final class com/caplin/integration/datasourcex/util/serialization/jackson/DataSourceModuleKt {
+public final class com/caplin/integration/datasourcex/util/serialization/jackson2/DataSourceModuleKt {
 	public static final fun registerDataSourceModule (Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/fasterxml/jackson/databind/ObjectMapper;
 }
 

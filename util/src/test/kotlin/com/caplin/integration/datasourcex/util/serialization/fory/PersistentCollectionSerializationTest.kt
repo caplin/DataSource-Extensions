@@ -17,7 +17,7 @@ class PersistentCollectionSerializationTest :
               .withLanguage(Language.JAVA)
               .requireClassRegistration(false)
               .build()
-              .registerDataSourceSerializers()
+              .registerPersistentCollectionSerializers()
 
       test("PersistentHashMap") {
         val map = persistentHashMapOf("1" to "A", "2" to "B")

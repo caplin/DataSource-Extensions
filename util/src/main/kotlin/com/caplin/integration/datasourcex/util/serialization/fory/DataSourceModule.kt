@@ -25,7 +25,9 @@ fun Fory.registerDataSourceSerializers(): Fory = apply {
   registerSerializer(SimpleMapEvent::class.java, SimpleMapEventSerializer::class.java)
   registerSerializer(SetEvent::class.java, SetEventSerializer::class.java)
   registerSerializer(ValueOrCompletion::class.java, ValueOrCompletionSerializer::class.java)
+}
 
+fun Fory.registerPersistentCollectionSerializers(): Fory = apply {
   // Register concrete serializers for the internal PersistentMap implementations
   runCatching {
         Class.forName(

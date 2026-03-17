@@ -1,4 +1,4 @@
-package com.caplin.integration.datasourcex.util.serialization.jackson
+package com.caplin.integration.datasourcex.util.serialization.jackson2
 
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent
 import com.fasterxml.jackson.core.type.TypeReference
