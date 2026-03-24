@@ -2,6 +2,10 @@ package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.messaging.json.JacksonJsonHandler
+import com.caplin.datasource.messaging.json.JsonHandler
+import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson2JsonHandler
+import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson2ObjectMapper
+import com.caplin.integration.datasourcex.util.serialization.jackson2.registerDataSourceModule
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -9,27 +13,49 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Files
 import java.util.logging.Logger
 
+/**
+ * A factory for creating [DataSource] instances from simplified configurations. Allows easy setup
+ * for tests and examples.
+ */
 object SimpleDataSourceFactory {
 
   private const val MAX_PATH_LENGTH = 32
 
   private val logger = getLogger<SimpleDataSourceFactory>()
 
-  val defaultObjectMapper: ObjectMapper =
+  /**
+   * The default [ObjectMapper] used for serializing and deserializing JSON payloads. It is
+   * pre-configured with the JavaTime module and DataSource serialization extensions.
+   */
+  val defaultJackson2ObjectMapper: ObjectMapper =
       jacksonObjectMapper()
           .configure(WRITE_DATES_AS_TIMESTAMPS, false)
           .registerModule(JavaTimeModule())
+          .registerDataSourceModule()
+
+  @JvmStatic
+  fun createJackson2JsonHandler(objectMapper: ObjectMapper): JacksonJsonHandler =
+      JacksonJsonHandler(
+          Logger.getLogger(JacksonJsonHandler::class.qualifiedName),
+          objectMapper,
+      )
+
+  val defaultJackson2JsonHandler: JacksonJsonHandler =
+      createJackson2JsonHandler(defaultJackson2ObjectMapper)
 
   /**
    * Creates a data source based on the given simple configuration.
    *
    * @param simpleConfig The simple configuration for the data source.
+   * @param jsonHandler The [JsonHandler] to use for serializing and deserializing JSON payloads.
+   *   This defaults to the Jackson 2 [defaultJackson2JsonHandler] backed by
+   *   [defaultJackson2ObjectMapper].
    * @return The created data source.
    */
   @JvmStatic
   fun createDataSource(
       simpleConfig: SimpleDataSourceConfig,
-      objectMapper: ObjectMapper = defaultObjectMapper,
+      jsonHandler: JsonHandler<*> = defaultJackson2JsonHandler,
   ): DataSource {
     val logPath =
         simpleConfig.logDirectory
@@ -113,12 +139,6 @@ object SimpleDataSourceFactory {
             .trimMargin()
 
     return DataSource.fromConfigString(config, Logger.getLogger(DataSource::class.qualifiedName))
-        .apply {
-          extraConfiguration.jsonHandler =
-              JacksonJsonHandler(
-                  Logger.getLogger(JacksonJsonHandler::class.qualifiedName),
-                  objectMapper,
-              )
-        }
+        .apply { extraConfiguration.jsonHandler = jsonHandler }
   }
 }

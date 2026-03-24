@@ -14,6 +14,7 @@ import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
@@ -37,6 +38,40 @@ class FlowMapTest :
           awaitItem() shouldBeEqual Upsert("2", "X", "Z")
           map.put("4", "G")
           awaitItem() shouldBeEqual Upsert("4", null, "G")
+        }
+      }
+
+      test("FlowMap asFlowWithState") {
+        val map = mutableFlowMapOf("1" to "A", "2" to "B")
+
+        map.asFlowWithState().test {
+          val initial = awaitItem()
+          initial.shouldBeInstanceOf<FlowMapStreamEvent.InitialState<String, String>>()
+          initial.map shouldContainExactly mapOf("1" to "A", "2" to "B")
+
+          map.put("3", "C")
+          val afterPut = awaitItem()
+          afterPut.shouldBeInstanceOf<FlowMapStreamEvent.EventUpdate<String, String>>()
+          afterPut.event shouldBeEqual Upsert("3", null, "C")
+
+          map.remove("1")
+          val afterRemove = awaitItem()
+          afterRemove.shouldBeInstanceOf<FlowMapStreamEvent.EventUpdate<String, String>>()
+          afterRemove.event shouldBeEqual Removed("1", "A")
+        }
+      }
+
+      test("FlowMap asFlowWithState running fold to map") {
+        val map = mutableFlowMapOf("1" to "A", "2" to "B")
+
+        map.asFlowWithState().runningFoldToMap().test {
+          awaitItem() shouldContainExactly mapOf("1" to "A", "2" to "B")
+
+          map.put("3", "C")
+          awaitItem() shouldContainExactly mapOf("1" to "A", "2" to "B", "3" to "C")
+
+          map.remove("1")
+          awaitItem() shouldContainExactly mapOf("2" to "B", "3" to "C")
         }
       }
 
@@ -184,6 +219,24 @@ class FlowMapTest :
           awaitItem() shouldBeEqual Upsert("2", null, "Ax")
           primaryMap["2"] = "Axx"
           awaitItem() shouldBeEqual Upsert("2", "Ax", "Axx")
+        }
+      }
+
+      test("FlowMap putAll and clear") {
+        val map = mutableFlowMapOf("1" to "A")
+
+        map.asFlow().test {
+          awaitItem() shouldBeEqual Upsert("1", null, "A")
+          awaitItem() shouldBeEqual Populated
+
+          map.putAll(mapOf("2" to "B", "3" to "C"))
+          awaitItem() shouldBeEqual Upsert("2", null, "B")
+          awaitItem() shouldBeEqual Upsert("3", null, "C")
+
+          map.clear()
+          awaitItem() shouldBeEqual Removed("1", "A")
+          awaitItem() shouldBeEqual Removed("2", "B")
+          awaitItem() shouldBeEqual Removed("3", "C")
         }
       }
     })

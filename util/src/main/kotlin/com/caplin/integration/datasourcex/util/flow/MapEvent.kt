@@ -6,15 +6,15 @@ import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Upsert
 import com.caplin.integration.datasourcex.util.flow.MapEvent.Populated
-import com.caplin.integration.datasourcex.util.serializable
-import java.io.Serializable
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.selects.whileSelect
+import kotlinx.coroutines.selects.select
 
 /**
  * Events representing a mutation to a [Map].
@@ -24,7 +24,7 @@ import kotlinx.coroutines.selects.whileSelect
  * This does not support maps with `null` values or keys, consider using [java.util.Optional] if
  * this is required.
  */
-sealed interface MapEvent<out K : Any, out V : Any> : Serializable {
+sealed interface MapEvent<out K : Any, out V : Any> {
 
   /**
    * Indicates that a consistent view of the map has been emitted and only updates will be seen from
@@ -34,8 +34,6 @@ sealed interface MapEvent<out K : Any, out V : Any> : Serializable {
    * event.
    */
   object Populated : MapEvent<Nothing, Nothing> {
-    private fun readResolve(): Any = Populated
-
     override fun toString(): String {
       return "Populated()"
     }
@@ -138,7 +136,7 @@ fun <K : Any, V : Any> Flow<MapEvent<K, V>>.runningFoldToMap(
   var populated = false
   var map = persistentMapOf<K, V>()
 
-  if (emitPartials) emit(map.serializable())
+  if (emitPartials) emit(map)
 
   collect { mapEvent ->
     var emit = false
@@ -163,7 +161,7 @@ fun <K : Any, V : Any> Flow<MapEvent<K, V>>.runningFoldToMap(
     }
     if (emit) {
       emitted = true
-      emit(map.serializable())
+      emit(map)
     }
   }
 }
@@ -180,12 +178,12 @@ fun <K : Any, V : Any> Flow<EntryEvent<K, V>>.runningFoldToMap(): Flow<Map<K, V>
             map.remove(mapEvent.key).also { newMap ->
               check(newMap !== map) { "Attempted to remove non existent key ${mapEvent.key}" }
             }
-        emit(map.serializable())
+        emit(map)
       }
 
       is Upsert -> {
         map = map.put(mapEvent.key, mapEvent.newValue)
-        emit(map.serializable())
+        emit(map)
       }
     }
   }
@@ -209,45 +207,57 @@ fun <K : Any, V : Any> Flow<MapEvent<K, V>>.conflateKeys() = channelFlow {
   fun nextValueToSend(): MapEvent<K, V>? =
       unsentValues.entries.firstOrNull()?.value ?: Populated.takeIf { unsentPopulated }
 
-  whileSelect {
-    nextValueToSend()?.let { value ->
-      onSend(value) {
-        when (value) {
-          is EntryEvent -> unsentValues.remove(value.key)
-          is Populated -> unsentPopulated = false
-        }
-        true
-      }
-    }
-    upstream.onReceive { event ->
-      when (event) {
-        is Populated -> unsentPopulated = true
-        is EntryEvent -> {
-          val key = event.key
-          val oldEvent = unsentValues[key]
-          if (oldEvent == null) {
-            unsentValues[key] = event // Nothing to conflate
-          } else {
-            val oldValue = oldEvent.oldValue
-            when (event) {
-              is Removed -> {
-                when (oldEvent) {
-                  is Removed -> error("Two Removed events for the same key")
-                  is Upsert -> if (oldValue != null) unsentValues[key] = Removed(key, oldValue)
-                }
-              }
+  var upstreamClosed = false
+  while (true) {
+    val value = nextValueToSend()
+    if (upstreamClosed && value == null) break
 
-              is Upsert -> {
-                when (oldEvent) {
-                  is Removed -> unsentValues[key] = Upsert(key, null, event.newValue)
-                  is Upsert -> unsentValues[key] = Upsert(key, oldValue, event.newValue)
-                }
-              }
-            }
+    select<Unit> {
+      if (value != null) {
+        onSend(value) {
+          when (value) {
+            is EntryEvent<K, V> -> unsentValues.remove(value.key)
+            is Populated -> unsentPopulated = false
           }
         }
       }
-      true
+      if (!upstreamClosed) {
+        upstream.onReceiveCatching { result ->
+          result
+              .onSuccess { event ->
+                when (event) {
+                  is Populated -> unsentPopulated = true
+                  is EntryEvent -> {
+                    val key = event.key
+                    val oldEvent = unsentValues[key]
+                    if (oldEvent == null) {
+                      unsentValues[key] = event // Nothing to conflate
+                    } else {
+                      val oldValue = oldEvent.oldValue
+                      when (event) {
+                        is Removed -> {
+                          when (oldEvent) {
+                            is Removed -> error("Two Removed events for the same key")
+                            is Upsert ->
+                                if (oldValue != null) unsentValues[key] = Removed(key, oldValue)
+                                else unsentValues.remove(key)
+                          }
+                        }
+
+                        is Upsert -> {
+                          when (oldEvent) {
+                            is Removed -> unsentValues[key] = Upsert(key, null, event.newValue)
+                            is Upsert -> unsentValues[key] = Upsert(key, oldValue, event.newValue)
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              .onFailure { upstreamClosed = true }
+        }
+      }
     }
   }
 }

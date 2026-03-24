@@ -31,6 +31,13 @@ class AntPatternNamespace(pattern: String) : Namespace {
     }
   }
 
+  /**
+   * Represents a mapping between a from-pattern and a to-pattern, used for injecting user-specific
+   * information into subjects requested by Liberator.
+   *
+   * @property fromPattern The pattern used to match the incoming subject.
+   * @property toPattern The pattern used to map to the destination subject.
+   */
   class ObjectMap(val fromPattern: String, val toPattern: String) {
     operator fun component1(): String = fromPattern
 
@@ -59,12 +66,20 @@ class AntPatternNamespace(pattern: String) : Namespace {
     }
   }
 
+  /** The Ant-style path pattern used by this namespace. */
   val pattern = pattern.removeSuffix("/")
 
   private val matcher = AntRegexPathMatcher(pattern)
 
   override fun match(subject: String): Boolean = matcher.regex.matchEntire(subject) != null
 
+  /**
+   * Extracts path variables from a matching subject.
+   *
+   * @param subject The subject to extract variables from. Must match the [pattern].
+   * @return A map of path variable names to their extracted values.
+   * @throws IllegalStateException If the subject does not match the pattern.
+   */
   fun extractPathVariables(subject: String): Map<String, String> {
     val groups =
         checkNotNull(matcher.regex.matchEntire(subject)) {

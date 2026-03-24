@@ -4,8 +4,6 @@ import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent
 import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent.Insert
 import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.SetEvent.Populated
-import com.caplin.integration.datasourcex.util.serializable
-import java.io.Serializable
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.Job
@@ -17,21 +15,26 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 
-sealed interface SetEvent<out V : Any> : Serializable {
+/** Events representing a mutation to a [Set]. */
+sealed interface SetEvent<out V : Any> {
 
+  /**
+   * Indicates that a consistent view of the set has been emitted and only updates will be seen from
+   * now on.
+   */
   object Populated : SetEvent<Nothing> {
-    private fun readResolve(): Any = Populated
-
     override fun toString(): String {
       return "Populated()"
     }
   }
 
+  /** Mutation event for a specific entry. */
   sealed interface EntryEvent<out V : Any> : SetEvent<V> {
     val value: V
 
     operator fun component1(): V = value
 
+    /** An event indicating a value has been inserted into the set. */
     class Insert<out V : Any>(override val value: V) : EntryEvent<V> {
 
       override fun equals(other: Any?): Boolean {
@@ -52,6 +55,7 @@ sealed interface SetEvent<out V : Any> : Serializable {
       }
     }
 
+    /** An event indicating a value has been removed from the set. */
     class Removed<out V : Any>(override val value: V) : EntryEvent<V> {
 
       override fun equals(other: Any?): Boolean {
@@ -119,7 +123,7 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
   var populated = false
   var set = persistentSetOf<V>()
 
-  if (emitPartials) emit(set.serializable())
+  if (emitPartials) emit(set)
 
   collect { setEvent ->
     var emit = false
@@ -128,14 +132,14 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
       is Removed -> {
         set = oldSet.remove(setEvent.value)
         val changed = oldSet !== set
-        if (relaxed && !changed) error("Received $setEvent but this did not exist")
+        if (!relaxed && !changed) error("Received $setEvent but this did not exist")
         if (changed && (populated || emitPartials)) emit = true
       }
 
       is Insert -> {
         set = oldSet.add(setEvent.value)
         val changed = oldSet !== set
-        if (relaxed && !changed) error("Received $setEvent but this already existed")
+        if (!relaxed && !changed) error("Received $setEvent but this already existed")
         if (changed && (populated || emitPartials)) emit = true
       }
 
@@ -147,29 +151,44 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
     }
     if (emit) {
       emitted = true
-      emit(set.serializable())
+      emit(set)
     }
   }
 }
 
+/**
+ * Transforms a flow of sets into a merged flow by applying [entryEventTransformer] to each entry
+ * event (insert or remove). When a value is inserted, a new flow is created and merged. When a
+ * value is removed, the corresponding flow is cancelled.
+ */
 @JvmName("flatMapLatestAndMergeSet")
 fun <V : Any, R> Flow<Set<V>>.flatMapLatestAndMerge(
     entryEventTransformer: (EntryEvent<V>) -> Flow<R>
 ): Flow<R> = toEvents().flatMapLatestAndMerge(entryEventTransformer)
 
+/**
+ * Transforms a flow of [SetEvent] into a merged flow by applying [entryEventTransformer] to each
+ * entry event. When an [Insert] event is received, a new flow is created and its emissions are
+ * merged into the resulting flow. When a [Removed] event is received, the previously created flow
+ * for that value is cancelled.
+ */
 fun <V : Any, R> Flow<SetEvent<V>>.flatMapLatestAndMerge(
     entryEventTransformer: (EntryEvent<V>) -> Flow<R>
 ) = channelFlow {
   val jobs = ConcurrentHashMap<V, Job>()
   collect { setEvent ->
     when (setEvent) {
-      is EntryEvent<V> -> {
+      is Insert<V> -> {
         jobs[setEvent.value]?.cancelAndJoin()
         jobs[setEvent.value] =
             entryEventTransformer(setEvent)
                 .onEach { send(it) }
-                .onCompletion { throwable -> if (throwable == null) jobs.remove(setEvent.value) }
+                .onCompletion { jobs.remove(setEvent.value) }
                 .launchIn(this@channelFlow)
+      }
+
+      is Removed<V> -> {
+        jobs.remove(setEvent.value)?.cancelAndJoin()
       }
 
       is Populated -> {}

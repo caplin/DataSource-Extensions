@@ -7,6 +7,7 @@ import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Completion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Value
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.shouldBe
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -83,6 +84,35 @@ class RetryKtTest :
 
               delay(1)
               startCount.get() shouldBeEqual 6
+            }
+      }
+
+      test("Retry stops when onRetry returns false") {
+        val startCount = AtomicInteger()
+        val channel = Channel<ValueOrCompletion<String>>(Channel.BUFFERED)
+        channel
+            .receiveAsFlow()
+            .dematerialize()
+            .onStart { startCount.getAndIncrement() }
+            .retryWithExponentialBackoff(minMillis = 10, maxMillis = 100) { _, _ ->
+              startCount.get() < 3
+            }
+            .test {
+              channel.send(Completion(RuntimeException("fail")))
+              // 1st failure: onRetry(1 < 3) is true. Retries.
+              delay(15)
+              startCount.get() shouldBeEqual 2
+
+              channel.send(Completion(RuntimeException("fail")))
+              // 2nd failure: onRetry(2 < 3) is true. Retries.
+              delay(35)
+              startCount.get() shouldBeEqual 3
+
+              channel.send(Completion(RuntimeException("fail")))
+              // 3rd failure: onRetry(3 < 3) is false. Stops.
+
+              awaitError().message shouldBe "fail"
+              startCount.get() shouldBeEqual 3
             }
       }
     })

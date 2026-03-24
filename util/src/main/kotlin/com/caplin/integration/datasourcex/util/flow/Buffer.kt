@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.selects.onTimeout
 import kotlinx.coroutines.selects.whileSelect
+import kotlinx.coroutines.yield
 
 /**
  * Buffers all elements emitted until there is a period of no emissions greater than
@@ -18,7 +19,7 @@ import kotlinx.coroutines.selects.whileSelect
  *
  * If the upstream [Flow] completes, any remaining elements are emitted immediately.
  */
-fun <T : Any?> Flow<T>.bufferingDebounce(timeoutMillis: Long): Flow<List<T>> = channelFlow {
+fun <T> Flow<T>.bufferingDebounce(timeoutMillis: Long): Flow<List<T>> = channelFlow {
   val itemChannel = produceIn(this)
   var bufferedItems = mutableListOf<T>()
   whileSelect {
@@ -31,7 +32,14 @@ fun <T : Any?> Flow<T>.bufferingDebounce(timeoutMillis: Long): Flow<List<T>> = c
     itemChannel.onReceiveCatching { result ->
       result
           .onSuccess { item -> bufferedItems += item }
-          .onFailure { if (bufferedItems.isNotEmpty()) send(bufferedItems) }
+          .onFailure {
+            if (bufferedItems.isNotEmpty()) {
+              send(bufferedItems)
+              bufferedItems = mutableListOf()
+              yield()
+            }
+            it?.let { throw it }
+          }
           .isSuccess
     }
   }
@@ -43,5 +51,5 @@ fun <T : Any?> Flow<T>.bufferingDebounce(timeoutMillis: Long): Flow<List<T>> = c
  *
  * If the upstream [Flow] completes, any remaining elements are emitted immediately.
  */
-fun <T : Any?> Flow<T>.bufferingDebounce(timeout: Duration): Flow<List<T>> =
+fun <T> Flow<T>.bufferingDebounce(timeout: Duration): Flow<List<T>> =
     bufferingDebounce(timeout.toMillis())

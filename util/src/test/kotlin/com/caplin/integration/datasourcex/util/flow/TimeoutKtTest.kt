@@ -6,6 +6,7 @@ import app.cash.turbine.test
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.time.Duration
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -20,6 +21,14 @@ internal class TimeoutKtTest :
           delay(9)
           expectNoEvents()
           delay(1)
+          awaitError().shouldBeInstanceOf<TimeoutException>()
+        }
+      }
+
+      test("Timeout first Duration - Triggers") {
+        val channel = Channel<String>()
+        channel.consumeAsFlow().timeoutFirst(Duration.ofMillis(10)).test {
+          delay(10)
           awaitError().shouldBeInstanceOf<TimeoutException>()
         }
       }
@@ -54,6 +63,16 @@ internal class TimeoutKtTest :
         }
       }
 
+      test("Timeout first or null Duration - Triggers") {
+        val channel = Channel<String>()
+        channel.consumeAsFlow().timeoutFirstOrNull(Duration.ofMillis(10)).test {
+          delay(10)
+          expectMostRecentItem() shouldBe null
+          channel.close()
+          awaitComplete()
+        }
+      }
+
       test("Timeout first or null - Doesn't trigger") {
         val channel = Channel<String>()
         channel.consumeAsFlow().timeoutFirstOrNull(10).test {
@@ -83,6 +102,29 @@ internal class TimeoutKtTest :
               channel.close()
               awaitComplete()
             }
+      }
+
+      test("Timeout first or default Duration - Triggers") {
+        val channel = Channel<String>()
+        channel
+            .consumeAsFlow()
+            .timeoutFirstOrDefault(Duration.ofMillis(10)) { "X" }
+            .test {
+              delay(10)
+              expectMostRecentItem() shouldBe "X"
+              channel.close()
+              awaitComplete()
+            }
+      }
+
+      test("Timeout first or default value Duration - Triggers") {
+        val channel = Channel<String>()
+        channel.consumeAsFlow().timeoutFirstOrDefault(Duration.ofMillis(10), "X").test {
+          delay(10)
+          expectMostRecentItem() shouldBe "X"
+          channel.close()
+          awaitComplete()
+        }
       }
 
       test("Timeout first or default - Exception handling") {

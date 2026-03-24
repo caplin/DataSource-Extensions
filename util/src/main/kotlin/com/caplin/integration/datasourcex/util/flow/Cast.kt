@@ -8,4 +8,4 @@ import kotlinx.coroutines.flow.Flow
  *
  * @return A new [Flow] containing the cast elements of type [R].
  */
-@Suppress("UNCHECKED_CAST") fun <R : Any?> Flow<*>.cast(): Flow<R> = this as Flow<R>
+@Suppress("UNCHECKED_CAST") fun <R> Flow<*>.cast(): Flow<R> = this as Flow<R>

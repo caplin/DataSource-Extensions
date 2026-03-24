@@ -469,6 +469,7 @@ class BindTest :
         delay(1)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
+        verify { cachedMessageFactory.createGenericMessage("/SUBJECT/1-items/1") }
 
         sharedFlow.subscriptionCount.value shouldBeEqual 0
 

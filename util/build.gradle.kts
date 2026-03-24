@@ -1,4 +1,7 @@
-plugins { `common-library` }
+plugins {
+  `common-library`
+  alias(libs.plugins.jmh)
+}
 
 description = "Utility classes for DataSource extensions"
 
@@ -15,12 +18,22 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   implementation(libs.kotlin.collections.immutable)
 
+  compileOnly(libs.fory.core)
+  compileOnly(libs.fory.kotlin)
+
   testRuntimeOnly("org.slf4j:slf4j-simple")
 
   testImplementation("org.springframework:spring-core") // For testing the RegexPathMatcher
   testImplementation(libs.turbine)
   testImplementation(libs.kotest.assertions)
   testImplementation(libs.kotest.runner)
+  testImplementation(libs.fory.core)
+  testImplementation(libs.fory.kotlin)
+
+  jmh(libs.jmh.core)
+  jmh(libs.jmh.generator)
 }
+
+jmh { duplicateClassesStrategy.set(DuplicatesStrategy.EXCLUDE) }
 
 dokka { dokkaSourceSets.configureEach { includes.from("README.md") } }

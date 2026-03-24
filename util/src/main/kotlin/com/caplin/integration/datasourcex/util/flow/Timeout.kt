@@ -6,6 +6,7 @@ import java.time.Duration
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.onSuccess
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -21,7 +22,7 @@ fun <T, R> Flow<T>.timeoutFirstOrDefault(millis: Long, default: () -> R): Flow<R
   val receiveChannel = produce { collect { send(it) } }
 
   select {
-    receiveChannel.onReceive { result -> send(result as R) }
+    receiveChannel.onReceiveCatching { result -> result.onSuccess { send(it as R) } }
     onTimeout(millis) { send(default()) }
   }
   receiveChannel.consumeEach { send(it as R) }
@@ -45,7 +46,7 @@ fun <T, R> Flow<T>.timeoutFirstOrDefault(millis: Long, default: R): Flow<R> =
  * If the upstream emits no first event within [duration] it will emit the event [default] followed
  * by all later emissions from the upstream.
  */
-fun <T, R : Any?> Flow<T>.timeoutFirstOrDefault(duration: Duration, default: R): Flow<R> =
+fun <T, R> Flow<T>.timeoutFirstOrDefault(duration: Duration, default: R): Flow<R> =
     timeoutFirstOrDefault(duration.toMillis(), default)
 
 /**

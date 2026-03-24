@@ -4,8 +4,6 @@ import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent.EntryEvent
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent.EntryEvent.Upsert
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent.Populated
-import com.caplin.integration.datasourcex.util.serializable
-import java.io.Serializable
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -22,7 +20,7 @@ import kotlinx.coroutines.flow.flow
  * This does not support maps with `null` values or keys, consider using [java.util.Optional] if
  * this is required.
  */
-sealed interface SimpleMapEvent<out K : Any, out V : Any> : Serializable {
+sealed interface SimpleMapEvent<out K : Any, out V : Any> {
 
   /**
    * Indicates that a consistent view of the map has been emitted and only updates will be seen from
@@ -32,8 +30,6 @@ sealed interface SimpleMapEvent<out K : Any, out V : Any> : Serializable {
    * event.
    */
   object Populated : SimpleMapEvent<Nothing, Nothing> {
-    private fun readResolve(): Any = Populated
-
     override fun toString(): String {
       return "Populated()"
     }
@@ -117,6 +113,8 @@ fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.runningFoldToMap(
   var populated = false
   var map = persistentMapOf<K, V>()
 
+  if (emitPartials) emit(map)
+
   collect { mapEvent ->
     var emit = false
     when (mapEvent) {
@@ -134,13 +132,14 @@ fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.runningFoldToMap(
       }
 
       is Populated -> {
+        if (populated) error("Populated event already received")
         populated = true
-        if (!emitted || !emitPartials) emit = true
+        if (!emitted && !emitPartials) emit = true
       }
     }
     if (emit) {
       emitted = true
-      emit(map.serializable())
+      emit(map)
     }
   }
 }
@@ -157,12 +156,12 @@ fun <K : Any, V : Any> Flow<EntryEvent<K, V>>.runningFoldToMap(): Flow<Map<K, V>
             map.remove(mapEvent.key).also { newMap ->
               check(newMap !== map) { "Attempted to remove non existent key ${mapEvent.key}" }
             }
-        emit(map.serializable())
+        emit(map)
       }
 
       is Upsert -> {
         map = map.put(mapEvent.key, mapEvent.newValue)
-        emit(map.serializable())
+        emit(map)
       }
     }
   }
