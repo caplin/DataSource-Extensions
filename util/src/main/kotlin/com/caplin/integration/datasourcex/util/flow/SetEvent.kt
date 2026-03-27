@@ -168,9 +168,8 @@ fun <V : Any, R> Flow<Set<V>>.flatMapLatestAndMerge(
 
 /**
  * Transforms a flow of [SetEvent] into a merged flow by applying [entryEventTransformer] to each
- * entry event. When an [Insert] event is received, a new flow is created and its emissions are
- * merged into the resulting flow. When a [Removed] event is received, the previously created flow
- * for that value is cancelled.
+ * entry event. When an event is received, a new flow is created and its emissions are
+ * merged into the resulting flow.
  */
 fun <V : Any, R> Flow<SetEvent<V>>.flatMapLatestAndMerge(
     entryEventTransformer: (EntryEvent<V>) -> Flow<R>
@@ -178,17 +177,13 @@ fun <V : Any, R> Flow<SetEvent<V>>.flatMapLatestAndMerge(
   val jobs = ConcurrentHashMap<V, Job>()
   collect { setEvent ->
     when (setEvent) {
-      is Insert<V> -> {
+      is EntryEvent<V> -> {
         jobs[setEvent.value]?.cancelAndJoin()
         jobs[setEvent.value] =
             entryEventTransformer(setEvent)
                 .onEach { send(it) }
-                .onCompletion { jobs.remove(setEvent.value) }
+                .onCompletion { throwable -> if (throwable == null) jobs.remove(setEvent.value) }
                 .launchIn(this@channelFlow)
-      }
-
-      is Removed<V> -> {
-        jobs.remove(setEvent.value)?.cancelAndJoin()
       }
 
       is Populated -> {}
