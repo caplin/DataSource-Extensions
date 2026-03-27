@@ -362,8 +362,6 @@ public final class com/caplin/integration/datasourcex/util/flow/SetEvent$Populat
 }
 
 public final class com/caplin/integration/datasourcex/util/flow/SetEventKt {
-	public static final fun flatMapLatestAndMerge (Lkotlinx/coroutines/flow/Flow;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
-	public static final fun flatMapLatestAndMergeSet (Lkotlinx/coroutines/flow/Flow;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun runningFoldToSet (Lkotlinx/coroutines/flow/Flow;ZZ)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun runningFoldToSet$default (Lkotlinx/coroutines/flow/Flow;ZZILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun toEvents (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
