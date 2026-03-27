@@ -168,8 +168,8 @@ fun <V : Any, R> Flow<Set<V>>.flatMapLatestAndMerge(
 
 /**
  * Transforms a flow of [SetEvent] into a merged flow by applying [entryEventTransformer] to each
- * entry event. When an event is received, a new flow is created and its emissions are
- * merged into the resulting flow.
+ * entry event. When an event is received, a new flow is created and its emissions are merged into
+ * the resulting flow.
  */
 fun <V : Any, R> Flow<SetEvent<V>>.flatMapLatestAndMerge(
     entryEventTransformer: (EntryEvent<V>) -> Flow<R>
