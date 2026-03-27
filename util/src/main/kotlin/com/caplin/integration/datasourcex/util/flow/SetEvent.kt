@@ -4,16 +4,9 @@ import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent
 import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent.Insert
 import com.caplin.integration.datasourcex.util.flow.SetEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.SetEvent.Populated
-import java.util.concurrent.ConcurrentHashMap
 import kotlinx.collections.immutable.persistentSetOf
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
 
 /** Events representing a mutation to a [Set]. */
 sealed interface SetEvent<out V : Any> {
@@ -152,41 +145,6 @@ fun <V : Any> Flow<SetEvent<V>>.runningFoldToSet(
     if (emit) {
       emitted = true
       emit(set)
-    }
-  }
-}
-
-/**
- * Transforms a flow of sets into a merged flow by applying [entryEventTransformer] to each entry
- * event (insert or remove). When a value is inserted, a new flow is created and merged. When a
- * value is removed, the corresponding flow is cancelled.
- */
-@JvmName("flatMapLatestAndMergeSet")
-fun <V : Any, R> Flow<Set<V>>.flatMapLatestAndMerge(
-    entryEventTransformer: (EntryEvent<V>) -> Flow<R>
-): Flow<R> = toEvents().flatMapLatestAndMerge(entryEventTransformer)
-
-/**
- * Transforms a flow of [SetEvent] into a merged flow by applying [entryEventTransformer] to each
- * entry event. When an event is received, a new flow is created and its emissions are merged into
- * the resulting flow.
- */
-fun <V : Any, R> Flow<SetEvent<V>>.flatMapLatestAndMerge(
-    entryEventTransformer: (EntryEvent<V>) -> Flow<R>
-) = channelFlow {
-  val jobs = ConcurrentHashMap<V, Job>()
-  collect { setEvent ->
-    when (setEvent) {
-      is EntryEvent<V> -> {
-        jobs[setEvent.value]?.cancelAndJoin()
-        jobs[setEvent.value] =
-            entryEventTransformer(setEvent)
-                .onEach { send(it) }
-                .onCompletion { throwable -> if (throwable == null) jobs.remove(setEvent.value) }
-                .launchIn(this@channelFlow)
-      }
-
-      is Populated -> {}
     }
   }
 }
