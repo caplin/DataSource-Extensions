@@ -8,7 +8,13 @@ import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
 import org.apache.fory.Fory
 
 /** Registers serializers for internal types with the provided [Fory] instance. */
-fun Fory.registerDataSourceSerializers(): Fory = apply {
+@Suppress("UNCHECKED_CAST")
+fun Fory.registerDataSourceSerializers(preserveExceptionTypes: Boolean = false): Fory = apply {
+  if (preserveExceptionTypes)
+      check(config.trackingRef()) {
+        "Tracking references must be enabled for exception types preservation"
+      }
+
   // Register serializers for FlowMapStreamEvent value classes
   registerSerializer(FlowMapStreamEvent::class.java, FlowMapStreamEventSerializer::class.java)
   registerSerializer(
@@ -24,7 +30,15 @@ fun Fory.registerDataSourceSerializers(): Fory = apply {
   registerSerializer(MapEvent::class.java, MapEventSerializer::class.java)
   registerSerializer(SimpleMapEvent::class.java, SimpleMapEventSerializer::class.java)
   registerSerializer(SetEvent::class.java, SetEventSerializer::class.java)
-  registerSerializer(ValueOrCompletion::class.java, ValueOrCompletionSerializer::class.java)
+
+  registerSerializer(
+      ValueOrCompletion::class.java,
+      ValueOrCompletionSerializer(
+          this,
+          ValueOrCompletion::class.java,
+          preserveExceptionTypes,
+      ),
+  )
 }
 
 fun Fory.registerPersistentCollectionSerializers(): Fory = apply {

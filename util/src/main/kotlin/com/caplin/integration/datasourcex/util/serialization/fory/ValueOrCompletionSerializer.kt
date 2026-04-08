@@ -5,8 +5,11 @@ import org.apache.fory.Fory
 import org.apache.fory.memory.MemoryBuffer
 import org.apache.fory.serializer.Serializer
 
-internal class ValueOrCompletionSerializer(fory: Fory, type: Class<ValueOrCompletion<*>>) :
-    Serializer<ValueOrCompletion<*>>(fory, type) {
+internal class ValueOrCompletionSerializer(
+    fory: Fory,
+    type: Class<ValueOrCompletion<*>>,
+    private val preserveExceptionTypes: Boolean = true,
+) : Serializer<ValueOrCompletion<*>>(fory, type) {
 
   private enum class Type {
     VALUE,
@@ -21,8 +24,12 @@ internal class ValueOrCompletionSerializer(fory: Fory, type: Class<ValueOrComple
       }
       is ValueOrCompletion.Completion -> {
         buffer.writeByte(Type.COMPLETION.ordinal.toByte())
-        val message = value.throwable?.message ?: value.throwable?.toString()
-        fory.writeRef(buffer, message)
+        if (preserveExceptionTypes) {
+          fory.writeRef(buffer, value.throwable)
+        } else {
+          val message = value.throwable?.message ?: value.throwable?.toString()
+          fory.writeRef(buffer, message)
+        }
       }
     }
   }
@@ -34,8 +41,13 @@ internal class ValueOrCompletionSerializer(fory: Fory, type: Class<ValueOrComple
         ValueOrCompletion.Value(value)
       }
       Type.COMPLETION -> {
-        val message = fory.readRef(buffer) as String?
-        ValueOrCompletion.Completion(message?.let { RuntimeException(it) })
+        if (preserveExceptionTypes) {
+          val throwable = fory.readRef(buffer) as Throwable?
+          ValueOrCompletion.Completion(throwable)
+        } else {
+          val message = fory.readRef(buffer) as String?
+          ValueOrCompletion.Completion(message?.let { RuntimeException(it) })
+        }
       }
     }
   }
