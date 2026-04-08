@@ -461,7 +461,8 @@ public final class com/caplin/integration/datasourcex/util/flow/ValueOrCompletio
 }
 
 public final class com/caplin/integration/datasourcex/util/serialization/fory/DataSourceModuleKt {
-	public static final fun registerDataSourceSerializers (Lorg/apache/fory/Fory;)Lorg/apache/fory/Fory;
+	public static final fun registerDataSourceSerializers (Lorg/apache/fory/Fory;Z)Lorg/apache/fory/Fory;
+	public static synthetic fun registerDataSourceSerializers$default (Lorg/apache/fory/Fory;ZILjava/lang/Object;)Lorg/apache/fory/Fory;
 	public static final fun registerPersistentCollectionSerializers (Lorg/apache/fory/Fory;)Lorg/apache/fory/Fory;
 }
 
