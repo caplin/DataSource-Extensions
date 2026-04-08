@@ -65,7 +65,7 @@ class ValueOrCompletionSerializationTest :
               val bytes = foryNoType.serialize(event)
               val deserialized = foryNoType.deserialize(bytes) as ValueOrCompletion.Completion
               deserialized.throwable.shouldBeInstanceOf<RuntimeException>()
-              deserialized.throwable.message shouldBe "aah"
+              deserialized.throwable?.message shouldBe "aah"
             }
           }
         },
