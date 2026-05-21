@@ -161,4 +161,84 @@ open class FlowMapBenchmark {
     events.toFlowMapIn(scope)
     scope.cancel()
   }
+
+  /** Per-thread state for benchmarks that need an ever-changing value. */
+  @State(Scope.Thread)
+  open class ChangingValueState {
+    var counter: Int = 0
+  }
+
+  /** Per-thread state for benchmarks that cycle through a fixed key pool. */
+  @State(Scope.Thread)
+  open class KeyCyclingState {
+    val keys: List<String> = (0..255).map { "key$it" }
+    var idx: Int = 0
+  }
+
+  /**
+   * Measures the throughput of [MutableFlowMap.put] when the value actually changes on every call.
+   * Unlike [putSingle] (which puts the same key/value repeatedly and short-circuits on the equality
+   * check) this exercises the full mutate-and-emit path.
+   */
+  @Benchmark
+  fun putChanging(value: ChangingValueState) {
+    flowMap.put("key", "v${value.counter++}")
+  }
+
+  /**
+   * Measures the throughput of [MutableFlowMap.put] rotating through a 256-entry key pool with a
+   * fresh value every time. Every put is a real mutation against different parts of the persistent
+   * map's trie.
+   */
+  @Benchmark
+  fun putCycling(state: KeyCyclingState) {
+    val key = state.keys[state.idx and 255]
+    flowMap.put(key, "v${state.idx}")
+    state.idx++
+  }
+
+  /**
+   * Same workload as [putCycling] but with 4 contending writer threads, measuring the cost of the
+   * write-side synchronization under contention.
+   */
+  @Benchmark
+  @Threads(4)
+  fun concurrentPutCycling(state: KeyCyclingState) {
+    val key = state.keys[state.idx and 255]
+    flowMap.put(key, "v${state.idx}")
+    state.idx++
+  }
+
+  /** Holds two pre-built large maps so that successive [MutableFlowMap.putAll] calls all mutate. */
+  @State(Scope.Benchmark)
+  open class LargePutAllState {
+    val mapA: Map<String, String> = (0..99).associate { "key$it" to "A$it" }
+    val mapB: Map<String, String> = (0..99).associate { "key$it" to "B$it" }
+  }
+
+  /** Per-thread toggle so each [putAllLarge] invocation alternates between the two large maps. */
+  @State(Scope.Thread)
+  open class PutAllToggleState {
+    var useA: Boolean = false
+  }
+
+  /**
+   * Measures the throughput of [MutableFlowMap.putAll] with a 100-entry map where every entry's
+   * value differs from the current contents. Unlike [putAllSmall] (3 entries, no-op after the first
+   * iteration), this exercises the full event-list construction and emission path.
+   */
+  @Benchmark
+  fun putAllLarge(shared: LargePutAllState, toggle: PutAllToggleState) {
+    flowMap.putAll(if (toggle.useA) shared.mapA else shared.mapB)
+    toggle.useA = !toggle.useA
+  }
+
+  /**
+   * Measures put throughput with active [MutableFlowMap.asFlow] subscribers and a value that
+   * actually changes each call - the realistic combination of mutation cost and subscriber fan-out.
+   */
+  @Benchmark
+  fun putChangingWithSubscribers(state: ActiveSubscriberState, value: ChangingValueState) {
+    state.flowMap.put("key", "v${value.counter++}")
+  }
 }
