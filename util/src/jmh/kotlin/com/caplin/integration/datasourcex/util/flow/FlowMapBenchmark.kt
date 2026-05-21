@@ -2,20 +2,61 @@ package com.caplin.integration.datasourcex.util.flow
 
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Upsert
 import com.caplin.integration.datasourcex.util.flow.MapEvent.Populated
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.runBlocking
-import org.openjdk.jmh.annotations.*
+import org.openjdk.jmh.annotations.Benchmark
+import org.openjdk.jmh.annotations.BenchmarkMode
+import org.openjdk.jmh.annotations.Fork
+import org.openjdk.jmh.annotations.Measurement
+import org.openjdk.jmh.annotations.Mode
+import org.openjdk.jmh.annotations.OutputTimeUnit
+import org.openjdk.jmh.annotations.Param
+import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.Setup
+import org.openjdk.jmh.annotations.State
+import org.openjdk.jmh.annotations.TearDown
+import org.openjdk.jmh.annotations.Threads
+import org.openjdk.jmh.annotations.Warmup
 
 /**
  * Benchmarks for [FlowMap] implementation, focusing on mutation performance, lookup efficiency, and
  * Flow-based state reconstruction.
+ *
+ * Latest measurement (Temurin 17, single fork, Windows 11):
+ *
+ * | Benchmark                                 | Score (ops/ms) | Error       |
+ * |-------------------------------------------|---------------:|------------:|
+ * | asFlowCollection                          |         40.968 |     ± 3.454 |
+ * | asFlowWithPredicateCollection             |         32.692 |     ± 5.310 |
+ * | asFlowWithStateCollection                 |       2408.062 |    ± 29.675 |
+ * | concurrentPutCycling (4 threads)          |       3373.249 |   ± 758.200 |
+ * | getFromLargeMap                           |      95562.706 |  ± 6261.902 |
+ * | putAllLarge                               |        324.697 |    ± 22.246 |
+ * | putAllSmall                               |      21808.968 |  ± 2155.450 |
+ * | putAndRemove                              |      10380.004 |   ± 483.477 |
+ * | putChanging                               |      16558.513 |   ± 555.618 |
+ * | putChangingWithDrainingSubscribers, n=1   |        277.528 |   ± 157.848 |
+ * | putChangingWithDrainingSubscribers, n=10  |         59.796 |     ± 6.976 |
+ * | putChangingWithDrainingSubscribers, n=100 |          6.159 |     ± 0.724 |
+ * | putChangingWithSubscribers, n=1           |       3819.274 |   ± 404.097 |
+ * | putChangingWithSubscribers, n=10          |         62.353 |     ± 7.079 |
+ * | putChangingWithSubscribers, n=100         |        566.000 |   ± 175.059 |
+ * | putCycling                                |      10790.064 |  ± 1335.875 |
+ * | putSingle                                 |      66679.844 |  ± 4248.634 |
+ * | putWithSubscribers, n=1                   |      66822.702 |  ± 1237.435 |
+ * | putWithSubscribers, n=10                  |      62986.763 | ± 15085.699 |
+ * | putWithSubscribers, n=100                 |      68117.696 |  ± 1345.374 |
+ * | toFlowMapInBenchmark                      |         29.011 |     ± 1.184 |
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -236,9 +277,68 @@ open class FlowMapBenchmark {
   /**
    * Measures put throughput with active [MutableFlowMap.asFlow] subscribers and a value that
    * actually changes each call - the realistic combination of mutation cost and subscriber fan-out.
+   *
+   * Note: writer-only throughput. Events may accumulate in the signal's buffer; this does not wait
+   * for subscribers to consume them. See [putChangingWithDrainingSubscribers] for end-to-end.
    */
   @Benchmark
   fun putChangingWithSubscribers(state: ActiveSubscriberState, value: ChangingValueState) {
     state.flowMap.put("key", "v${value.counter++}")
+  }
+
+  /**
+   * State holder for [putChangingWithDrainingSubscribers]. Subscribers bump an [AtomicLong] counter
+   * on each consumed event so the writer can spin-wait until every subscriber has observed the
+   * latest put. Uses a non-blocking counter rather than a blocking gate so subscriber coroutines
+   * never park their dispatcher worker thread.
+   */
+  @State(Scope.Benchmark)
+  open class DrainingSubscriberState {
+    @Param("1", "10", "100") var subscriberCount: Int = 0
+
+    lateinit var flowMap: MutableFlowMap<String, String>
+    lateinit var scope: CoroutineScope
+    val consumed: AtomicLong = AtomicLong()
+
+    @Setup
+    fun setup() {
+      flowMap = mutableFlowMapOf()
+      scope = CoroutineScope(Dispatchers.Default)
+      val attached = CountDownLatch(subscriberCount)
+      repeat(subscriberCount) {
+        flowMap
+            .asFlow()
+            .onEach { event ->
+              if (event === Populated) attached.countDown() else consumed.incrementAndGet()
+            }
+            .launchIn(scope)
+      }
+      // Ensure every subscriber is actually attached (has seen its initial Populated) before
+      // the first measurement, otherwise the writer would wait for events the subscriber never
+      // received.
+      attached.await()
+    }
+
+    @TearDown
+    fun tearDown() {
+      scope.cancel()
+    }
+  }
+
+  /**
+   * Like [putChangingWithSubscribers] but blocks after each put until every subscriber has run its
+   * `onEach` for the emitted event. Measures end-to-end put-to-consume throughput rather than the
+   * writer's buffer-and-go throughput.
+   */
+  @Benchmark
+  fun putChangingWithDrainingSubscribers(
+      state: DrainingSubscriberState,
+      value: ChangingValueState,
+  ) {
+    val target = state.consumed.get() + state.subscriberCount
+    state.flowMap.put("key", "v${value.counter++}")
+    while (state.consumed.get() < target) {
+      Thread.onSpinWait()
+    }
   }
 }
