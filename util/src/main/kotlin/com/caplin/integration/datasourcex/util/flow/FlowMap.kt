@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow.SUSPEND
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
@@ -192,14 +191,14 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
   )
 
   private val writeLock = Any()
-  private val state = MutableStateFlow(initialMap)
+  @Volatile private var currentMap: PersistentMap<K, V> = initialMap
 
   private val signal =
       MutableSharedFlow<FlowMapEvent<K, V>>(1, MAX_VALUE, SUSPEND).apply {
         tryEmit(FlowMapEvent(initialMap, emptyList()))
       }
 
-  override fun asMap(): PersistentMap<K, V> = state.value
+  override fun asMap(): PersistentMap<K, V> = currentMap
 
   override fun asFlow(predicate: ((K, V) -> Boolean)?): Flow<MapEvent<K, V>> = flow {
     val emittedKeys = if (predicate != null) mutableSetOf<K>() else null
@@ -277,52 +276,52 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
     }
   }
 
-  override fun valueFlow(key: K): Flow<V?> = state.map { it[key] }.distinctUntilChanged()
+  override fun valueFlow(key: K): Flow<V?> = signal.map { it.map[key] }.distinctUntilChanged()
 
   override fun put(key: K, value: V): V? =
       synchronized(writeLock) {
-        val cur = state.value
+        val cur = currentMap
         val oldValue = cur[key]
         if (oldValue == value) return@synchronized oldValue
         val next = cur.put(key, value)
-        state.value = next
+        currentMap = next
         signal.tryEmit(FlowMapEvent(next, listOf(Upsert(key, oldValue, value))))
         oldValue
       }
 
   override fun remove(key: K): V? =
       synchronized(writeLock) {
-        val cur = state.value
+        val cur = currentMap
         val oldValue = cur[key] ?: return@synchronized null
         val next = cur.remove(key)
-        state.value = next
+        currentMap = next
         signal.tryEmit(FlowMapEvent(next, listOf(Removed(key, oldValue))))
         oldValue
       }
 
   override val entries: Set<Map.Entry<K, V>>
-    get() = state.value.entries
+    get() = currentMap.entries
 
   override val keys: Set<K>
-    get() = state.value.keys
+    get() = currentMap.keys
 
   override val size: Int
-    get() = state.value.size
+    get() = currentMap.size
 
   override val values: Collection<V>
-    get() = state.value.values
+    get() = currentMap.values
 
-  override fun isEmpty(): Boolean = state.value.isEmpty()
+  override fun isEmpty(): Boolean = currentMap.isEmpty()
 
-  override fun get(key: K): V? = state.value[key]
+  override fun get(key: K): V? = currentMap[key]
 
-  override fun containsValue(value: V): Boolean = state.value.containsValue(value)
+  override fun containsValue(value: V): Boolean = currentMap.containsValue(value)
 
-  override fun containsKey(key: K): Boolean = state.value.containsKey(key)
+  override fun containsKey(key: K): Boolean = currentMap.containsKey(key)
 
   override fun putAll(from: Map<out K, V>) =
       synchronized(writeLock) {
-        val cur = state.value
+        val cur = currentMap
         val events =
             from.mapNotNull { (key, newValue) ->
               val oldValue = cur[key]
@@ -330,17 +329,17 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
             }
         if (events.isEmpty()) return@synchronized
         val next = cur.putAll(from)
-        state.value = next
+        currentMap = next
         signal.tryEmit(FlowMapEvent(next, events))
       }
 
   override fun clear() =
       synchronized(writeLock) {
-        val cur = state.value
+        val cur = currentMap
         if (cur.isEmpty()) return@synchronized
         val events = cur.map { Removed(it.key, it.value) }
         val next = cur.clear()
-        state.value = next
+        currentMap = next
         signal.tryEmit(FlowMapEvent(next, events, isClear = true))
       }
 }
