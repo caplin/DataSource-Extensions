@@ -4,7 +4,6 @@ import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Upsert
 import com.caplin.integration.datasourcex.util.flow.MapEvent.Populated
-import java.util.TreeMap
 import kotlin.Int.Companion.MAX_VALUE
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
@@ -13,12 +12,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow.SUSPEND
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 
@@ -185,56 +182,30 @@ fun <K : Any, V : Any> Flow<FlowMapStreamEvent<K, V>>.runningFoldToMap(): Flow<M
 
 private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
     MutableFlowMap<K, V> {
-  private data class State<K, V>(val version: Long, val map: PersistentMap<K, V>)
 
   private data class FlowMapEvent<K : Any, V : Any>(
-      val state: State<K, V>,
+      val map: PersistentMap<K, V>,
       val events: List<EntryEvent<K, V>>,
       val isClear: Boolean = false,
   )
 
-  private val state = MutableStateFlow(State(0L, initialMap))
+  private val writeLock = Any()
+  @Volatile private var currentMap: PersistentMap<K, V> = initialMap
 
   private val signal =
       MutableSharedFlow<FlowMapEvent<K, V>>(1, MAX_VALUE, SUSPEND).apply {
-        tryEmit(FlowMapEvent(state.value, emptyList()))
+        tryEmit(FlowMapEvent(initialMap, emptyList()))
       }
 
-  private val orderedSignal = flow {
-    var version = -1L
-    var held: TreeMap<Long, FlowMapEvent<K, V>>? = null
-    signal.collect {
-      val expectedVersion = version + 1
-      if (version == -1L || it.state.version == expectedVersion) {
-        version = it.state.version
-        emit(it)
-        if (held != null) {
-          var nextVersion = version + 1
-          var next: FlowMapEvent<K, V>? = held?.remove(nextVersion)
-          while (next != null) {
-            emit(next)
-            version = next.state.version
-            nextVersion = version + 1
-            next = held?.remove(nextVersion)
-          }
-          if (held?.isEmpty() == true) held = null
-        }
-      } else if (it.state.version > expectedVersion) {
-        held = held ?: TreeMap()
-        held?.put(it.state.version, it)
-      }
-    }
-  }
-
-  override fun asMap(): PersistentMap<K, V> = state.value.map
+  override fun asMap(): PersistentMap<K, V> = currentMap
 
   override fun asFlow(predicate: ((K, V) -> Boolean)?): Flow<MapEvent<K, V>> = flow {
     val emittedKeys = if (predicate != null) mutableSetOf<K>() else null
 
     var first = true
-    orderedSignal.collect { flowMapEvent ->
+    signal.collect { flowMapEvent ->
       if (first) {
-        val map = flowMapEvent.state.map
+        val map = flowMapEvent.map
         if (predicate == null) {
           for (entry in map) {
             emit(Upsert(entry.key, null, entry.value))
@@ -287,9 +258,9 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
 
   override fun asFlowWithState(): Flow<FlowMapStreamEvent<K, V>> = flow {
     var first = true
-    orderedSignal.collect { flowMapEvent ->
+    signal.collect { flowMapEvent ->
       if (first) {
-        emit(FlowMapStreamEvent.InitialState(flowMapEvent.state.map))
+        emit(FlowMapStreamEvent.InitialState(flowMapEvent.map))
         first = false
       } else {
         if (flowMapEvent.isClear) {
@@ -304,77 +275,89 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
     }
   }
 
-  override fun valueFlow(key: K): Flow<V?> = state.map { it.map[key] }.distinctUntilChanged()
+  override fun valueFlow(key: K): Flow<V?> =
+      flow {
+            var first = true
+            signal.collect { flowMapEvent ->
+              if (first) {
+                first = false
+                emit(flowMapEvent.map[key])
+              } else {
+                for (event in flowMapEvent.events) {
+                  if (event.key == key) {
+                    emit(event.newValue)
+                    break
+                  }
+                }
+              }
+            }
+          }
+          .distinctUntilChanged()
 
-  override fun put(key: K, value: V): V? {
-    val (prev, next) =
-        state.updateAndGetPrevAndNext {
-          if (it.map[key] == value) it else State(it.version + 1, it.map.put(key, value))
-        }
+  override fun put(key: K, value: V): V? =
+      synchronized(writeLock) {
+        val cur = currentMap
+        val oldValue = cur[key]
+        if (oldValue == value) return@synchronized oldValue
+        val next = cur.put(key, value)
+        currentMap = next
+        signal.tryEmit(FlowMapEvent(next, listOf(Upsert(key, oldValue, value))))
+        oldValue
+      }
 
-    val oldValue = prev.map[key]
-    if (prev != next) signal.tryEmit(FlowMapEvent(next, listOf(Upsert(key, oldValue, value))))
-    return oldValue
-  }
-
-  override fun remove(key: K): V? {
-    val (prev, next) =
-        state.updateAndGetPrevAndNext {
-          if (it.map[key] == null) it else State(it.version + 1, it.map.remove(key))
-        }
-
-    val oldValue = prev.map[key]
-    if (oldValue != null) signal.tryEmit(FlowMapEvent(next, listOf(Removed(key, oldValue))))
-    return oldValue
-  }
+  override fun remove(key: K): V? =
+      synchronized(writeLock) {
+        val cur = currentMap
+        val oldValue = cur[key] ?: return@synchronized null
+        val next = cur.remove(key)
+        currentMap = next
+        signal.tryEmit(FlowMapEvent(next, listOf(Removed(key, oldValue))))
+        oldValue
+      }
 
   override val entries: Set<Map.Entry<K, V>>
-    get() = state.value.map.entries
+    get() = currentMap.entries
 
   override val keys: Set<K>
-    get() = state.value.map.keys
+    get() = currentMap.keys
 
   override val size: Int
-    get() = state.value.map.size
+    get() = currentMap.size
 
   override val values: Collection<V>
-    get() = state.value.map.values
+    get() = currentMap.values
 
-  override fun isEmpty(): Boolean = state.value.map.isEmpty()
+  override fun isEmpty(): Boolean = currentMap.isEmpty()
 
-  override fun get(key: K): V? = state.value.map[key]
+  override fun get(key: K): V? = currentMap[key]
 
-  override fun containsValue(value: V): Boolean = state.value.map.containsValue(value)
+  override fun containsValue(value: V): Boolean = currentMap.containsValue(value)
 
-  override fun containsKey(key: K): Boolean = state.value.map.containsKey(key)
+  override fun containsKey(key: K): Boolean = currentMap.containsKey(key)
 
-  override fun putAll(from: Map<out K, V>) {
-    val (prev, next) =
-        state.updateAndGetPrevAndNext {
-          val nextMap = it.map.putAll(from)
-          if (nextMap === it.map) it else State(it.version + 1, nextMap)
-        }
+  override fun putAll(from: Map<out K, V>) =
+      synchronized(writeLock) {
+        val cur = currentMap
+        val events =
+            from.mapNotNull { (key, newValue) ->
+              val oldValue = cur[key]
+              if (newValue != oldValue) Upsert(key, oldValue, newValue) else null
+            }
+        if (events.isEmpty()) return@synchronized
+        val next = cur.putAll(from)
+        currentMap = next
+        signal.tryEmit(FlowMapEvent(next, events))
+      }
 
-    if (prev != next) {
-      val events =
-          from.mapNotNull { (key, newValue) ->
-            val oldValue = prev.map[key]
-            if (newValue != oldValue) Upsert(key, oldValue, newValue) else null
-          }
-      if (events.isNotEmpty()) signal.tryEmit(FlowMapEvent(next, events))
-    }
-  }
-
-  override fun clear() {
-    val (prev, next) =
-        state.updateAndGetPrevAndNext {
-          if (it.map.isEmpty()) it else State(it.version + 1, it.map.clear())
-        }
-    if (prev.map.isNotEmpty())
-        signal.tryEmit(
-            FlowMapEvent(next, prev.map.map { Removed(it.key, it.value) }, isClear = true)
-        )
-  }
+  override fun clear() =
+      synchronized(writeLock) {
+        val cur = currentMap
+        if (cur.isEmpty()) return@synchronized
+        val events = cur.map { Removed(it.key, it.value) }
+        val next = cur.clear()
+        currentMap = next
+        signal.tryEmit(FlowMapEvent(next, events, isClear = true))
+      }
 }
 
 suspend fun <K : Any, V : Any> Flow<MapEvent<K, V>>.toFlowMapIn(
@@ -410,14 +393,4 @@ suspend fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.toFlowMapIn(
       .launchIn(scope)
   populated.lock()
   return flowMap
-}
-
-internal inline fun <T> MutableStateFlow<T>.updateAndGetPrevAndNext(
-    function: (T) -> T
-): Pair<T, T> {
-  while (true) {
-    val prevValue = value
-    val nextValue = function(prevValue)
-    if (compareAndSet(prevValue, nextValue)) return prevValue to nextValue
-  }
 }
