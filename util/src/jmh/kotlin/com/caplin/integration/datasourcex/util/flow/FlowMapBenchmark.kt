@@ -34,29 +34,32 @@ import org.openjdk.jmh.annotations.Warmup
  *
  * Latest measurement (Temurin 17, single fork, Windows 11):
  *
- * | Benchmark                                 | Score (ops/ms) | Error       |
- * |-------------------------------------------|---------------:|------------:|
- * | asFlowCollection                          |         40.968 |     ± 3.454 |
- * | asFlowWithPredicateCollection             |         32.692 |     ± 5.310 |
- * | asFlowWithStateCollection                 |       2408.062 |    ± 29.675 |
- * | concurrentPutCycling (4 threads)          |       3373.249 |   ± 758.200 |
- * | getFromLargeMap                           |      95562.706 |  ± 6261.902 |
- * | putAllLarge                               |        324.697 |    ± 22.246 |
- * | putAllSmall                               |      21808.968 |  ± 2155.450 |
- * | putAndRemove                              |      10380.004 |   ± 483.477 |
- * | putChanging                               |      16558.513 |   ± 555.618 |
- * | putChangingWithDrainingSubscribers, n=1   |        277.528 |   ± 157.848 |
- * | putChangingWithDrainingSubscribers, n=10  |         59.796 |     ± 6.976 |
- * | putChangingWithDrainingSubscribers, n=100 |          6.159 |     ± 0.724 |
- * | putChangingWithSubscribers, n=1           |       3819.274 |   ± 404.097 |
- * | putChangingWithSubscribers, n=10          |         62.353 |     ± 7.079 |
- * | putChangingWithSubscribers, n=100         |        566.000 |   ± 175.059 |
- * | putCycling                                |      10790.064 |  ± 1335.875 |
- * | putSingle                                 |      66679.844 |  ± 4248.634 |
- * | putWithSubscribers, n=1                   |      66822.702 |  ± 1237.435 |
- * | putWithSubscribers, n=10                  |      62986.763 | ± 15085.699 |
- * | putWithSubscribers, n=100                 |      68117.696 |  ± 1345.374 |
- * | toFlowMapInBenchmark                      |         29.011 |     ± 1.184 |
+ * | Benchmark                                          | Score (ops/ms) | Error      |
+ * |----------------------------------------------------|---------------:|-----------:|
+ * | asFlowCollection                                   |         42.548 |    ± 3.394 |
+ * | asFlowWithPredicateCollection                      |         34.197 |    ± 0.905 |
+ * | asFlowWithStateCollection                          |       2070.676 |   ± 62.405 |
+ * | concurrentPutCycling (4 threads)                   |       2664.437 |  ± 354.958 |
+ * | getFromLargeMap                                    |      94992.879 | ± 8888.292 |
+ * | putAllLarge                                        |        321.358 |   ± 14.364 |
+ * | putAllSmall                                        |      22155.471 | ± 4211.902 |
+ * | putAndRemove                                       |      10372.256 |  ± 171.209 |
+ * | putChanging                                        |      16413.289 | ± 1372.233 |
+ * | putChangingWithDrainingSubscribers, n=1            |        341.278 |   ± 18.641 |
+ * | putChangingWithDrainingSubscribers, n=10           |         60.685 |    ± 4.373 |
+ * | putChangingWithDrainingSubscribers, n=100          |          5.984 |    ± 1.017 |
+ * | putChangingWithDrainingValueFlowSubscribers, n=1   |        218.861 |   ± 30.982 |
+ * | putChangingWithDrainingValueFlowSubscribers, n=10  |         61.384 |    ± 6.342 |
+ * | putChangingWithDrainingValueFlowSubscribers, n=100 |          6.295 |    ± 0.777 |
+ * | putChangingWithSubscribers, n=1                    |       3921.719 |  ± 269.207 |
+ * | putChangingWithSubscribers, n=10                   |         65.148 |    ± 7.733 |
+ * | putChangingWithSubscribers, n=100                  |        530.386 |  ± 168.633 |
+ * | putCycling                                         |      10580.715 | ± 2106.702 |
+ * | putSingle                                          |      63821.667 | ± 1333.707 |
+ * | putWithSubscribers, n=1                            |      63339.972 | ± 2133.787 |
+ * | putWithSubscribers, n=10                           |      63061.449 | ± 1313.094 |
+ * | putWithSubscribers, n=100                          |      63960.063 | ± 3961.219 |
+ * | toFlowMapInBenchmark                               |         27.103 |    ± 2.115 |
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -337,6 +340,68 @@ open class FlowMapBenchmark {
   ) {
     val target = state.consumed.get() + state.subscriberCount
     state.flowMap.put("key", "v${value.counter++}")
+    while (state.consumed.get() < target) {
+      Thread.onSpinWait()
+    }
+  }
+
+  /**
+   * State holder for [putChangingWithDrainingValueFlowSubscribers]. Each subscriber watches a
+   * distinct key; the benchmark cycles the writer through those keys so exactly one subscriber
+   * emits per put, allowing the writer to spin-wait on a single counter increment. The map is
+   * pre-populated with 1,000 filler entries so the per-event filter cost on the non-matching N-1
+   * subscribers is non-trivial.
+   */
+  @State(Scope.Benchmark)
+  open class DrainingValueFlowSubscriberState {
+    @Param("1", "10", "100") var subscriberCount: Int = 0
+
+    lateinit var flowMap: MutableFlowMap<String, String>
+    lateinit var scope: CoroutineScope
+    lateinit var keys: List<String>
+    val consumed: AtomicLong = AtomicLong()
+
+    @Setup
+    fun setup() {
+      flowMap = mutableFlowMapOf()
+      repeat(1000) { flowMap.put("filler$it", "v$it") }
+      keys = (0 until subscriberCount).map { "watched$it" }
+      // Seed each watched key so the first per-iteration put can't dedup against null.
+      keys.forEach { flowMap.put(it, "init") }
+
+      scope = CoroutineScope(Dispatchers.Default)
+      val attached = CountDownLatch(subscriberCount)
+      repeat(subscriberCount) { i ->
+        flowMap
+            .valueFlow(keys[i])
+            .onEach { if (attached.count > 0) attached.countDown() else consumed.incrementAndGet() }
+            .launchIn(scope)
+      }
+      attached.await()
+    }
+
+    @TearDown
+    fun tearDown() {
+      scope.cancel()
+    }
+  }
+
+  /**
+   * Measures put-to-consume throughput with N active [FlowMap.valueFlow] subscribers each watching
+   * a distinct key. The writer cycles through those keys so each put matches exactly one
+   * subscriber; the other N-1 subscribers exercise the per-event filter path (key compare under the
+   * new impl, `map[key]` lookup under the old) but never emit. End-to-end throughput captures both
+   * the writer's fan-out cost and the matching subscriber's emit-chain time.
+   */
+  @Benchmark
+  fun putChangingWithDrainingValueFlowSubscribers(
+      state: DrainingValueFlowSubscriberState,
+      value: ChangingValueState,
+  ) {
+    val idx = value.counter++
+    val key = state.keys[idx % state.subscriberCount]
+    val target = state.consumed.get() + 1
+    state.flowMap.put(key, "v$idx")
     while (state.consumed.get() < target) {
       Thread.onSpinWait()
     }

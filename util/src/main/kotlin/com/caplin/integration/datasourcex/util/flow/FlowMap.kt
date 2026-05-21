@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 
@@ -276,7 +275,24 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
     }
   }
 
-  override fun valueFlow(key: K): Flow<V?> = signal.map { it.map[key] }.distinctUntilChanged()
+  override fun valueFlow(key: K): Flow<V?> =
+      flow {
+            var first = true
+            signal.collect { flowMapEvent ->
+              if (first) {
+                first = false
+                emit(flowMapEvent.map[key])
+              } else {
+                for (event in flowMapEvent.events) {
+                  if (event.key == key) {
+                    emit(event.newValue)
+                    break
+                  }
+                }
+              }
+            }
+          }
+          .distinctUntilChanged()
 
   override fun put(key: K, value: V): V? =
       synchronized(writeLock) {
