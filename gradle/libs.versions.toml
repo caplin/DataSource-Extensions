@@ -1,5 +1,5 @@
 [versions]
-springBoot = "3.5.10"
+springBoot = "3.5.14"
 kotlin = "1.9.25" # Keep in sync with Spring - https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
 kotlinCollectionsImmutable = "0.3.8"
 jsonPatch = "1.13"
