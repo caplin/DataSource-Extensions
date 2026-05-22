@@ -1,7 +1,7 @@
 [versions]
 springBoot = "3.5.14"
 kotlin = "2.2.0"
-kotlinCollectionsImmutable = "0.3.8"
+kotlinCollectionsImmutable = "0.4.0"
 jsonPatch = "1.13"
 jmh = "1.37"
 jmh-plugin = "0.7.3"
