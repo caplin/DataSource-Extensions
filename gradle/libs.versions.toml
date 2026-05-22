@@ -21,7 +21,7 @@ mockk = "1.13.14"
 
 # Plugins
 spotless-plugin = "8.5.1"
-dokka-plugin = "2.0.0"
+dokka-plugin = "2.2.0"
 binary-compatibility-validator-plugin = "0.17.0"
 kover-plugin = "0.9.1"
 vanniktech-maven-publish-plugin = "0.31.0"

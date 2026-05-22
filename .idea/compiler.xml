@@ -24,6 +24,7 @@
       <module name="datasourcex.spring-boot-starter-datasource.main" options="-proc:none" />
       <module name="datasourcex.spring-boot-starter-datasource.samples" options="-proc:none" />
       <module name="datasourcex.spring-boot-starter-datasource.test" options="-proc:none" />
+      <module name="spring-java.datasourcex.examples.spring-java.main" options="-parameters" />
     </option>
   </component>
 </project>
