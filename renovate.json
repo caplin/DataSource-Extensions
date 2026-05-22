@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "labels": ["dependencies"],
+  "prHourlyLimit": 4,
+  "prConcurrentLimit": 10,
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "matchManagers": ["gradle"],
+      "matchPackageNames": [
+        "org.jetbrains.kotlin:**",
+        "org.jetbrains.kotlin.plugin.allopen:**"
+      ],
+      "allowedVersions": "<2"
+    },
+    {
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["org.springframework.boot:**"],
+      "allowedVersions": "<4"
+    }
+  ]
+}

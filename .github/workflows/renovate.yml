@@ -1,0 +1,40 @@
+name: Renovate
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        type: choice
+        default: 'info'
+        options:
+          - info
+          - debug
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v46.1.10
+        with:
+          configurationFile: .github/renovate-config.js
+          token: ${{ secrets.RENOVATE_TOKEN }}
+          env-regex: '^(?:RENOVATE_\w+|LOG_LEVEL|GITHUB_COM_TOKEN|NODE_OPTIONS|CAPLIN_USERNAME|CAPLIN_PASSWORD)$'
+        env:
+          LOG_LEVEL: ${{ inputs.logLevel || 'info' }}
+          CAPLIN_USERNAME: ${{ secrets.CAPLIN_USERNAME }}
+          CAPLIN_PASSWORD: ${{ secrets.CAPLIN_PASSWORD }}
