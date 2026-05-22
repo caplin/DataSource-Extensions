@@ -1,6 +1,6 @@
 [versions]
-springBoot = "3.5.10"
-kotlin = "1.9.25" # Keep in sync with Spring - https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
+springBoot = "3.5.14"
+kotlin = "2.2.0"
 kotlinCollectionsImmutable = "0.3.8"
 jsonPatch = "1.13"
 jmh = "1.37"
@@ -25,6 +25,7 @@ dokka-plugin = "2.0.0"
 binary-compatibility-validator-plugin = "0.17.0"
 kover-plugin = "0.9.1"
 vanniktech-maven-publish-plugin = "0.31.0"
+spring-dependency-management-plugin = "1.1.7"
 
 
 [libraries]
@@ -53,6 +54,7 @@ kover-plugin = { module = "org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kov
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-allopen-plugin = { module = "org.jetbrains.kotlin.plugin.allopen:org.jetbrains.kotlin.plugin.allopen.gradle.plugin", version.ref = "kotlin" }
 vanniktech-maven-publish-plugin = { module = "com.vanniktech.maven.publish:com.vanniktech.maven.publish.gradle.plugin", version.ref = "vanniktech-maven-publish-plugin"}
+spring-dependency-management-plugin = { module = "io.spring.dependency-management:io.spring.dependency-management.gradle.plugin", version.ref = "spring-dependency-management-plugin" }
 
 # BOMs
 spring-boot-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }

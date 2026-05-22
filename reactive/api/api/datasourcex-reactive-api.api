@@ -133,7 +133,7 @@ public final class com/caplin/integration/datasourcex/reactive/api/ContainerEven
 }
 
 public abstract interface class com/caplin/integration/datasourcex/reactive/api/ContainerEvent$RowEvent : com/caplin/integration/datasourcex/reactive/api/ContainerEvent {
-	public abstract fun component1 ()Ljava/lang/String;
+	public fun component1 ()Ljava/lang/String;
 	public abstract fun getKey ()Ljava/lang/String;
 }
 

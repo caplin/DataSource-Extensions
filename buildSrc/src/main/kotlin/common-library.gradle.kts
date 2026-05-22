@@ -12,10 +12,19 @@ plugins {
   id("org.jetbrains.kotlinx.binary-compatibility-validator")
   id("com.diffplug.spotless")
   id("org.jetbrains.dokka")
+  id("io.spring.dependency-management")
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val ktfmtVersion = libs.findVersion("ktfmt").get().requiredVersion
+val kotlinVersion = libs.findVersion("kotlin").get().requiredVersion
+val springBootVersion = libs.findVersion("springBoot").get().requiredVersion
+
+extra["kotlin.version"] = kotlinVersion
+
+dependencyManagement {
+  imports { mavenBom("org.springframework.boot:spring-boot-dependencies:$springBootVersion") }
+}
 
 spotless {
   kotlin {
