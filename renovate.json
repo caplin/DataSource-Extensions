@@ -6,8 +6,8 @@
     ":semanticCommits"
   ],
   "labels": ["dependencies"],
-  "prHourlyLimit": 4,
-  "prConcurrentLimit": 10,
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
