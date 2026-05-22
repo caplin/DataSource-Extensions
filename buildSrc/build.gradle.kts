@@ -17,6 +17,7 @@ dependencies {
   implementation(libs.kotlin.plugin)
   implementation(libs.kotlin.allopen.plugin)
   implementation(libs.vanniktech.maven.publish.plugin)
+  implementation(libs.spring.dependency.management.plugin)
 }
 
 spotless {

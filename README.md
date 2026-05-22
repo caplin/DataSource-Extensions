@@ -1,5 +1,7 @@
 # Extensions for DataSource
 
+Requires Kotlin 2.2 or later.
+
 ## Reactive
 
 These modules provide APIs for consuming and providing data as streams implementations provided by popular libraries to

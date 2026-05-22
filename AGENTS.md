@@ -6,7 +6,7 @@ Guidance for AI coding assistants working in this repository.
 
 `DataSource-Extensions` is a multi-module Gradle (Kotlin DSL) library that wraps Caplin's `com.caplin.platform.integration.java:datasource` SDK with modern reactive APIs and a Spring Boot starter. Kotlin Coroutines `Flow` is the canonical internal representation; Java `Flow.Publisher` and Reactive Streams `Publisher` variants are thin adapters over it.
 
-JDK 17. Spring Boot pinned to 3.5.x and Kotlin pinned to 1.9.25 (must stay aligned — see `gradle/libs.versions.toml`).
+JDK 17. Spring Boot pinned to 3.5.x and Kotlin to 2.2.x (see `gradle/libs.versions.toml`). The `common-library` convention plugin applies `io.spring.dependency-management` and overrides Spring's BOM `kotlin.version` to our catalog value — without this, transitive Jackson updates raise `kotlin-stdlib` past what the compiler can read.
 
 ## Common commands
 
