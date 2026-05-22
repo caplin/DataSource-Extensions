@@ -1,6 +1,7 @@
 module.exports = {
   platform: 'github',
   repositories: [process.env.GITHUB_REPOSITORY],
+  allowedUnsafeExecutions: ['gradleWrapper'],
   hostRules: [
     {
       matchHost: 'repository.caplin.com',
