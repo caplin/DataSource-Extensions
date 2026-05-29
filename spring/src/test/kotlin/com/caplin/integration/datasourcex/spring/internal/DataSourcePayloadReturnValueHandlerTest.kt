@@ -15,8 +15,7 @@ import org.springframework.messaging.support.MessageBuilder
 
 internal class DataSourcePayloadReturnValueHandlerTest :
     FunSpec({
-      val handler =
-          DataSourcePayloadReturnValueHandler(ReactiveAdapterRegistry.getSharedInstance())
+      val handler = DataSourcePayloadReturnValueHandler(ReactiveAdapterRegistry.getSharedInstance())
 
       fun returnType(methodName: String) =
           MethodParameter(ReturnValues::class.java.getMethod(methodName), -1)
@@ -42,9 +41,7 @@ internal class DataSourcePayloadReturnValueHandlerTest :
 
       test("a returned Flow is exposed element by element") {
         val ref = AtomicReference<Flow<Any>>()
-        handler
-            .handleReturnValue(flowOf("a", "b", "c"), returnType("flow"), message(ref))
-            .block()
+        handler.handleReturnValue(flowOf("a", "b", "c"), returnType("flow"), message(ref)).block()
         collect(ref) shouldBe listOf("a", "b", "c")
       }
 
