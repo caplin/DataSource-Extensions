@@ -9,6 +9,21 @@ import org.apache.fory.config.Language
 
 class CustomException(val customMessage: String) : Exception(customMessage)
 
+data class ErrorDetail(val code: Int, val description: String)
+
+/**
+ * A custom exception whose primary `(String)` constructor has a non-nullable Kotlin parameter (so
+ * it exercises the [ThrowableSerializerFactory] fallback) while also carrying a nested custom
+ * object that must survive the round-trip.
+ */
+class DetailedException(val customMessage: String) : Exception(customMessage) {
+  lateinit var detail: ErrorDetail
+
+  constructor(customMessage: String, detail: ErrorDetail) : this(customMessage) {
+    this.detail = detail
+  }
+}
+
 class ValueOrCompletionSerializationTest :
     FunSpec(
         {
@@ -57,6 +72,18 @@ class ValueOrCompletionSerializationTest :
               val deserialized = fory.deserialize(bytes) as ValueOrCompletion.Completion
               val throwable = deserialized.throwable.shouldBeInstanceOf<CustomException>()
               throwable.customMessage shouldBe "aah"
+            }
+
+            test("Completion with custom exception containing a nested object (preserved type)") {
+              val event: ValueOrCompletion.Completion =
+                  ValueOrCompletion.Completion(
+                      DetailedException("boom", ErrorDetail(42, "bad input")),
+                  )
+              val bytes = fory.serialize(event)
+              val deserialized = fory.deserialize(bytes) as ValueOrCompletion.Completion
+              val throwable = deserialized.throwable.shouldBeInstanceOf<DetailedException>()
+              throwable.customMessage shouldBe "boom"
+              throwable.detail shouldBe ErrorDetail(42, "bad input")
             }
 
             test("Completion with exception (no type)") {

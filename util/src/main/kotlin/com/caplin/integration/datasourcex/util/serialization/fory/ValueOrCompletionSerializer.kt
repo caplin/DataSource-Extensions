@@ -1,51 +1,52 @@
 package com.caplin.integration.datasourcex.util.serialization.fory
 
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
-import org.apache.fory.Fory
-import org.apache.fory.memory.MemoryBuffer
+import org.apache.fory.config.Config
+import org.apache.fory.context.ReadContext
+import org.apache.fory.context.WriteContext
 import org.apache.fory.serializer.Serializer
 
 internal class ValueOrCompletionSerializer(
-    fory: Fory,
+    config: Config,
     type: Class<ValueOrCompletion<*>>,
     private val preserveExceptionTypes: Boolean = true,
-) : Serializer<ValueOrCompletion<*>>(fory, type) {
+) : Serializer<ValueOrCompletion<*>>(config, type) {
 
   private enum class Type {
     VALUE,
     COMPLETION,
   }
 
-  override fun write(buffer: MemoryBuffer, value: ValueOrCompletion<*>) {
+  override fun write(writeContext: WriteContext, value: ValueOrCompletion<*>) {
     when (value) {
       is ValueOrCompletion.Value -> {
-        buffer.writeByte(Type.VALUE.ordinal.toByte())
-        fory.writeRef(buffer, value.value)
+        writeContext.writeByte(Type.VALUE.ordinal.toByte())
+        writeContext.writeRef(value.value)
       }
       is ValueOrCompletion.Completion -> {
-        buffer.writeByte(Type.COMPLETION.ordinal.toByte())
+        writeContext.writeByte(Type.COMPLETION.ordinal.toByte())
         if (preserveExceptionTypes) {
-          fory.writeRef(buffer, value.throwable)
+          writeContext.writeRef(value.throwable)
         } else {
           val message = value.throwable?.message ?: value.throwable?.toString()
-          fory.writeRef(buffer, message)
+          writeContext.writeRef(message)
         }
       }
     }
   }
 
-  override fun read(buffer: MemoryBuffer): ValueOrCompletion<*> {
-    return when (Type.entries[buffer.readByte().toInt()]) {
+  override fun read(readContext: ReadContext): ValueOrCompletion<*> {
+    return when (Type.entries[readContext.readByte().toInt()]) {
       Type.VALUE -> {
-        val value = fory.readRef(buffer) as Any
+        val value = readContext.readRef() as Any
         ValueOrCompletion.Value(value)
       }
       Type.COMPLETION -> {
         if (preserveExceptionTypes) {
-          val throwable = fory.readRef(buffer) as Throwable?
+          val throwable = readContext.readRef() as Throwable?
           ValueOrCompletion.Completion(throwable)
         } else {
-          val message = fory.readRef(buffer) as String?
+          val message = readContext.readRef() as String?
           ValueOrCompletion.Completion(message?.let { RuntimeException(it) })
         }
       }
