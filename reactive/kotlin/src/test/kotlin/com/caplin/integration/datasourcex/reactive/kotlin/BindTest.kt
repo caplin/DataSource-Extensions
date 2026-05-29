@@ -20,9 +20,9 @@ import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Completion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Value
 import com.caplin.integration.datasourcex.util.flow.dematerialize
-import io.kotest.core.coroutines.backgroundScope
 import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.engine.coroutines.backgroundScope
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.equals.shouldBeEqual
