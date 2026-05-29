@@ -30,14 +30,7 @@ change is required — plain POJOs serialize as before.
 
 If you registered **custom Jackson 2 modules, serializers, or `ObjectMapper` customizers**, port them
 to Jackson 3. See the
-[Jackson 3 release notes](https://github.com/FasterXML/jackson/wiki/Jackson-Release-3.0); the main
-changes are:
-
-- group/package `com.fasterxml.jackson.*` → `tools.jackson.*` (annotations stay on
-  `com.fasterxml.jackson`),
-- `JsonSerializer` / `JsonDeserializer` → `ValueSerializer` / `ValueDeserializer`,
-  `SerializerProvider` → `SerializationContext`, `JsonMappingException` → `DatabindException`,
-- the `ObjectMapper` is immutable — build it via `JsonMapper.builder()…build()`.
+[Jackson 3 release notes](https://github.com/FasterXML/jackson/wiki/Jackson-Release-3.0).
 
 ### 3. Keeping Jackson 2 (optional)
 
@@ -65,8 +58,3 @@ Outside Spring, `SimpleDataSourceFactory.createDataSource(...)` now defaults to 
 handler; pass `SimpleDataSourceFactory.defaultJackson2JsonHandler` (or your own) explicitly to keep
 Jackson 2. On the `3.x` line the Jackson 2 artifacts are `compileOnly` in `datasourcex-util`, so add
 them to your own classpath if you use the Jackson 2 helpers directly.
-
-### 4. Versioning note
-
-The published `.api` surface is unchanged between `2.x` and `3.x`; the breaking change is the Spring
-Boot 4 / Jackson 3 runtime baseline, which is why this is a major version bump.

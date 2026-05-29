@@ -27,9 +27,9 @@ dependencies {
   testImplementation(libs.kotest.assertions)
   testImplementation(libs.kotest.runner)
   testImplementation(libs.turbine)
-  // Spring-context test of the autoconfiguration (kotest SpringExtension + @SpringBootTest).
-  testImplementation("org.springframework.boot:spring-boot-test")
+  // End-to-end SpringExtension test of the autoconfiguration + publish path.
   testImplementation(libs.kotest.extensions.spring)
+  testImplementation("org.springframework.boot:spring-boot-test")
 }
 
 val prepareReadme =

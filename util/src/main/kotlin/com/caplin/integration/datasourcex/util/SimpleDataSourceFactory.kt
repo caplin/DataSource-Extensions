@@ -2,7 +2,6 @@ package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.messaging.json.JsonHandler
-import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson2ObjectMapper
 import com.caplin.integration.datasourcex.util.serialization.jackson2.Jackson2JsonHandler
 import com.caplin.integration.datasourcex.util.serialization.jackson2.registerDataSourceModule
 import com.caplin.integration.datasourcex.util.serialization.jackson3.Jackson3JsonHandler
@@ -27,35 +26,48 @@ object SimpleDataSourceFactory {
   private val logger = getLogger<SimpleDataSourceFactory>()
 
   /**
-   * The default [ObjectMapper] used for serializing and deserializing JSON payloads. It is
-   * pre-configured with the JavaTime module and DataSource serialization extensions.
+   * The default Jackson 2 [ObjectMapper] used for serializing and deserializing JSON payloads.
+   * Pre-configured with the JavaTime module and DataSource serialization extensions.
    */
-  val defaultJackson2ObjectMapper: ObjectMapper by lazy {
-    jacksonObjectMapper()
-        .configure(WRITE_DATES_AS_TIMESTAMPS, false)
-        .registerModule(JavaTimeModule())
-        .registerDataSourceModule()
-  }
+  val defaultJackson2ObjectMapper: ObjectMapper
+    get() = Jackson2.objectMapper
 
   @JvmStatic
   fun createJackson2JsonHandler(objectMapper: ObjectMapper): Jackson2JsonHandler =
       Jackson2JsonHandler(objectMapper)
 
-  @Suppress("unused")
-  val defaultJackson2JsonHandler: Jackson2JsonHandler by lazy {
-    createJackson2JsonHandler(defaultJackson2ObjectMapper)
-  }
+  val defaultJackson2JsonHandler: Jackson2JsonHandler
+    get() = Jackson2.jsonHandler
 
-  val defaultJackson3ObjectMapper: Jackson3ObjectMapper by lazy {
-    jacksonMapperBuilder().addDataSourceModule().build()
-  }
+  /**
+   * The default Jackson 3 [Jackson3ObjectMapper], pre-configured with the DataSource serialization
+   * extensions. Requires Jackson 3 on the runtime classpath.
+   */
+  val defaultJackson3ObjectMapper: Jackson3ObjectMapper
+    get() = Jackson3.objectMapper
 
   @JvmStatic
   fun createJackson3JsonHandler(objectMapper: Jackson3ObjectMapper): Jackson3JsonHandler =
       Jackson3JsonHandler(objectMapper)
 
-  val defaultJackson3JsonHandler: Jackson3JsonHandler by lazy {
-    createJackson3JsonHandler(defaultJackson3ObjectMapper)
+  val defaultJackson3JsonHandler: Jackson3JsonHandler
+    get() = Jackson3.jsonHandler
+
+  // Each Jackson generation's defaults live in their own holder so that loading
+  // SimpleDataSourceFactory (or using one generation) never triggers class-loading of the other.
+  // This keeps the Jackson 2 path usable when Jackson 3 is absent from the runtime, and vice versa.
+  private object Jackson2 {
+    val objectMapper: ObjectMapper =
+        jacksonObjectMapper()
+            .configure(WRITE_DATES_AS_TIMESTAMPS, false)
+            .registerModule(JavaTimeModule())
+            .registerDataSourceModule()
+    val jsonHandler: Jackson2JsonHandler = createJackson2JsonHandler(objectMapper)
+  }
+
+  private object Jackson3 {
+    val objectMapper: Jackson3ObjectMapper = jacksonMapperBuilder().addDataSourceModule().build()
+    val jsonHandler: Jackson3JsonHandler = createJackson3JsonHandler(objectMapper)
   }
 
   /**
