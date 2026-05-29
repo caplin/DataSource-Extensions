@@ -13,7 +13,7 @@ fory = "1.0.0"
 datasource = "8.0.11-1836-95c6e774"
 
 # Test Dependencies
-kotest = "5.9.1"
+kotest = "6.1.11"
 turbine = "1.2.1"
 mockk = "1.13.14"
 
