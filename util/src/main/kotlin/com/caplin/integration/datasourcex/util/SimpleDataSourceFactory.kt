@@ -75,16 +75,16 @@ object SimpleDataSourceFactory {
   ): DataSource {
     val logPath =
         simpleConfig.logDirectory
-          ?: run {
-            val tmpLogPath =
-                Files.createTempDirectory(
-                    simpleConfig.name.replace("\\s".toRegex(), "").take(MAX_PATH_LENGTH),
-                )
-            logger.warn {
-              "log file path is not specified, writing datasource logs to $tmpLogPath"
+            ?: run {
+              val tmpLogPath =
+                  Files.createTempDirectory(
+                      simpleConfig.name.replace("\\s".toRegex(), "").take(MAX_PATH_LENGTH),
+                  )
+              logger.warn {
+                "log file path is not specified, writing datasource logs to $tmpLogPath"
+              }
+              tmpLogPath
             }
-            tmpLogPath
-          }
     val logDirectory = logPath.toFile()
     check(!logDirectory.exists() || logDirectory.isDirectory) { "$logPath is not a directory" }
     logDirectory.mkdirs()
@@ -92,7 +92,7 @@ object SimpleDataSourceFactory {
     val peerConfiguration =
         when (simpleConfig) {
           is SimpleDataSourceConfig.Discovery ->
-            """
+              """
                 |discovery-addr         ${simpleConfig.hostname}
                 |discovery-cluster-name ${simpleConfig.clusterName}
                 |datasrc-name           ${simpleConfig.name}
@@ -100,7 +100,7 @@ object SimpleDataSourceFactory {
                 """
 
           is SimpleDataSourceConfig.Peer ->
-            """
+              """
                 |datasrc-name         ${simpleConfig.name}
                 |datasrc-local-label  ${simpleConfig.localLabel}
                 |datasrc-dev-override ${simpleConfig.devOverride}
