@@ -2,12 +2,13 @@ package com.caplin.integration.datasourcex.util.serialization.fory
 
 import com.caplin.integration.datasourcex.util.flow.FlowMapStreamEvent
 import com.caplin.integration.datasourcex.util.flow.MapEvent
-import org.apache.fory.Fory
-import org.apache.fory.memory.MemoryBuffer
+import org.apache.fory.config.Config
+import org.apache.fory.context.ReadContext
+import org.apache.fory.context.WriteContext
 import org.apache.fory.serializer.Serializer
 
-internal class FlowMapStreamEventSerializer(fory: Fory, type: Class<FlowMapStreamEvent<*, *>>) :
-    Serializer<FlowMapStreamEvent<*, *>>(fory, type) {
+internal class FlowMapStreamEventSerializer(config: Config, type: Class<FlowMapStreamEvent<*, *>>) :
+    Serializer<FlowMapStreamEvent<*, *>>(config, type) {
 
   private enum class Type {
     INITIAL_STATE,
@@ -15,30 +16,31 @@ internal class FlowMapStreamEventSerializer(fory: Fory, type: Class<FlowMapStrea
     CLEARED,
   }
 
-  override fun write(buffer: MemoryBuffer, value: FlowMapStreamEvent<*, *>) {
+  override fun write(writeContext: WriteContext, value: FlowMapStreamEvent<*, *>) {
     when (value) {
       is FlowMapStreamEvent.InitialState -> {
-        buffer.writeByte(Type.INITIAL_STATE.ordinal.toByte())
-        fory.writeRef(buffer, value.map)
+        writeContext.writeByte(Type.INITIAL_STATE.ordinal.toByte())
+        writeContext.writeRef(value.map)
       }
       is FlowMapStreamEvent.EventUpdate -> {
-        buffer.writeByte(Type.EVENT_UPDATE.ordinal.toByte())
-        fory.writeRef(buffer, value.event)
+        writeContext.writeByte(Type.EVENT_UPDATE.ordinal.toByte())
+        writeContext.writeRef(value.event)
       }
       is FlowMapStreamEvent.Cleared -> {
-        buffer.writeByte(Type.CLEARED.ordinal.toByte())
+        writeContext.writeByte(Type.CLEARED.ordinal.toByte())
       }
     }
   }
 
-  override fun read(buffer: MemoryBuffer): FlowMapStreamEvent<*, *> {
-    return when (Type.entries[buffer.readByte().toInt()]) {
+  @Suppress("UNCHECKED_CAST")
+  override fun read(readContext: ReadContext): FlowMapStreamEvent<*, *> {
+    return when (Type.entries[readContext.readByte().toInt()]) {
       Type.INITIAL_STATE -> {
-        val map = fory.readRef(buffer) as Map<Any, Any>
+        val map = readContext.readRef() as Map<Any, Any>
         FlowMapStreamEvent.InitialState(map)
       }
       Type.EVENT_UPDATE -> {
-        val event = fory.readRef(buffer) as MapEvent.EntryEvent<Any, Any>
+        val event = readContext.readRef() as MapEvent.EntryEvent<Any, Any>
         FlowMapStreamEvent.EventUpdate(event)
       }
       Type.CLEARED -> FlowMapStreamEvent.Cleared

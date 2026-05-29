@@ -10,10 +10,12 @@ import org.apache.fory.Fory
 /** Registers serializers for internal types with the provided [Fory] instance. */
 @Suppress("UNCHECKED_CAST")
 fun Fory.registerDataSourceSerializers(preserveExceptionTypes: Boolean = false): Fory = apply {
-  if (preserveExceptionTypes)
-      check(config.trackingRef()) {
-        "Tracking references must be enabled for exception types preservation"
-      }
+  if (preserveExceptionTypes) {
+    check(config.trackingRef()) {
+      "Tracking references must be enabled for exception types preservation"
+    }
+    registerSerializerFactory(ThrowableSerializerFactory)
+  }
 
   // Register serializers for FlowMapStreamEvent value classes
   registerSerializer(FlowMapStreamEvent::class.java, FlowMapStreamEventSerializer::class.java)
@@ -34,7 +36,7 @@ fun Fory.registerDataSourceSerializers(preserveExceptionTypes: Boolean = false):
   registerSerializer(
       ValueOrCompletion::class.java,
       ValueOrCompletionSerializer(
-          this,
+          config,
           ValueOrCompletion::class.java,
           preserveExceptionTypes,
       ),

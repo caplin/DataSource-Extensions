@@ -1,13 +1,13 @@
 [versions]
 springBoot = "3.5.14"
 kotlin = "2.2.0"
-kotlinCollectionsImmutable = "0.3.8"
+kotlinCollectionsImmutable = "0.4.0"
 jsonPatch = "1.13"
 jmh = "1.37"
 jmh-plugin = "0.7.3"
 kotlinpoet = "2.2.0"
 ktfmt = "0.61"
-fory = "0.15.0"
+fory = "1.0.0"
 
 # Caplin Dependencies
 datasource = "8.0.11-1836-95c6e774"
@@ -22,7 +22,7 @@ mockk = "1.14.9"
 # Plugins
 spotless-plugin = "8.5.1"
 dokka-plugin = "2.2.0"
-binary-compatibility-validator-plugin = "0.17.0"
+binary-compatibility-validator-plugin = "0.18.1"
 kover-plugin = "0.9.1"
 vanniktech-maven-publish-plugin = "0.31.0"
 spring-dependency-management-plugin = "1.1.7"

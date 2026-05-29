@@ -2,23 +2,26 @@ package com.caplin.integration.datasourcex.util.serialization.fory
 
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.toPersistentMap
-import org.apache.fory.Fory
-import org.apache.fory.memory.MemoryBuffer
+import org.apache.fory.context.CopyContext
+import org.apache.fory.context.ReadContext
+import org.apache.fory.resolver.TypeResolver
 import org.apache.fory.serializer.collection.MapSerializer
 
 /** A Fory [MapSerializer] for [PersistentMap] (Ordered implementation). */
-internal class PersistentOrderedMapSerializer(fory: Fory, type: Class<PersistentMap<*, *>>) :
-    MapSerializer<PersistentMap<*, *>>(fory, type, true) {
+internal class PersistentOrderedMapSerializer(
+    typeResolver: TypeResolver,
+    type: Class<PersistentMap<*, *>>,
+) : MapSerializer<PersistentMap<*, *>>(typeResolver, type, true) {
 
-  override fun newMap(buffer: MemoryBuffer): MutableMap<*, *> {
-    val numElements = buffer.readVarUint32Small7()
+  override fun newMap(readContext: ReadContext): MutableMap<*, *> {
+    val numElements = readMapSize(readContext.buffer)
     setNumElements(numElements)
     val map = LinkedHashMap<Any?, Any?>(numElements)
-    refResolver.reference(map)
+    readContext.reference(map)
     return map
   }
 
-  override fun newMap(map: Map<*, *>): MutableMap<*, *> {
+  override fun newMap(copyContext: CopyContext, map: Map<*, *>): MutableMap<*, *> {
     return LinkedHashMap<Any?, Any?>(map.size)
   }
 
