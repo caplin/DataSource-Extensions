@@ -46,6 +46,7 @@ datasource = { module = "com.caplin.platform.integration.java:datasource", versi
 # Test Dependencies
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-extensions-spring = { module = "io.kotest:kotest-extensions-spring", version.ref = "kotest" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 

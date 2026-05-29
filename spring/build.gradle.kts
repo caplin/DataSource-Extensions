@@ -20,11 +20,13 @@ dependencies {
 
   kapt(libs.spring.boot.configuration.processor)
 
-  testRuntimeOnly("org.slf4j:slf4j-simple")
   testImplementation(libs.mockk)
   testImplementation(libs.kotest.assertions)
   testImplementation(libs.kotest.runner)
   testImplementation(libs.turbine)
+  // End-to-end SpringExtension test of the autoconfiguration + publish path.
+  testImplementation(libs.kotest.extensions.spring)
+  testImplementation("org.springframework.boot:spring-boot-test")
 }
 
 val prepareReadme =
