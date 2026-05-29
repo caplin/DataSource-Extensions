@@ -9,13 +9,13 @@ import com.caplin.datasource.messaging.CachedMessageFactory
 import com.caplin.datasource.messaging.container.ContainerMessage
 import com.caplin.datasource.messaging.json.JsonMessage
 import com.caplin.datasource.messaging.record.GenericMessage
-import com.caplin.datasource.namespace.RegexNamespace
 import com.caplin.datasource.publisher.CachingDataProvider
 import com.caplin.datasource.publisher.CachingPublisher
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent.RowEvent.Remove
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent.RowEvent.Upsert
 import com.caplin.integration.datasourcex.reactive.api.InsertAt.HEAD
+import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Completion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Value
@@ -37,6 +37,7 @@ import io.mockk.verifyOrder
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.properties.ReadOnlyProperty
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -82,7 +83,9 @@ class BindTest :
 
       val dataSource =
           mockk<DataSource> {
-            every { createCachingPublisher(any<RegexNamespace>(), capture(dataProviders)) } answers
+            every {
+              createCachingPublisher(any<AntPatternNamespace>(), capture(dataProviders))
+            } answers
                 {
                   secondArg<CachingDataProvider>().setPublisher(cachingPublisher)
                   cachingPublisher
@@ -134,11 +137,11 @@ class BindTest :
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
 
-        delay(10)
+        delay(10.milliseconds)
 
         verify(exactly = 0) { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
 
-        delay(1)
+        delay(1.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
 
@@ -161,21 +164,21 @@ class BindTest :
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
 
-        delay(1)
+        delay(1.milliseconds)
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow = requestedContainerSubjects.getValue("/SUBJECT/1")
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf("1" to "a", "2" to "b")))
 
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow.emitUpdate(Upsert(key = "2", value = mapOf("1" to "x", "2" to "y")))
 
         verify(exactly = 0) { cachingPublisher.publish(any()) }
-        delay(50)
+        delay(50.milliseconds)
 
         verify(exactly = 0) { cachingPublisher.publish(any()) }
-        delay(51)
+        delay(51.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
         containerMessages.last().also { containerMessage ->
@@ -187,7 +190,7 @@ class BindTest :
         }
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/1")
-        delay(1)
+        delay(1.milliseconds)
 
         verify { cachedMessageFactory.createGenericMessage("/SUBJECT/1-items/1") }
         genericMessages.last().also { genericMessage ->
@@ -199,7 +202,7 @@ class BindTest :
         }
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/2")
-        delay(1)
+        delay(1.milliseconds)
 
         verify { cachedMessageFactory.createGenericMessage("/SUBJECT/1-items/2") }
         genericMessages.last().also { genericMessage ->
@@ -212,11 +215,11 @@ class BindTest :
 
         sharedFlow.emitUpdate(Remove(key = "2"))
 
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow.emitUpdate(Upsert(key = "3", value = mapOf("1" to "l", "2" to "m")))
 
-        delay(101)
+        delay(101.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
         containerMessages.last().also { containerMessage ->
@@ -228,7 +231,7 @@ class BindTest :
         }
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/3")
-        delay(1)
+        delay(1.milliseconds)
 
         verify { cachedMessageFactory.createGenericMessage("/SUBJECT/1-items/3") }
         genericMessages.last().also { genericMessage ->
@@ -259,18 +262,18 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow = requestedContainerSubjects.getValue("/SUBJECT/1")
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf()))
 
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow.emitUpdate(Upsert(key = "2", value = mapOf()))
 
-        delay(101)
+        delay(101.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
         containerMessages.last().also { containerMessage ->
@@ -282,7 +285,7 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onDiscard("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
       }
 
       test("Generic Container - Re-request") {
@@ -299,18 +302,18 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow = requestedContainerSubjects.getValue("/SUBJECT/1")
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf()))
 
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow.emitUpdate(Upsert(key = "2", value = mapOf()))
 
-        delay(101)
+        delay(101.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
         containerMessages.last().also { containerMessage ->
@@ -322,23 +325,23 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onDiscard("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         // Resubscribe
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow2 = requestedContainerSubjects.getValue("/SUBJECT/1")
 
         sharedFlow2.emitUpdate(Upsert(key = "1", value = mapOf()))
 
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow2.emitUpdate(Upsert(key = "2", value = mapOf()))
 
-        delay(101)
+        delay(101.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
 
@@ -351,7 +354,7 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onDiscard("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
       }
 
       test("Generic Container - Upsert and remove quicker than debounce") {
@@ -362,27 +365,27 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow = requestedContainerSubjects.getValue("/SUBJECT/1")
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf()))
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow.emitUpdate(Remove(key = "1"))
-        delay(100)
+        delay(100.milliseconds)
 
         verify(exactly = 0) { cachingPublisher.publish(any()) }
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf()))
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow.emitUpdate(Upsert(key = "2", value = mapOf()))
-        delay(50)
+        delay(50.milliseconds)
 
         sharedFlow.emitUpdate(Remove(key = "1"))
-        delay(101)
+        delay(101.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
         containerMessages.last().also { containerMessage ->
@@ -393,7 +396,7 @@ class BindTest :
         }
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/2")
-        delay(1)
+        delay(1.milliseconds)
         verify { cachedMessageFactory.createGenericMessage("/SUBJECT/1-items/2") }
         genericMessages.last().also { genericMessage ->
           verify { cachingPublisher.publish(genericMessage) }
@@ -401,7 +404,7 @@ class BindTest :
 
         containerDataProviderCaptor.onDiscard("/SUBJECT/1")
         dataProviderCaptor.onDiscard("/SUBJECT/1-items/2")
-        delay(1)
+        delay(1.milliseconds)
 
         confirmVerified(cachedMessageFactory)
       }
@@ -414,7 +417,7 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow = requestedContainerSubjects.getValue("/SUBJECT/1")
@@ -422,15 +425,15 @@ class BindTest :
         sharedFlow.subscriptionCount.value shouldNotBeEqual 0
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf()))
-        delay(50)
+        delay(50.milliseconds)
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/1")
-        delay(1)
+        delay(1.milliseconds)
 
         sharedFlow.subscriptionCount.value shouldNotBeEqual 0
 
         sharedFlow.emit(Completion(IllegalStateException()))
-        delay(1)
+        delay(1.milliseconds)
 
         sharedFlow.subscriptionCount.value shouldBeEqual 0
 
@@ -450,7 +453,7 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow = requestedContainerSubjects.getValue("/SUBJECT/1")
@@ -458,15 +461,15 @@ class BindTest :
         sharedFlow.subscriptionCount.value shouldNotBeEqual 0
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf()))
-        delay(50)
+        delay(50.milliseconds)
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/1")
-        delay(1)
+        delay(1.milliseconds)
 
         sharedFlow.subscriptionCount.value shouldNotBeEqual 0
 
         sharedFlow.emit(Completion())
-        delay(1)
+        delay(1.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
         verify { cachedMessageFactory.createGenericMessage("/SUBJECT/1-items/1") }
@@ -489,7 +492,7 @@ class BindTest :
         }
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/1")
-        delay(1)
+        delay(1.milliseconds)
 
         verify { cachedMessageFactory.createSubjectErrorEvent("/SUBJECT/1-items/1", NotFound) }
         subjectErrorEvents.last().also { subjectErrorEvent ->
@@ -505,7 +508,7 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedContainerSubjects.keys shouldContain "/SUBJECT/1"
         val sharedFlow = requestedContainerSubjects.getValue("/SUBJECT/1")
@@ -513,16 +516,16 @@ class BindTest :
         sharedFlow.subscriptionCount.value shouldNotBeEqual 0
 
         sharedFlow.emitUpdate(Upsert(key = "1", value = mapOf()))
-        delay(101)
+        delay(101.milliseconds)
 
         verify { cachedMessageFactory.createContainerMessage("/SUBJECT/1") }
 
         dataProviderCaptor.onRequest("/SUBJECT/1-items/2")
-        delay(9000)
+        delay(9000.milliseconds)
         verify(exactly = 0) {
           cachedMessageFactory.createSubjectErrorEvent("/SUBJECT/1-items/2", NotFound)
         }
-        delay(1001)
+        delay(1001.milliseconds)
 
         verify { cachedMessageFactory.createSubjectErrorEvent("/SUBJECT/1-items/2", NotFound) }
         subjectErrorEvents.last().also { subjectErrorEvent ->
@@ -530,7 +533,7 @@ class BindTest :
         }
 
         containerDataProviderCaptor.onDiscard("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         confirmVerified(cachedMessageFactory)
       }
@@ -543,7 +546,7 @@ class BindTest :
         requestedGenericSubjects.keys shouldNotContain "/SUBJECT/1"
 
         dataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedGenericSubjects.keys shouldContain "/SUBJECT/1"
 
@@ -591,7 +594,7 @@ class BindTest :
         requestedGenericSubjects.keys shouldNotContain "/SUBJECT/1"
 
         dataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
 
         requestedGenericSubjects.keys shouldContain "/SUBJECT/1"
 
@@ -627,7 +630,7 @@ class BindTest :
 
         requestedJsonSubjects.keys shouldNotContain "/SUBJECT/1"
         dataProviderCaptor.onRequest("/SUBJECT/1")
-        delay(1)
+        delay(1.milliseconds)
         requestedJsonSubjects.keys shouldContain "/SUBJECT/1"
 
         val sharedFlow = requestedJsonSubjects.getValue("/SUBJECT/1")
