@@ -6,7 +6,9 @@ Guidance for AI coding assistants working in this repository.
 
 `DataSource-Extensions` is a multi-module Gradle (Kotlin DSL) library that wraps Caplin's `com.caplin.platform.integration.java:datasource` SDK with modern reactive APIs and a Spring Boot starter. Kotlin Coroutines `Flow` is the canonical internal representation; Java `Flow.Publisher` and Reactive Streams `Publisher` variants are thin adapters over it.
 
-JDK 17. Spring Boot pinned to 3.5.x and Kotlin to 2.2.x (see `gradle/libs.versions.toml`). The `common-library` convention plugin applies `io.spring.dependency-management` and overrides Spring's BOM `kotlin.version` to our catalog value — without this, transitive Jackson updates raise `kotlin-stdlib` past what the compiler can read.
+JDK 17. Two parallel release lines (see the compatibility table in `README.md`): **`main` targets Spring Boot 4.0.x** (Jackson 3 is the default JSON binding; Jackson 2 is a `compileOnly` opt-in), and **`springboot-3.5.x` is the Spring Boot 3.5.x maintenance branch** (Jackson 2 default). Kotlin pinned to 2.2.21 (see `gradle/libs.versions.toml`). The `common-library` convention plugin applies `io.spring.dependency-management` and overrides Spring's BOM `kotlin.version` to our catalog value — without this, transitive Jackson updates raise `kotlin-stdlib` past what the compiler can read.
+
+`datasourcex-util` ships both Jackson serialization layers under `serialization/{jackson2,jackson3}` (mirrored serializers + a `JsonHandler` each, sharing zjsonpatch for RFC 6902 diff/patch). On `main`, Jackson 3 (`tools.jackson.*`) is the runtime default and Jackson 2 (`com.fasterxml.jackson.*`) is `compileOnly`; on `springboot-3.5.x` it's the reverse. The Spring starter's `JsonHandler` bean auto-selects Jackson 3 when present and falls back to Jackson 2 (`DataSourceAutoConfiguration`).
 
 ## Common commands
 

@@ -2,7 +2,6 @@ package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.messaging.json.JsonHandler
-import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson2JsonHandler
 import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson2ObjectMapper
 import com.caplin.integration.datasourcex.util.serialization.jackson2.Jackson2JsonHandler
 import com.caplin.integration.datasourcex.util.serialization.jackson2.registerDataSourceModule
@@ -42,6 +41,7 @@ object SimpleDataSourceFactory {
   fun createJackson2JsonHandler(objectMapper: ObjectMapper): Jackson2JsonHandler =
       Jackson2JsonHandler(objectMapper)
 
+  @Suppress("unused")
   val defaultJackson2JsonHandler: Jackson2JsonHandler by lazy {
     createJackson2JsonHandler(defaultJackson2ObjectMapper)
   }
@@ -54,7 +54,6 @@ object SimpleDataSourceFactory {
   fun createJackson3JsonHandler(objectMapper: Jackson3ObjectMapper): Jackson3JsonHandler =
       Jackson3JsonHandler(objectMapper)
 
-  @Suppress("unused")
   val defaultJackson3JsonHandler: Jackson3JsonHandler by lazy {
     createJackson3JsonHandler(defaultJackson3ObjectMapper)
   }
@@ -64,14 +63,14 @@ object SimpleDataSourceFactory {
    *
    * @param simpleConfig The simple configuration for the data source.
    * @param jsonHandler The [JsonHandler] to use for serializing and deserializing JSON payloads.
-   *   This defaults to the Jackson 2 [defaultJackson2JsonHandler] backed by
-   *   [defaultJackson2ObjectMapper].
+   *   This defaults to the Jackson 3 [defaultJackson3JsonHandler] backed by
+   *   [defaultJackson3ObjectMapper].
    * @return The created data source.
    */
   @JvmStatic
   fun createDataSource(
       simpleConfig: SimpleDataSourceConfig,
-      jsonHandler: JsonHandler<*> = defaultJackson2JsonHandler,
+      jsonHandler: JsonHandler<*> = defaultJackson3JsonHandler,
   ): DataSource {
     val logPath =
         simpleConfig.logDirectory
