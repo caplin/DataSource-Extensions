@@ -3,6 +3,7 @@ package com.caplin.integration.datasourcex.spring.internal
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATASRC_LOCAL_LABEL
 import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATASRC_NAME
+import com.caplin.datasource.messaging.json.JsonHandler
 import com.caplin.integration.datasourcex.spring.DataSourceConfigurationProperties
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Discovery
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Peer
@@ -32,8 +33,13 @@ internal class DataSourceAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
+  fun jsonHandler(objectMapper: ObjectMapper): JsonHandler<*> =
+      createJackson2JsonHandler(objectMapper)
+
+  @Bean
+  @ConditionalOnMissingBean
   fun dataSource(
-      objectMapper: ObjectMapper,
+      jsonHandler: JsonHandler<*>,
       dataSourceConfigurationProperties: DataSourceConfigurationProperties,
       @Value("\${spring.application.name:#{null}}") applicationName: String?,
   ): DataSource {
@@ -91,7 +97,7 @@ internal class DataSourceAutoConfiguration {
                   }
           )
         }
-        .apply { extraConfiguration.jsonHandler = createJackson2JsonHandler(objectMapper) }
+        .apply { extraConfiguration.jsonHandler = jsonHandler }
   }
 
   @Bean
