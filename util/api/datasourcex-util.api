@@ -129,9 +129,12 @@ public final class com/caplin/integration/datasourcex/util/SimpleDataSourceFacto
 	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/SimpleDataSourceFactory;
 	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;)Lcom/caplin/datasource/DataSource;
 	public static synthetic fun createDataSource$default (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;ILjava/lang/Object;)Lcom/caplin/datasource/DataSource;
-	public static final fun createJackson2JsonHandler (Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/caplin/datasource/messaging/json/JacksonJsonHandler;
-	public final fun getDefaultJackson2JsonHandler ()Lcom/caplin/datasource/messaging/json/JacksonJsonHandler;
+	public static final fun createJackson2JsonHandler (Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/caplin/integration/datasourcex/util/serialization/jackson2/Jackson2JsonHandler;
+	public static final fun createJackson3JsonHandler (Ltools/jackson/databind/ObjectMapper;)Lcom/caplin/integration/datasourcex/util/serialization/jackson3/Jackson3JsonHandler;
+	public final fun getDefaultJackson2JsonHandler ()Lcom/caplin/integration/datasourcex/util/serialization/jackson2/Jackson2JsonHandler;
 	public final fun getDefaultJackson2ObjectMapper ()Lcom/fasterxml/jackson/databind/ObjectMapper;
+	public final fun getDefaultJackson3JsonHandler ()Lcom/caplin/integration/datasourcex/util/serialization/jackson3/Jackson3JsonHandler;
+	public final fun getDefaultJackson3ObjectMapper ()Ltools/jackson/databind/ObjectMapper;
 }
 
 public final class com/caplin/integration/datasourcex/util/TimeoutKt {
@@ -473,5 +476,45 @@ public final class com/caplin/integration/datasourcex/util/serialization/jackson
 
 public final class com/caplin/integration/datasourcex/util/serialization/jackson2/DataSourceModuleKt {
 	public static final fun registerDataSourceModule (Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/fasterxml/jackson/databind/ObjectMapper;
+}
+
+public final class com/caplin/integration/datasourcex/util/serialization/jackson2/Jackson2JsonHandler : com/caplin/datasource/messaging/json/JsonHandler {
+	public fun <init> (Lcom/fasterxml/jackson/databind/ObjectMapper;)V
+	public fun diff (Lcom/fasterxml/jackson/databind/JsonNode;Lcom/fasterxml/jackson/databind/JsonNode;)Lcom/fasterxml/jackson/databind/JsonNode;
+	public synthetic fun diff (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun format (Lcom/fasterxml/jackson/databind/JsonNode;)Ljava/lang/String;
+	public synthetic fun format (Ljava/lang/Object;)Ljava/lang/String;
+	public fun parse (Ljava/lang/String;)Lcom/fasterxml/jackson/databind/JsonNode;
+	public synthetic fun parse (Ljava/lang/String;)Ljava/lang/Object;
+	public fun patch (Lcom/fasterxml/jackson/databind/JsonNode;Lcom/fasterxml/jackson/databind/JsonNode;)Lcom/fasterxml/jackson/databind/JsonNode;
+	public synthetic fun patch (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun toJsonTree (Ljava/lang/Object;)Lcom/fasterxml/jackson/databind/JsonNode;
+	public synthetic fun toJsonTree (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun toObject (Lcom/fasterxml/jackson/databind/JsonNode;Ljava/lang/Class;)Ljava/lang/Object;
+	public synthetic fun toObject (Ljava/lang/Object;Ljava/lang/Class;)Ljava/lang/Object;
+}
+
+public final class com/caplin/integration/datasourcex/util/serialization/jackson3/DataSourceModule : tools/jackson/databind/module/SimpleModule {
+	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/serialization/jackson3/DataSourceModule;
+}
+
+public final class com/caplin/integration/datasourcex/util/serialization/jackson3/DataSourceModuleKt {
+	public static final fun addDataSourceModule (Ltools/jackson/databind/json/JsonMapper$Builder;)Ltools/jackson/databind/json/JsonMapper$Builder;
+}
+
+public final class com/caplin/integration/datasourcex/util/serialization/jackson3/Jackson3JsonHandler : com/caplin/datasource/messaging/json/JsonHandler {
+	public fun <init> (Ltools/jackson/databind/ObjectMapper;)V
+	public synthetic fun diff (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun diff (Ltools/jackson/databind/JsonNode;Ltools/jackson/databind/JsonNode;)Ltools/jackson/databind/JsonNode;
+	public synthetic fun format (Ljava/lang/Object;)Ljava/lang/String;
+	public fun format (Ltools/jackson/databind/JsonNode;)Ljava/lang/String;
+	public synthetic fun parse (Ljava/lang/String;)Ljava/lang/Object;
+	public fun parse (Ljava/lang/String;)Ltools/jackson/databind/JsonNode;
+	public synthetic fun patch (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+	public fun patch (Ltools/jackson/databind/JsonNode;Ltools/jackson/databind/JsonNode;)Ltools/jackson/databind/JsonNode;
+	public synthetic fun toJsonTree (Ljava/lang/Object;)Ljava/lang/Object;
+	public fun toJsonTree (Ljava/lang/Object;)Ltools/jackson/databind/JsonNode;
+	public synthetic fun toObject (Ljava/lang/Object;Ljava/lang/Class;)Ljava/lang/Object;
+	public fun toObject (Ltools/jackson/databind/JsonNode;Ljava/lang/Class;)Ljava/lang/Object;
 }
 

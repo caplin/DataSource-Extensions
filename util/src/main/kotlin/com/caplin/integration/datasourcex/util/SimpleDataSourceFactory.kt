@@ -1,17 +1,21 @@
 package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.DataSource
-import com.caplin.datasource.messaging.json.JacksonJsonHandler
 import com.caplin.datasource.messaging.json.JsonHandler
 import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson2JsonHandler
 import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson2ObjectMapper
+import com.caplin.integration.datasourcex.util.serialization.jackson2.Jackson2JsonHandler
 import com.caplin.integration.datasourcex.util.serialization.jackson2.registerDataSourceModule
+import com.caplin.integration.datasourcex.util.serialization.jackson3.Jackson3JsonHandler
+import com.caplin.integration.datasourcex.util.serialization.jackson3.addDataSourceModule
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.file.Files
 import java.util.logging.Logger
+import tools.jackson.databind.ObjectMapper as Jackson3ObjectMapper
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 
 /**
  * A factory for creating [DataSource] instances from simplified configurations. Allows easy setup
@@ -34,14 +38,24 @@ object SimpleDataSourceFactory {
           .registerDataSourceModule()
 
   @JvmStatic
-  fun createJackson2JsonHandler(objectMapper: ObjectMapper): JacksonJsonHandler =
-      JacksonJsonHandler(
-          Logger.getLogger(JacksonJsonHandler::class.qualifiedName),
-          objectMapper,
-      )
+  fun createJackson2JsonHandler(objectMapper: ObjectMapper): Jackson2JsonHandler =
+      Jackson2JsonHandler(objectMapper)
 
-  val defaultJackson2JsonHandler: JacksonJsonHandler =
+  val defaultJackson2JsonHandler: Jackson2JsonHandler =
       createJackson2JsonHandler(defaultJackson2ObjectMapper)
+
+  // Lazy so the Jackson 3 classes (a compileOnly dependency) are only loaded if actually used.
+  val defaultJackson3ObjectMapper: Jackson3ObjectMapper by lazy {
+    jacksonMapperBuilder().addDataSourceModule().build()
+  }
+
+  @JvmStatic
+  fun createJackson3JsonHandler(objectMapper: Jackson3ObjectMapper): Jackson3JsonHandler =
+      Jackson3JsonHandler(objectMapper)
+
+  val defaultJackson3JsonHandler: Jackson3JsonHandler by lazy {
+    createJackson3JsonHandler(defaultJackson3ObjectMapper)
+  }
 
   /**
    * Creates a data source based on the given simple configuration.
