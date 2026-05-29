@@ -14,7 +14,10 @@ dependencies {
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.springframework.boot:spring-boot-starter")
   implementation("org.springframework.boot:spring-boot-starter-json")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  implementation("tools.jackson.module:jackson-module-kotlin")
+  // Jackson 2 is only needed to compile the jackson2 fallback in DataSourceAutoConfiguration; it is
+  // present at runtime only if the consumer adds spring-boot-jackson2.
+  compileOnly("com.fasterxml.jackson.core:jackson-databind")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.slf4j:slf4j-api")
 

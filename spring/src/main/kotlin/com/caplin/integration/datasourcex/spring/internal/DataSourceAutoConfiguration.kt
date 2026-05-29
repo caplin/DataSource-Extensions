@@ -9,16 +9,19 @@ import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Discovery
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Peer
 import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.createDataSource
 import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.createJackson2JsonHandler
+import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.createJackson3JsonHandler
 import com.caplin.integration.datasourcex.util.getLogger
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper as Jackson2ObjectMapper
 import java.nio.file.Paths
 import java.util.UUID
 import java.util.logging.Logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
+import tools.jackson.databind.ObjectMapper as Jackson3ObjectMapper
 
 @AutoConfiguration
 @EnableConfigurationProperties(DataSourceConfigurationProperties::class)
@@ -31,9 +34,20 @@ internal class DataSourceAutoConfiguration {
     internal const val DEFAULT_DATASOURCE_NAME = "caplin-adapter"
   }
 
+  // Prefer Jackson 3 (the Spring Boot 4 default). Falls back to Jackson 2 only when Jackson 3 is
+  // absent and a Jackson 2 ObjectMapper is present (e.g. the consumer added spring-boot-jackson2).
+  // Both are @ConditionalOnMissingBean(JsonHandler) so a consumer-defined JsonHandler wins
+  // outright.
   @Bean
-  @ConditionalOnMissingBean
-  fun jsonHandler(objectMapper: ObjectMapper): JsonHandler<*> =
+  @ConditionalOnClass(Jackson3ObjectMapper::class)
+  @ConditionalOnMissingBean(JsonHandler::class)
+  fun jackson3JsonHandler(objectMapper: Jackson3ObjectMapper): JsonHandler<*> =
+      createJackson3JsonHandler(objectMapper)
+
+  @Bean
+  @ConditionalOnClass(Jackson2ObjectMapper::class)
+  @ConditionalOnMissingBean(JsonHandler::class)
+  fun jackson2JsonHandler(objectMapper: Jackson2ObjectMapper): JsonHandler<*> =
       createJackson2JsonHandler(objectMapper)
 
   @Bean

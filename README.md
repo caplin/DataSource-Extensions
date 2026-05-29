@@ -1,6 +1,19 @@
 # Extensions for DataSource
 
-Requires Kotlin 2.2 or later.
+Requires Kotlin 2.2 or later and JDK 17 or later.
+
+## Compatibility
+
+This library is maintained in two parallel lines — choose the version that matches your Spring Boot
+major version:
+
+| Library version | Branch              | Spring Boot | Default JSON binding                                                                                          | Kotlin  |
+|------------------|---------------------|-------------|---------------------------------------------------------------------------------------------------------------|---------|
+| `3.x`            | `main`              | 4.0.x       | Jackson 3 (Jackson 2 available via [`spring-boot-jackson2`](https://docs.spring.io/spring-boot/reference/features/json.html)) | 2.2.21+ |
+| `2.x`            | `springboot-3.5.x`  | 3.5.x       | Jackson 2 (Jackson 3 available by adding the `tools.jackson` dependencies)                                     | 2.2+    |
+
+Upgrading from `2.x` (Spring Boot 3.5) to `3.x` (Spring Boot 4.0)? See the
+[migration guide](./MIGRATION.md).
 
 ## Reactive
 
@@ -32,7 +45,7 @@ Then refer to the documentation:
 ## Spring
 
 This module provides a starter for integrating Caplin DataSource with your
-[Spring Boot 3.5](https://spring.io/projects/spring-boot) application, and integration with
+[Spring Boot 4.0](https://spring.io/projects/spring-boot) application, and integration with
 [Spring Messaging](https://docs.spring.io/spring-boot/docs/current/reference/html/messaging.html)
 for publishing data from annotated functions.
 
