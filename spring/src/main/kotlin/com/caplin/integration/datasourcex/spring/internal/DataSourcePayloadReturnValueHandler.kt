@@ -8,8 +8,6 @@ import org.reactivestreams.Publisher
 import org.springframework.core.MethodParameter
 import org.springframework.core.ReactiveAdapterRegistry
 import org.springframework.core.ResolvableType
-import org.springframework.http.server.reactive.ChannelSendOperator
-import org.springframework.lang.Nullable
 import org.springframework.messaging.Message
 import org.springframework.messaging.handler.invocation.reactive.HandlerMethodReturnValueHandler
 import org.springframework.util.Assert
@@ -32,26 +30,18 @@ internal class DataSourcePayloadReturnValueHandler(
       returnType: MethodParameter,
       message: Message<*>,
   ): Mono<Void> {
-    if (returnValue == null) {
-      val responseRef = getResponseReference(message)
-      responseRef?.set(emptyFlow())
-    }
-
-    val content = getContent(returnValue, returnType)
-    return ChannelSendOperator(content) { publisher -> handleContent(publisher.asFlow(), message) }
+    val responseRef = getResponseReference(message)
+    checkNotNull(responseRef) { "Missing '$RESPONSE_HEADER'" }
+    responseRef.set(
+        if (returnValue == null) emptyFlow() else getContent(returnValue, returnType).asFlow()
+    )
+    return Mono.empty()
   }
 
-  private fun getContent(@Nullable content: Any?, returnType: MethodParameter): Publisher<Any> {
+  private fun getContent(content: Any, returnType: MethodParameter): Publisher<Any> {
     val returnValueType = ResolvableType.forMethodParameter(returnType)
     val adapter = reactiveAdapterRegistry.getAdapter(returnValueType.resolve(), content)
-    return adapter?.run { toPublisher(content) } ?: Mono.justOrEmpty(content)
-  }
-
-  private fun handleContent(encodedContent: Flow<Any>, message: Message<*>): Mono<Void?> {
-    val responseRef: AtomicReference<Flow<Any>>? = getResponseReference(message)
-    checkNotNull(responseRef) { "Missing '$RESPONSE_HEADER'" }
-    responseRef.set(encodedContent)
-    return Mono.empty()
+    return adapter?.run { toPublisher(content) } ?: Mono.just(content)
   }
 
   @Suppress("UNCHECKED_CAST")
