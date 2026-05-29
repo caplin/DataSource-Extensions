@@ -3,11 +3,11 @@ package com.caplin.integration.datasourcex.spring.internal
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATASRC_LOCAL_LABEL
 import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATASRC_NAME
-import com.caplin.datasource.messaging.json.JacksonJsonHandler
 import com.caplin.integration.datasourcex.spring.DataSourceConfigurationProperties
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Discovery
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Peer
 import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.createDataSource
+import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.createJackson2JsonHandler
 import com.caplin.integration.datasourcex.util.getLogger
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.nio.file.Paths
@@ -91,13 +91,7 @@ internal class DataSourceAutoConfiguration {
                   }
           )
         }
-        .apply {
-          extraConfiguration.jsonHandler =
-              JacksonJsonHandler(
-                  Logger.getLogger(JacksonJsonHandler::class.qualifiedName),
-                  objectMapper,
-              )
-        }
+        .apply { extraConfiguration.jsonHandler = createJackson2JsonHandler(objectMapper) }
   }
 
   @Bean

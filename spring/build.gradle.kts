@@ -15,7 +15,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter")
   implementation("org.springframework.boot:spring-boot-starter-json")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation(libs.json.patch)
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.slf4j:slf4j-api")
 
