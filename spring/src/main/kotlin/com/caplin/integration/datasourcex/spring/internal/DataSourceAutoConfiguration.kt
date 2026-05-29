@@ -41,7 +41,7 @@ internal class DataSourceAutoConfiguration {
   fun dataSource(
       jsonHandler: JsonHandler<*>,
       dataSourceConfigurationProperties: DataSourceConfigurationProperties,
-      @Value("\${spring.application.name:#{null}}") applicationName: String?,
+      @Value($$"${spring.application.name:#{null}}") applicationName: String?,
   ): DataSource {
     val provided = dataSourceConfigurationProperties.provided
     val managed = dataSourceConfigurationProperties.managed
@@ -104,7 +104,7 @@ internal class DataSourceAutoConfiguration {
   fun dataSourceInfo(
       dataSource: DataSource,
       dataSourceConfigurationProperties: DataSourceConfigurationProperties,
-      @Value("\${spring.application.name:#{null}}") applicationName: String?,
+      @Value($$"${spring.application.name:#{null}}") applicationName: String?,
   ): DataSourceInfo =
       (dataSourceConfigurationProperties.managed?.let {
             createManagedDataSourceInfo(applicationName, it)

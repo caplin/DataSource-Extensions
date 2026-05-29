@@ -31,20 +31,21 @@ object SimpleDataSourceFactory {
    * The default [ObjectMapper] used for serializing and deserializing JSON payloads. It is
    * pre-configured with the JavaTime module and DataSource serialization extensions.
    */
-  val defaultJackson2ObjectMapper: ObjectMapper =
-      jacksonObjectMapper()
-          .configure(WRITE_DATES_AS_TIMESTAMPS, false)
-          .registerModule(JavaTimeModule())
-          .registerDataSourceModule()
+  val defaultJackson2ObjectMapper: ObjectMapper by lazy {
+    jacksonObjectMapper()
+        .configure(WRITE_DATES_AS_TIMESTAMPS, false)
+        .registerModule(JavaTimeModule())
+        .registerDataSourceModule()
+  }
 
   @JvmStatic
   fun createJackson2JsonHandler(objectMapper: ObjectMapper): Jackson2JsonHandler =
       Jackson2JsonHandler(objectMapper)
 
-  val defaultJackson2JsonHandler: Jackson2JsonHandler =
-      createJackson2JsonHandler(defaultJackson2ObjectMapper)
+  val defaultJackson2JsonHandler: Jackson2JsonHandler by lazy {
+    createJackson2JsonHandler(defaultJackson2ObjectMapper)
+  }
 
-  // Lazy so the Jackson 3 classes (a compileOnly dependency) are only loaded if actually used.
   val defaultJackson3ObjectMapper: Jackson3ObjectMapper by lazy {
     jacksonMapperBuilder().addDataSourceModule().build()
   }
@@ -53,6 +54,7 @@ object SimpleDataSourceFactory {
   fun createJackson3JsonHandler(objectMapper: Jackson3ObjectMapper): Jackson3JsonHandler =
       Jackson3JsonHandler(objectMapper)
 
+  @Suppress("unused")
   val defaultJackson3JsonHandler: Jackson3JsonHandler by lazy {
     createJackson3JsonHandler(defaultJackson3ObjectMapper)
   }
@@ -73,16 +75,16 @@ object SimpleDataSourceFactory {
   ): DataSource {
     val logPath =
         simpleConfig.logDirectory
-            ?: run {
-              val tmpLogPath =
-                  Files.createTempDirectory(
-                      simpleConfig.name.replace("\\s".toRegex(), "").take(MAX_PATH_LENGTH),
-                  )
-              logger.warn {
-                "log file path is not specified, writing datasource logs to $tmpLogPath"
-              }
-              tmpLogPath
+          ?: run {
+            val tmpLogPath =
+                Files.createTempDirectory(
+                    simpleConfig.name.replace("\\s".toRegex(), "").take(MAX_PATH_LENGTH),
+                )
+            logger.warn {
+              "log file path is not specified, writing datasource logs to $tmpLogPath"
             }
+            tmpLogPath
+          }
     val logDirectory = logPath.toFile()
     check(!logDirectory.exists() || logDirectory.isDirectory) { "$logPath is not a directory" }
     logDirectory.mkdirs()
@@ -90,7 +92,7 @@ object SimpleDataSourceFactory {
     val peerConfiguration =
         when (simpleConfig) {
           is SimpleDataSourceConfig.Discovery ->
-              """
+            """
                 |discovery-addr         ${simpleConfig.hostname}
                 |discovery-cluster-name ${simpleConfig.clusterName}
                 |datasrc-name           ${simpleConfig.name}
@@ -98,7 +100,7 @@ object SimpleDataSourceFactory {
                 """
 
           is SimpleDataSourceConfig.Peer ->
-              """
+            """
                 |datasrc-name         ${simpleConfig.name}
                 |datasrc-local-label  ${simpleConfig.localLabel}
                 |datasrc-dev-override ${simpleConfig.devOverride}
