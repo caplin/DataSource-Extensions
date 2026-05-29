@@ -1,12 +1,13 @@
 package com.caplin.integration.datasourcex.util.serialization.fory
 
 import com.caplin.integration.datasourcex.util.flow.MapEvent
-import org.apache.fory.Fory
-import org.apache.fory.memory.MemoryBuffer
+import org.apache.fory.config.Config
+import org.apache.fory.context.ReadContext
+import org.apache.fory.context.WriteContext
 import org.apache.fory.serializer.Serializer
 
-internal class MapEventSerializer(fory: Fory, type: Class<MapEvent<*, *>>) :
-    Serializer<MapEvent<*, *>>(fory, type) {
+internal class MapEventSerializer(config: Config, type: Class<MapEvent<*, *>>) :
+    Serializer<MapEvent<*, *>>(config, type) {
 
   private enum class Type {
     POPULATED,
@@ -14,37 +15,37 @@ internal class MapEventSerializer(fory: Fory, type: Class<MapEvent<*, *>>) :
     REMOVED,
   }
 
-  override fun write(buffer: MemoryBuffer, value: MapEvent<*, *>) {
+  override fun write(writeContext: WriteContext, value: MapEvent<*, *>) {
     when (value) {
       is MapEvent.Populated -> {
-        buffer.writeByte(Type.POPULATED.ordinal.toByte())
+        writeContext.writeByte(Type.POPULATED.ordinal.toByte())
       }
       is MapEvent.EntryEvent.Upsert -> {
-        buffer.writeByte(Type.UPSERT.ordinal.toByte())
-        fory.writeRef(buffer, value.key)
-        fory.writeRef(buffer, value.oldValue)
-        fory.writeRef(buffer, value.newValue)
+        writeContext.writeByte(Type.UPSERT.ordinal.toByte())
+        writeContext.writeRef(value.key)
+        writeContext.writeRef(value.oldValue)
+        writeContext.writeRef(value.newValue)
       }
       is MapEvent.EntryEvent.Removed -> {
-        buffer.writeByte(Type.REMOVED.ordinal.toByte())
-        fory.writeRef(buffer, value.key)
-        fory.writeRef(buffer, value.oldValue)
+        writeContext.writeByte(Type.REMOVED.ordinal.toByte())
+        writeContext.writeRef(value.key)
+        writeContext.writeRef(value.oldValue)
       }
     }
   }
 
-  override fun read(buffer: MemoryBuffer): MapEvent<*, *> {
-    return when (Type.entries[buffer.readByte().toInt()]) {
+  override fun read(readContext: ReadContext): MapEvent<*, *> {
+    return when (Type.entries[readContext.readByte().toInt()]) {
       Type.POPULATED -> MapEvent.Populated
       Type.UPSERT -> {
-        val key = fory.readRef(buffer) as Any
-        val oldValue = fory.readRef(buffer)
-        val newValue = fory.readRef(buffer) as Any
+        val key = readContext.readRef() as Any
+        val oldValue = readContext.readRef()
+        val newValue = readContext.readRef() as Any
         MapEvent.EntryEvent.Upsert(key, oldValue, newValue)
       }
       Type.REMOVED -> {
-        val key = fory.readRef(buffer) as Any
-        val oldValue = fory.readRef(buffer) as Any
+        val key = readContext.readRef() as Any
+        val oldValue = readContext.readRef() as Any
         MapEvent.EntryEvent.Removed(key, oldValue)
       }
     }

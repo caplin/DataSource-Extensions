@@ -1,12 +1,13 @@
 package com.caplin.integration.datasourcex.util.serialization.fory
 
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent
-import org.apache.fory.Fory
-import org.apache.fory.memory.MemoryBuffer
+import org.apache.fory.config.Config
+import org.apache.fory.context.ReadContext
+import org.apache.fory.context.WriteContext
 import org.apache.fory.serializer.Serializer
 
-internal class SimpleMapEventSerializer(fory: Fory, type: Class<SimpleMapEvent<*, *>>) :
-    Serializer<SimpleMapEvent<*, *>>(fory, type) {
+internal class SimpleMapEventSerializer(config: Config, type: Class<SimpleMapEvent<*, *>>) :
+    Serializer<SimpleMapEvent<*, *>>(config, type) {
 
   private enum class Type {
     POPULATED,
@@ -14,33 +15,33 @@ internal class SimpleMapEventSerializer(fory: Fory, type: Class<SimpleMapEvent<*
     REMOVED,
   }
 
-  override fun write(buffer: MemoryBuffer, value: SimpleMapEvent<*, *>) {
+  override fun write(writeContext: WriteContext, value: SimpleMapEvent<*, *>) {
     when (value) {
       is SimpleMapEvent.Populated -> {
-        buffer.writeByte(Type.POPULATED.ordinal.toByte())
+        writeContext.writeByte(Type.POPULATED.ordinal.toByte())
       }
       is SimpleMapEvent.EntryEvent.Upsert -> {
-        buffer.writeByte(Type.UPSERT.ordinal.toByte())
-        fory.writeRef(buffer, value.key)
-        fory.writeRef(buffer, value.newValue)
+        writeContext.writeByte(Type.UPSERT.ordinal.toByte())
+        writeContext.writeRef(value.key)
+        writeContext.writeRef(value.newValue)
       }
       is SimpleMapEvent.EntryEvent.Removed -> {
-        buffer.writeByte(Type.REMOVED.ordinal.toByte())
-        fory.writeRef(buffer, value.key)
+        writeContext.writeByte(Type.REMOVED.ordinal.toByte())
+        writeContext.writeRef(value.key)
       }
     }
   }
 
-  override fun read(buffer: MemoryBuffer): SimpleMapEvent<*, *> {
-    return when (Type.entries[buffer.readByte().toInt()]) {
+  override fun read(readContext: ReadContext): SimpleMapEvent<*, *> {
+    return when (Type.entries[readContext.readByte().toInt()]) {
       Type.POPULATED -> SimpleMapEvent.Populated
       Type.UPSERT -> {
-        val key = fory.readRef(buffer) as Any
-        val newValue = fory.readRef(buffer) as Any
+        val key = readContext.readRef() as Any
+        val newValue = readContext.readRef() as Any
         SimpleMapEvent.EntryEvent.Upsert(key, newValue)
       }
       Type.REMOVED -> {
-        val key = fory.readRef(buffer) as Any
+        val key = readContext.readRef() as Any
         SimpleMapEvent.EntryEvent.Removed<Any, Any>(key)
       }
     }
