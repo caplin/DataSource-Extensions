@@ -6,8 +6,8 @@ import app.cash.turbine.test
 import app.cash.turbine.turbineScope
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Completion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Value
-import io.kotest.core.coroutines.backgroundScope
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.engine.coroutines.backgroundScope
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -7,8 +7,8 @@ import app.cash.turbine.turbineScope
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Removed
 import com.caplin.integration.datasourcex.util.flow.MapEvent.EntryEvent.Upsert
 import com.caplin.integration.datasourcex.util.flow.MapEvent.Populated
-import io.kotest.core.coroutines.backgroundScope
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.engine.coroutines.backgroundScope
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
