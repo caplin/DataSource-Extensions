@@ -9,6 +9,7 @@ import tools.jackson.databind.deser.std.StdDeserializer
 
 internal class FlowMapStreamEventDeserializer :
     StdDeserializer<FlowMapStreamEvent<*, *>>(FlowMapStreamEvent::class.java) {
+  @Suppress("UNCHECKED_CAST")
   override fun deserialize(p: JsonParser, ctxt: DeserializationContext): FlowMapStreamEvent<*, *> {
     val node = ctxt.readTree(p)
     val type =

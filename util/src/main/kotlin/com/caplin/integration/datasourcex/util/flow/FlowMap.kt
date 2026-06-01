@@ -80,7 +80,7 @@ interface MutableFlowMap<K : Any, V : Any> : FlowMap<K, V> {
 interface FlowMap<K : Any, V : Any> : MapFlow<K, V>, Map<K, V> {
 
   /** A copy of the map at this point in time */
-  fun asMap(): PersistentMap<K, V>
+  fun asMap(): Map<K, V>
 }
 
 /** An event emitted by [MapFlow.asFlowWithState]. */

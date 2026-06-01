@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 
 internal class FlowMapStreamEventDeserializer :
     StdDeserializer<FlowMapStreamEvent<*, *>>(FlowMapStreamEvent::class.java) {
+  @Suppress("UNCHECKED_CAST")
   override fun deserialize(p: JsonParser, ctxt: DeserializationContext): FlowMapStreamEvent<*, *> {
     val node = p.codec.readTree<ObjectNode>(p)
     val type =
