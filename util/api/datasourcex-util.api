@@ -181,7 +181,7 @@ public final class com/caplin/integration/datasourcex/util/flow/FlatMapFirstKt {
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/flow/FlowMap : com/caplin/integration/datasourcex/util/flow/MapFlow, java/util/Map, kotlin/jvm/internal/markers/KMappedMarker {
-	public abstract fun asMap ()Lkotlinx/collections/immutable/PersistentMap;
+	public abstract fun asMap ()Ljava/util/Map;
 }
 
 public final class com/caplin/integration/datasourcex/util/flow/FlowMapKt {
