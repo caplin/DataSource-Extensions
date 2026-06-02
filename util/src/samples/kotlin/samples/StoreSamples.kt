@@ -26,10 +26,9 @@ class StoreSamples {
    * A [CacheLoaderWriter] over a jOOQ `account` table whose `version` is drawn from a database
    * sequence, so the version is the store's durable commit order rather than an in-process counter.
    *
-   * The transactional operations ([write], [delete] and the read-modify-write [load]) are
-   * non-suspending: they run on the caller's blocking transaction (`tx.transaction`), already
-   * dispatched to [Dispatchers.IO] by [flowStoreTransaction]. Only the cache-miss read-through
-   * [load] is suspending, so it dispatches its own blocking jOOQ call to [Dispatchers.IO].
+   * The transactional operations ([write], [delete] and the read-modify-write [load]) run on the
+   * caller's transaction via `tx.transaction`. The cache-miss read-through [load] has no
+   * transaction, so it runs its blocking jOOQ call on [Dispatchers.IO].
    */
   class JooqAccountStore(private val dsl: DSLContext) :
       CacheLoaderWriter<String, Account, Configuration> {
@@ -76,15 +75,11 @@ class StoreSamples {
   }
 
   /**
-   * Wires a [mutableFlowStore] that *participates in* the blocking jOOQ transactions the
-   * application owns — no R2DBC. Installing [FlowStorePublishingListener] once means every
-   * `dsl.transaction { … }` publishes the store's buffered deltas automatically on commit (or
-   * discards them on rollback), so callers write plain jOOQ transactions with no per-transaction
-   * wrapper. The store's mutations are non-suspending and run directly on the transaction.
-   *
-   * Moving funds between two accounts is one transaction: the locking read-modify-write
-   * (`store.get(key, config)`) and both writes run on it, and both deltas publish together on
-   * commit or neither on rollback.
+   * Wires a [mutableFlowStore] over a jOOQ `account` table and moves funds between two accounts in
+   * a single `dsl.transaction { … }`: the locking read-modify-write (`store.get(key, config)`) and
+   * both writes run on the transaction, and both deltas reach the stream together on commit or
+   * neither on rollback. [FlowStorePublishingListener], installed once on the [DSLContext], is what
+   * turns each commit into the delta publish.
    */
   suspend fun jooqSample(rootDsl: DSLContext, scope: CoroutineScope) {
     val cache =
@@ -94,8 +89,8 @@ class StoreSamples {
     val store =
         mutableFlowStore(JooqAccountStore(rootDsl), cache, txContext = Configuration::asTxContext)
 
-    // Install the publishing listener once; every transaction below then drains the buffered
-    // commit/rollback actions itself — no flowStoreTransaction wrapper to remember.
+    // Install the publishing listener once on the DSLContext; transactions opened from it run the
+    // store's buffered commit/rollback actions in their commit/rollback callbacks.
     val dsl =
         rootDsl
             .configuration()
@@ -117,10 +112,10 @@ private const val COMMIT_ACTIONS = "datasourcex.flowstore.commit-actions"
 private const val ROLLBACK_ACTIONS = "datasourcex.flowstore.rollback-actions"
 
 /**
- * Drains the store's buffered post-commit / rollback actions from within jOOQ's transaction
- * lifecycle, so a plain `dsl.transaction { … }` publishes the deltas automatically. The actions are
- * non-suspending (the store enqueues each delta and emits it from its own coroutine), so they run
- * directly in these synchronous callbacks — no `runBlocking` and no blocked thread.
+ * Runs the store's buffered post-commit / rollback actions from within jOOQ's transaction
+ * lifecycle: [commitEnd] fires the commit actions ([COMMIT_ACTIONS]) and [rollbackEnd] the rollback
+ * actions ([ROLLBACK_ACTIONS]), each adapted from the transaction's [Configuration] by
+ * [asTxContext].
  */
 private object FlowStorePublishingListener : TransactionListener {
   override fun commitEnd(ctx: TransactionContext) = ctx.configuration().runActions(COMMIT_ACTIONS)
@@ -131,8 +126,8 @@ private object FlowStorePublishingListener : TransactionListener {
 
 /**
  * Adapts a jOOQ transaction [Configuration] to a [TxContext], buffering the store's post-commit
- * side effects in the transaction-scoped [Configuration.data] so [flowStoreTransaction] can run
- * them after the commit or discard them on rollback.
+ * side effects in the transaction-scoped [Configuration.data] so [FlowStorePublishingListener] can
+ * run them after the commit or discard them on rollback.
  */
 private fun Configuration.asTxContext(): TxContext<Configuration> =
     object : TxContext<Configuration> {

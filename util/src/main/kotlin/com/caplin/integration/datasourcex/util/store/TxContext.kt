@@ -9,9 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * via [onCommitEnd] (and optional [onRollback] cleanup).
  *
  * Registered actions are **non-suspending** so they can run inside a synchronous commit/rollback
- * callback (e.g. a jOOQ `TransactionListener`) without blocking. The store keeps them cheap — a
- * cache update and an enqueue onto its delta channel — and defers any suspending work to its own
- * coroutine.
+ * callback (e.g. a jOOQ `TransactionListener`). The store's actions are cheap — a version-gated
+ * cache update and a `tryEmit` of the delta.
  */
 interface TxContext<out T> {
   val transaction: T

@@ -6,10 +6,9 @@ package com.caplin.integration.datasourcex.util.store
  * the store's commit order (a sequence, identity, or version column), never supplied by the caller,
  * so it survives restarts and orders writes the way the store committed them.
  *
- * Writes are **not** suspending: they run synchronously on the transaction the caller already
- * opened (a blocking jOOQ / JDBC transaction callback), so a [MutableFlowStore] can be driven from
- * inside `dsl.transaction { … }` without a `runBlocking` bridge. Dispatch the whole transaction to
- * a blocking-friendly dispatcher (`withContext(Dispatchers.IO)`) at its boundary.
+ * Writes are **not** suspending: they run on the caller's transaction, which may be a blocking jOOQ
+ * / JDBC transaction callback (`dsl.transaction { … }`). Dispatch the whole transaction to a
+ * blocking-friendly dispatcher (`withContext(Dispatchers.IO)`) at its boundary.
  */
 interface CacheWriter<K : Any, V : Any, T> {
   /** Writes [value] for [key] and returns the version the store assigned it. */

@@ -2,7 +2,6 @@ package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.cache.SuspendingCache
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
-import java.util.concurrent.CompletableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -33,10 +32,10 @@ interface FlowStore<K : Any, V : Any> {
 }
 
 /**
- * Read/write view of a store-backed map that **participates in** transactions the caller owns.
- * Every mutation takes the backend's transaction handle [T] (a jOOQ `Configuration`, a JDBC
- * `Connection`, …): the write is enlisted on it through [CacheWriter], which assigns the version,
- * and the cache update and delta are published only when that transaction commits.
+ * Read/write view of a store-backed map. Every mutation takes the caller's transaction handle [T]
+ * (a jOOQ `Configuration`, a JDBC `Connection`, …): the write is enlisted on it through
+ * [CacheWriter], which assigns the version, and the cache update and delta are published only when
+ * that transaction commits.
  *
  * The owner must **serialise writes to a given key** (single-writer-per-key): the version is the
  * store's commit order, so concurrent unserialised writes to the same key would let the persisted
@@ -82,23 +81,7 @@ internal class FlowStoreImpl<K : Any, V : Any>(
   init {
     scope.launch {
       inbound.collect { event ->
-        // Keep a resident entry coherent, gating on version with the cache's per-key atomic compute
-        // so neither a concurrent read-through nor an out-of-order delta can clobber a newer value.
-        // A removal leaves a tombstone so a stale older read-through is rejected by version;
-        // non-resident keys are left for the next read-through.
-        cache.asyncCache().asMap().computeIfPresent(event.key) { _, oldFuture ->
-          val old = oldFuture.getNow(null)
-          if (old == null || event.version <= old.version) {
-            oldFuture
-          } else {
-            val replacement: CacheEntry<V> =
-                when (event) {
-                  is VersionedMapEvent.Upsert -> Live(event.value, event.version)
-                  is VersionedMapEvent.Removed -> Tombstone(event.version)
-                }
-            CompletableFuture.completedFuture(replacement)
-          }
-        }
+        cacheReflectIfNewer(event)
         signal.emit(event)
       }
     }

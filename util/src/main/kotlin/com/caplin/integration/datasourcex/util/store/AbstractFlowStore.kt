@@ -62,6 +62,20 @@ internal abstract class AbstractFlowStore<K : Any, V : Any>(
     return resident?.getNow(candidate) ?: candidate
   }
 
+  /**
+   * Reflects [event] onto a *resident* entry only, gating on version — the consumer counterpart to
+   * [cachePutIfNewer], which also inserts. A removal leaves a tombstone so a stale older
+   * read-through is rejected by version; non-resident keys are left for the next read-through.
+   */
+  protected fun cacheReflectIfNewer(event: VersionedMapEvent<K, V>) {
+    cache.asyncCache().asMap().computeIfPresent(event.key) { _, oldFuture ->
+      val old = oldFuture.getNow(null)
+      if (old != null && event.version > old.version)
+          CompletableFuture.completedFuture(event.toEntry())
+      else oldFuture
+    }
+  }
+
   override fun valueFlow(key: K): Flow<V?> =
       flow {
             var highest = Long.MIN_VALUE
@@ -91,4 +105,10 @@ internal fun <V : Any> VersionedMapEvent<*, V>.valueOrNull(): V? =
     when (this) {
       is VersionedMapEvent.Upsert -> value
       is VersionedMapEvent.Removed -> null
+    }
+
+internal fun <V : Any> VersionedMapEvent<*, V>.toEntry(): CacheEntry<V> =
+    when (this) {
+      is VersionedMapEvent.Upsert -> Live(value, version)
+      is VersionedMapEvent.Removed -> Tombstone(version)
     }
