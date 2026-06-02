@@ -101,9 +101,10 @@ class FlowStoreTest :
         val owner =
             mutableFlowStore(
                 store,
-                inMemoryTransactionRunner,
                 Caffeine.newBuilder().buildSuspending(backgroundScope),
+                txContext = inMemoryTxContext,
             )
+        fun commit(action: (InMemoryTx) -> Unit) = InMemoryTx().also { action(it) }.commit()
         val attached = MutableStateFlow(false)
         val ownerDeltas =
             (owner.asFlow() as SharedFlow<VersionedMapEvent<String, String>>).onSubscription {
@@ -121,13 +122,13 @@ class FlowStoreTest :
           attached.first { it } // the consumer's collector has attached to the owner's stream
           awaitItem().shouldBeNull()
 
-          owner.put("k", "v1")
+          commit { owner.put("k", "v1", it) }
           awaitItem() shouldBe "v1"
 
-          owner.put("k", "v2")
+          commit { owner.put("k", "v2", it) }
           awaitItem() shouldBe "v2"
 
-          owner.remove("k")
+          commit { owner.remove("k", it) }
           awaitItem().shouldBeNull()
         }
       }

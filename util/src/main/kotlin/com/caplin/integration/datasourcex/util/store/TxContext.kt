@@ -7,13 +7,18 @@ import java.util.concurrent.atomic.AtomicBoolean
  * A driver-agnostic unit of work. [transaction] is the backend handle (jOOQ, JDBC, R2DBC, ...). The
  * owner of the transaction begins and commits it; callers only register post-commit side-effects
  * via [onCommitEnd] (and optional [onRollback] cleanup).
+ *
+ * Registered actions are **non-suspending** so they can run inside a synchronous commit/rollback
+ * callback (e.g. a jOOQ `TransactionListener`) without blocking. The store keeps them cheap — a
+ * cache update and an enqueue onto its delta channel — and defers any suspending work to its own
+ * coroutine.
  */
 interface TxContext<out T> {
   val transaction: T
 
-  fun onCommitEnd(action: suspend () -> Unit)
+  fun onCommitEnd(action: () -> Unit)
 
-  fun onRollback(action: suspend () -> Unit) {}
+  fun onRollback(action: () -> Unit) {}
 }
 
 /**
@@ -22,20 +27,20 @@ interface TxContext<out T> {
  * single unit of work directly.
  */
 class AutoCommitTxContext<out T>(override val transaction: T) : TxContext<T> {
-  private val commitActions = CopyOnWriteArrayList<suspend () -> Unit>()
-  private val rollbackActions = CopyOnWriteArrayList<suspend () -> Unit>()
+  private val commitActions = CopyOnWriteArrayList<() -> Unit>()
+  private val rollbackActions = CopyOnWriteArrayList<() -> Unit>()
   private val completed = AtomicBoolean(false)
 
-  override fun onCommitEnd(action: suspend () -> Unit) {
+  override fun onCommitEnd(action: () -> Unit) {
     commitActions += action
   }
 
-  override fun onRollback(action: suspend () -> Unit) {
+  override fun onRollback(action: () -> Unit) {
     rollbackActions += action
   }
 
   /** Fires the registered commit actions once; reusing a completed context throws. */
-  suspend fun commit() {
+  fun commit() {
     check(completed.compareAndSet(false, true)) { "Transaction already completed" }
     for (action in commitActions) action()
   }
@@ -43,7 +48,7 @@ class AutoCommitTxContext<out T>(override val transaction: T) : TxContext<T> {
   /**
    * Fires the registered rollback actions; a no-op once the context has committed or rolled back.
    */
-  suspend fun rollback() {
+  fun rollback() {
     if (!completed.compareAndSet(false, true)) return
     for (action in rollbackActions) action()
   }

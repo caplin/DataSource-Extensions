@@ -9,7 +9,7 @@ class InMemoryCacheLoaderWriterTest :
     FunSpec({
       test("writes are loadable and deletes remove the entry") {
         val store = InMemoryCacheLoaderWriter<String, String>()
-        val tx = AutoCommitTxContext(Unit)
+        val tx = inMemoryTxContext(InMemoryTx())
 
         store.write("a", "A", tx)
         store.write("b", "B", tx)

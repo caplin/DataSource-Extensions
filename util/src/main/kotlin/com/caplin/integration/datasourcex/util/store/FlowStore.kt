@@ -33,9 +33,10 @@ interface FlowStore<K : Any, V : Any> {
 }
 
 /**
- * Owning, read/write view of a store-backed map. Writes are written through [CacheWriter], which
- * assigns each write its version, and the cache update and delta are published only when the
- * enclosing transaction commits.
+ * Read/write view of a store-backed map that **participates in** transactions the caller owns.
+ * Every mutation takes the backend's transaction handle [T] (a jOOQ `Configuration`, a JDBC
+ * `Connection`, …): the write is enlisted on it through [CacheWriter], which assigns the version,
+ * and the cache update and delta are published only when that transaction commits.
  *
  * The owner must **serialise writes to a given key** (single-writer-per-key): the version is the
  * store's commit order, so concurrent unserialised writes to the same key would let the persisted
@@ -43,17 +44,18 @@ interface FlowStore<K : Any, V : Any> {
  * [FlowStore].
  */
 interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
-  suspend fun put(key: K, value: V)
+  /**
+   * Reads [key]'s current value within [tx], always through the store and bypassing the cache, so
+   * it sees this transaction's own uncommitted writes and can take a locking read. Use for
+   * read-modify-write; use the cache-first [get] outside a transaction.
+   */
+  fun get(key: K, tx: T): V?
 
-  suspend fun put(key: K, value: V, tx: TxContext<T>)
+  fun put(key: K, value: V, tx: T)
 
-  suspend fun putAll(from: Map<K, V>)
+  fun putAll(from: Map<K, V>, tx: T)
 
-  suspend fun putAll(from: Map<K, V>, tx: TxContext<T>)
-
-  suspend fun remove(key: K)
-
-  suspend fun remove(key: K, tx: TxContext<T>)
+  fun remove(key: K, tx: T)
 }
 
 /**

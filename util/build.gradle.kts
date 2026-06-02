@@ -33,6 +33,11 @@ dependencies {
   compileOnly(libs.fory.core)
   compileOnly(libs.fory.kotlin)
 
+  // Samples (compiled for Dokka only): show MutableFlowStore participating in a blocking jOOQ
+  // transaction. Off the published runtime classpath; jooq is version-managed by the Spring Boot
+  // BOM.
+  samplesImplementation("org.jooq:jooq")
+
   testRuntimeOnly("org.slf4j:slf4j-simple")
 
   testImplementation("org.springframework:spring-core") // For testing the RegexPathMatcher
@@ -53,4 +58,9 @@ dependencies {
 
 jmh { duplicateClassesStrategy.set(DuplicatesStrategy.EXCLUDE) }
 
-dokka { dokkaSourceSets.configureEach { includes.from("README.md") } }
+dokka {
+  dokkaSourceSets.configureEach {
+    includes.from("README.md")
+    samples.from(layout.projectDirectory.dir("src/samples/kotlin"))
+  }
+}

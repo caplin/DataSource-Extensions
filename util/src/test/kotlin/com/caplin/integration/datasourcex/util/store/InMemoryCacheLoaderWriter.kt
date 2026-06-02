@@ -6,11 +6,40 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 
 /**
+ * A trivial in-memory unit of work standing in for a database transaction: it buffers the store's
+ * post-commit / rollback side effects until the test drives [commit] or [rollback]. Mirrors how a
+ * jOOQ `Configuration` carries transaction-scoped state.
+ */
+class InMemoryTx {
+  internal val commitActions = mutableListOf<() -> Unit>()
+  internal val rollbackActions = mutableListOf<() -> Unit>()
+
+  fun commit() = commitActions.forEach { it() }
+
+  fun rollback() = rollbackActions.forEach { it() }
+}
+
+/** Adapts an [InMemoryTx] handle into the [TxContext] the store enlists on. */
+val inMemoryTxContext: (InMemoryTx) -> TxContext<InMemoryTx> = { handle ->
+  object : TxContext<InMemoryTx> {
+    override val transaction = handle
+
+    override fun onCommitEnd(action: () -> Unit) {
+      handle.commitActions += action
+    }
+
+    override fun onRollback(action: () -> Unit) {
+      handle.rollbackActions += action
+    }
+  }
+}
+
+/**
  * In-memory reference implementation of the store SPI for tests. Writes apply immediately to a
  * backing [ConcurrentHashMap], versioned from a shared counter that stands in for a DB sequence;
- * the [TxContext] (type [Unit]) is ignored.
+ * the [TxContext] is ignored.
  */
-class InMemoryCacheLoaderWriter<K : Any, V : Any> : CacheLoaderWriter<K, V, Unit> {
+class InMemoryCacheLoaderWriter<K : Any, V : Any> : CacheLoaderWriter<K, V, InMemoryTx> {
   private val backing = ConcurrentHashMap<K, Versioned<V>>()
   private val sequence = AtomicLong(0L)
 
@@ -22,31 +51,19 @@ class InMemoryCacheLoaderWriter<K : Any, V : Any> : CacheLoaderWriter<K, V, Unit
 
   override suspend fun load(key: K): Versioned<V>? = backing[key]
 
+  override fun load(key: K, tx: TxContext<InMemoryTx>): Versioned<V>? = backing[key]
+
   override fun loadAllKeys(): Flow<K> = backing.keys.toList().asFlow()
 
-  override suspend fun write(key: K, value: V, tx: TxContext<Unit>): Long {
+  override fun write(key: K, value: V, tx: TxContext<InMemoryTx>): Long {
     val version = sequence.incrementAndGet()
     backing[key] = Versioned(value, version)
     return version
   }
 
-  override suspend fun delete(key: K, tx: TxContext<Unit>): Long {
+  override fun delete(key: K, tx: TxContext<InMemoryTx>): Long {
     val version = sequence.incrementAndGet()
     backing.remove(key)
     return version
-  }
-}
-
-/**
- * A [TransactionRunner] over a [Unit] transaction that commits on success and rolls back on error.
- */
-val inMemoryTransactionRunner = TransactionRunner { block ->
-  val tx = AutoCommitTxContext(Unit)
-  try {
-    block(tx)
-    tx.commit()
-  } catch (e: Throwable) {
-    tx.rollback()
-    throw e
   }
 }
