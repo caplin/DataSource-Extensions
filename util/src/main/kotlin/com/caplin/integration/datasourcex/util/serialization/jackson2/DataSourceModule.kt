@@ -5,6 +5,7 @@ import com.caplin.integration.datasourcex.util.flow.MapEvent
 import com.caplin.integration.datasourcex.util.flow.SetEvent
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
+import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.Module
@@ -56,6 +57,23 @@ object DataSourceModule : SimpleModule() {
     addDeserializer(
         SimpleMapEvent.EntryEvent::class.java,
         simpleMapEventDeserializer as JsonDeserializer<SimpleMapEvent.EntryEvent<*, *>>,
+    )
+
+    val versionedMapEventSerializer = VersionedMapEventSerializer()
+    val versionedMapEventDeserializer = VersionedMapEventDeserializer()
+
+    addSerializer(VersionedMapEvent::class.java, versionedMapEventSerializer)
+    addDeserializer(VersionedMapEvent::class.java, versionedMapEventDeserializer)
+
+    @Suppress("UNCHECKED_CAST")
+    addSerializer(
+        VersionedMapEvent.Upsert::class.java,
+        versionedMapEventSerializer as JsonSerializer<VersionedMapEvent.Upsert<*, *>>,
+    )
+    @Suppress("UNCHECKED_CAST")
+    addSerializer(
+        VersionedMapEvent.Removed::class.java,
+        versionedMapEventSerializer as JsonSerializer<VersionedMapEvent.Removed<*>>,
     )
 
     val setEventSerializer = SetEventSerializer()

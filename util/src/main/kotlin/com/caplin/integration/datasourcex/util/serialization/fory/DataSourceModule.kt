@@ -5,6 +5,7 @@ import com.caplin.integration.datasourcex.util.flow.MapEvent
 import com.caplin.integration.datasourcex.util.flow.SetEvent
 import com.caplin.integration.datasourcex.util.flow.SimpleMapEvent
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
+import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
 import org.apache.fory.Fory
 
 /** Registers serializers for internal types with the provided [Fory] instance. */
@@ -32,6 +33,7 @@ fun Fory.registerDataSourceSerializers(preserveExceptionTypes: Boolean = false):
   registerSerializer(MapEvent::class.java, MapEventSerializer::class.java)
   registerSerializer(SimpleMapEvent::class.java, SimpleMapEventSerializer::class.java)
   registerSerializer(SetEvent::class.java, SetEventSerializer::class.java)
+  registerSerializer(VersionedMapEvent::class.java, VersionedMapEventSerializer::class.java)
 
   registerSerializer(
       ValueOrCompletion::class.java,
