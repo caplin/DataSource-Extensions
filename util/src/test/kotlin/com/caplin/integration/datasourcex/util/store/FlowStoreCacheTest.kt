@@ -1,10 +1,13 @@
 package com.caplin.integration.datasourcex.util.store
 
+import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,5 +55,47 @@ class FlowStoreCacheTest :
         cache.putIfNewer("k", Live("v3", 3L)) shouldBe Live("v5", 5L) // older rejected
         cache.putIfNewer("k", Live("v5b", 5L)) shouldBe Live("v5", 5L) // equal rejected
         cache.putIfNewer("k", Live("v9", 9L)) shouldBe Live("v9", 9L)
+      }
+
+      test("reflectIfNewer updates the cache during an in-flight load, preventing regression").config(
+          coroutineTestScope = false
+      ) {
+        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(scope)
+        val loadGate = CompletableDeferred<Unit>()
+        val resultGate = CompletableDeferred<Unit>()
+
+        val loadJob = async {
+          cache.loadIfNewer("k") {
+            loadGate.complete(Unit)
+            resultGate.await()
+            Versioned("v5", 5L)
+          }
+        }
+
+        // Wait until the load is executing and in-flight
+        loadGate.await()
+
+        // Call reflectIfNewer with a newer version (Version 6) while load is in-flight
+        cache.reflectIfNewer(VersionedMapEvent.Upsert("k", "v6", 6L))
+
+        // Complete the load (which yields Version 5)
+        resultGate.complete(Unit)
+        loadJob.await()
+
+        // Verify that the cache keeps the newer Version 6 and did not regress to Version 5
+        cache.getIfPresent("k") shouldBe Live("v6", 6L)
+      }
+
+      test("loadIfNewer throws CancellationException if the scope is cancelled").config(
+          coroutineTestScope = false
+      ) {
+        val deadScope = CoroutineScope(Dispatchers.Default)
+        deadScope.cancel()
+
+        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(deadScope)
+
+        shouldThrow<CancellationException> {
+          cache.loadIfNewer("k") { Versioned("v", 1L) }
+        }
       }
     })

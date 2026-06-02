@@ -6,6 +6,7 @@ import com.github.benmanes.caffeine.cache.AsyncCache
 import com.github.benmanes.caffeine.cache.Caffeine
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
@@ -34,7 +35,7 @@ class FlowStoreCache<K : Any, V : Any>(
     inFlight.putIfAbsent(key, mine)?.let {
       return it.await()
     }
-    loaderScope.launch {
+    val job = loaderScope.launch {
       try {
         val loaded = load(key)
         mine.complete(
@@ -44,6 +45,13 @@ class FlowStoreCache<K : Any, V : Any>(
         mine.completeExceptionally(t)
       } finally {
         inFlight.remove(key, mine)
+      }
+    }
+    job.invokeOnCompletion { throwable ->
+      if (throwable != null) {
+        mine.completeExceptionally(throwable)
+      } else if (!mine.isDone) {
+        mine.completeExceptionally(CancellationException("Job completed without completing future"))
       }
     }
     return mine.await()
@@ -63,14 +71,21 @@ class FlowStoreCache<K : Any, V : Any>(
   }
 
   /**
-   * Applies [event] to a resident entry only, gated on version; absent keys await the next read.
+   * Applies [event] to a resident or in-flight loading entry only, gated on version; other absent
+   * keys await the next read.
    */
   fun reflectIfNewer(event: VersionedMapEvent<K, V>) {
-    asyncCache().asMap().computeIfPresent(event.key) { _, old ->
-      val current = old.getNow(null)
-      if (current != null && event.version > current.version)
-          CompletableFuture.completedFuture(event.toEntry())
-      else old
+    asyncCache().asMap().compute(event.key) { _, old ->
+      val current = old?.getNow(null)
+      if (current != null) {
+        if (event.version > current.version) CompletableFuture.completedFuture(event.toEntry()) else old
+      } else if (old != null) {
+        old
+      } else if (inFlight.containsKey(event.key)) {
+        CompletableFuture.completedFuture(event.toEntry())
+      } else {
+        null
+      }
     }
   }
 }
