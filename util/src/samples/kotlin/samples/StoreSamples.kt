@@ -1,10 +1,9 @@
 package samples
 
-import com.caplin.integration.datasourcex.util.cache.buildSuspending
-import com.caplin.integration.datasourcex.util.store.CacheEntry
 import com.caplin.integration.datasourcex.util.store.CacheLoaderWriter
 import com.caplin.integration.datasourcex.util.store.TxContext
 import com.caplin.integration.datasourcex.util.store.Versioned
+import com.caplin.integration.datasourcex.util.store.buildFlowStoreCache
 import com.caplin.integration.datasourcex.util.store.mutableFlowStore
 import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +15,8 @@ import org.jooq.Record
 import org.jooq.TransactionContext
 import org.jooq.TransactionListener
 import org.jooq.impl.DefaultTransactionListenerProvider
+import samples.FlowStorePublishingListener.commitEnd
+import samples.FlowStorePublishingListener.rollbackEnd
 
 class StoreSamples {
 
@@ -83,9 +84,7 @@ class StoreSamples {
    */
   suspend fun jooqSample(rootDsl: DSLContext, scope: CoroutineScope) {
     val cache =
-        Caffeine.newBuilder()
-            .maximumSize(10_000)
-            .buildSuspending<String, CacheEntry<Account>>(scope)
+        Caffeine.newBuilder().maximumSize(10_000).buildFlowStoreCache<String, Account>(scope)
     val store =
         mutableFlowStore(JooqAccountStore(rootDsl), cache, txContext = Configuration::asTxContext)
 

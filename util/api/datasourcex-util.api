@@ -153,6 +153,7 @@ public class com/caplin/integration/datasourcex/util/cache/SuspendingCache {
 	public final fun asyncCache ()Lcom/github/benmanes/caffeine/cache/AsyncCache;
 	public final fun get (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getIfPresent (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getLoaderScope ()Lkotlinx/coroutines/CoroutineScope;
 	public final fun invalidate (Ljava/lang/Object;)V
 	public final fun put (Ljava/lang/Object;Ljava/lang/Object;)V
 }
@@ -624,9 +625,20 @@ public abstract interface class com/caplin/integration/datasourcex/util/store/Fl
 	public abstract fun valueFlow (Ljava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 }
 
+public final class com/caplin/integration/datasourcex/util/store/FlowStoreCache : com/caplin/integration/datasourcex/util/cache/SuspendingCache {
+	public fun <init> (Lcom/github/benmanes/caffeine/cache/AsyncCache;Lkotlinx/coroutines/CoroutineScope;)V
+	public final fun loadIfNewer (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun putIfNewer (Ljava/lang/Object;Lcom/caplin/integration/datasourcex/util/store/CacheEntry;)Lcom/caplin/integration/datasourcex/util/store/CacheEntry;
+	public final fun reflectIfNewer (Lcom/caplin/integration/datasourcex/util/flow/VersionedMapEvent;)V
+}
+
+public final class com/caplin/integration/datasourcex/util/store/FlowStoreCacheKt {
+	public static final fun buildFlowStoreCache (Lcom/github/benmanes/caffeine/cache/Caffeine;Lkotlinx/coroutines/CoroutineScope;)Lcom/caplin/integration/datasourcex/util/store/FlowStoreCache;
+}
+
 public final class com/caplin/integration/datasourcex/util/store/FlowStoreKt {
-	public static final fun flowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lkotlinx/coroutines/flow/Flow;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lkotlinx/coroutines/CoroutineScope;I)Lcom/caplin/integration/datasourcex/util/store/FlowStore;
-	public static synthetic fun flowStore$default (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lkotlinx/coroutines/flow/Flow;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lkotlinx/coroutines/CoroutineScope;IILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/FlowStore;
+	public static final fun flowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lkotlinx/coroutines/flow/Flow;Lcom/caplin/integration/datasourcex/util/store/FlowStoreCache;Lkotlinx/coroutines/CoroutineScope;I)Lcom/caplin/integration/datasourcex/util/store/FlowStore;
+	public static synthetic fun flowStore$default (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lkotlinx/coroutines/flow/Flow;Lcom/caplin/integration/datasourcex/util/store/FlowStoreCache;Lkotlinx/coroutines/CoroutineScope;IILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/FlowStore;
 }
 
 public final class com/caplin/integration/datasourcex/util/store/Live : com/caplin/integration/datasourcex/util/store/CacheEntry {
@@ -650,7 +662,7 @@ public abstract interface class com/caplin/integration/datasourcex/util/store/Mu
 }
 
 public final class com/caplin/integration/datasourcex/util/store/MutableFlowStoreKt {
-	public static final fun mutableFlowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lkotlin/jvm/functions/Function1;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
+	public static final fun mutableFlowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Lcom/caplin/integration/datasourcex/util/store/FlowStoreCache;Lkotlin/jvm/functions/Function1;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
 }
 
 public final class com/caplin/integration/datasourcex/util/store/Tombstone : com/caplin/integration/datasourcex/util/store/CacheEntry {

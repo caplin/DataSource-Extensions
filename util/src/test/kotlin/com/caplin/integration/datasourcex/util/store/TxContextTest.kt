@@ -26,4 +26,15 @@ class TxContextTest :
         tx.rollback()
         rollbacks shouldBe 0
       }
+
+      test("commit runs every action even if one throws, then rethrows") {
+        val log = mutableListOf<String>()
+        val tx = AutoCommitTxContext(Unit)
+        tx.onCommitEnd { log += "a" }
+        tx.onCommitEnd { throw RuntimeException("boom") }
+        tx.onCommitEnd { log += "c" }
+
+        shouldThrow<RuntimeException> { tx.commit() }
+        log shouldBe listOf("a", "c")
+      }
     })

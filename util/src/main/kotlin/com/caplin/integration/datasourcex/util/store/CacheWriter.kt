@@ -2,9 +2,8 @@ package com.caplin.integration.datasourcex.util.store
 
 /**
  * Write half of the store SPI. Implementations enlist on [TxContext.transaction] and must not
- * commit the transaction themselves. Each write assigns and returns the new version: the version is
- * the store's commit order (a sequence, identity, or version column), never supplied by the caller,
- * so it survives restarts and orders writes the way the store committed them.
+ * commit the transaction themselves. Each write assigns and returns the new version from the
+ * store's commit order (a sequence, identity, or version column); the caller never supplies it.
  *
  * Writes are **not** suspending: they run on the caller's transaction, which may be a blocking jOOQ
  * / JDBC transaction callback (`dsl.transaction { … }`). Dispatch the whole transaction to a

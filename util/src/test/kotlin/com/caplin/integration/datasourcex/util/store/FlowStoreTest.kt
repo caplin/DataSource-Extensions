@@ -1,7 +1,6 @@
 package com.caplin.integration.datasourcex.util.store
 
 import app.cash.turbine.test
-import com.caplin.integration.datasourcex.util.cache.buildSuspending
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.core.spec.style.FunSpec
@@ -24,7 +23,7 @@ class FlowStoreTest :
             flowStore(
                 store,
                 emptyFlow(),
-                Caffeine.newBuilder().buildSuspending(backgroundScope),
+                Caffeine.newBuilder().buildFlowStoreCache(backgroundScope),
                 backgroundScope,
             )
 
@@ -36,8 +35,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v5", 5L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache =
-            Caffeine.newBuilder().buildSuspending<String, CacheEntry<String>>(backgroundScope)
+        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(backgroundScope)
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -61,8 +59,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v2", 2L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache =
-            Caffeine.newBuilder().buildSuspending<String, CacheEntry<String>>(backgroundScope)
+        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(backgroundScope)
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -80,8 +77,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v5", 5L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache =
-            Caffeine.newBuilder().buildSuspending<String, CacheEntry<String>>(backgroundScope)
+        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(backgroundScope)
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -101,7 +97,7 @@ class FlowStoreTest :
         val owner =
             mutableFlowStore(
                 store,
-                Caffeine.newBuilder().buildSuspending(backgroundScope),
+                Caffeine.newBuilder().buildFlowStoreCache(backgroundScope),
                 txContext = inMemoryTxContext,
             )
         fun commit(action: (InMemoryTx) -> Unit) = InMemoryTx().also { action(it) }.commit()
@@ -114,7 +110,7 @@ class FlowStoreTest :
             flowStore(
                 store,
                 ownerDeltas,
-                Caffeine.newBuilder().buildSuspending(backgroundScope),
+                Caffeine.newBuilder().buildFlowStoreCache(backgroundScope),
                 backgroundScope,
             )
 

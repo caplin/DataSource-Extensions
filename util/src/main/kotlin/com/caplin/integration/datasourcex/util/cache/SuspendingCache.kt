@@ -11,16 +11,15 @@ import kotlinx.coroutines.future.future
 
 /**
  * A coroutine wrapper over Caffeine's [AsyncCache] with single-flight loading. Loads run in a child
- * [SupervisorJob] of [scope] rather than the caller's coroutine, so one caller cancelling its [get]
- * does not fail the shared computation, and a failed load surfaces only to that caller without
- * cancelling [scope]. [scope]'s dispatcher decides where loads run, so it is required (no default):
- * a blocking loader needs [kotlinx.coroutines.Dispatchers.IO], not the default dispatcher.
+ * [SupervisorJob] of [scope], so cancelling one [get] does not fail the shared load and a failed
+ * load surfaces only to its caller. [scope]'s dispatcher decides where loads run: a blocking loader
+ * needs [kotlinx.coroutines.Dispatchers.IO].
  */
 open class SuspendingCache<K : Any, V : Any>(
     private val cache: AsyncCache<K, V>,
     scope: CoroutineScope,
 ) {
-  private val loaderScope =
+  protected val loaderScope: CoroutineScope =
       CoroutineScope(scope.coroutineContext + SupervisorJob(scope.coroutineContext[Job]))
 
   fun asyncCache(): AsyncCache<K, V> = cache

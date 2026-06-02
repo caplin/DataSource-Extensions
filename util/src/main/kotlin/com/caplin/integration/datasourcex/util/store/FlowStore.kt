@@ -1,6 +1,5 @@
 package com.caplin.integration.datasourcex.util.store
 
-import com.caplin.integration.datasourcex.util.cache.SuspendingCache
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -10,16 +9,10 @@ import kotlinx.coroutines.launch
  * Read view of a store-backed map. Exposes the delta stream and per-key access only; there is no
  * full-map snapshot, so values are read through to the store on a miss.
  *
- * The value [V] must be an **aggregate root**: the complete state owned under a key, treated as an
- * opaque whole. Every write replaces a key's value entirely — there are no field-level or partial
- * updates and no merge — each published [VersionedMapEvent.Upsert] carries the full value, and a
- * cache miss reads the whole value back through the store. Together with single-writer-per-key
- * ownership (exactly one process writes a given key, and it serialises writes to that key) this is
- * what makes a key's version sequence totally ordered.
- *
- * It is therefore unsuitable for values updated field-by-field by multiple writers, partial
- * projections that must be merged, or values large enough that republishing the whole value on
- * every change is too costly.
+ * The value [V] must be an **aggregate root**: every write replaces a key's value as a whole (no
+ * field-level or partial updates), so each [VersionedMapEvent.Upsert] carries the full value and a
+ * miss reads the whole value back. With single-writer-per-key ownership this makes a key's version
+ * sequence totally ordered.
  */
 interface FlowStore<K : Any, V : Any> {
   /** The live, delta-only stream of versioned mutations. */
@@ -28,6 +21,10 @@ interface FlowStore<K : Any, V : Any> {
   /** The latest value for [key], starting from a read-through load then following the stream. */
   fun valueFlow(key: K): Flow<V?>
 
+  /**
+   * The latest value for [key]: cache-first, reading through to the store on a miss. Not ordered
+   * against [asFlow] — a value just published as a delta may not be visible here yet.
+   */
   suspend fun get(key: K): V?
 }
 
@@ -38,9 +35,8 @@ interface FlowStore<K : Any, V : Any> {
  * that transaction commits.
  *
  * The owner must **serialise writes to a given key** (single-writer-per-key): the version is the
- * store's commit order, so concurrent unserialised writes to the same key would let the persisted
- * row, not just the cache, settle on the wrong version. [V] must be an aggregate root — see
- * [FlowStore].
+ * store's commit order, so unserialised concurrent writes to one key would settle on the wrong
+ * version. [V] must be an aggregate root — see [FlowStore].
  */
 interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
   /**
@@ -65,14 +61,14 @@ interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
 fun <K : Any, V : Any> flowStore(
     loader: CacheLoader<K, V>,
     inbound: Flow<VersionedMapEvent<K, V>>,
-    cache: SuspendingCache<K, CacheEntry<V>>,
+    cache: FlowStoreCache<K, V>,
     scope: CoroutineScope,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
 ): FlowStore<K, V> = FlowStoreImpl(loader, cache, inbound, scope, bufferCapacity)
 
 internal class FlowStoreImpl<K : Any, V : Any>(
     loader: CacheLoader<K, V>,
-    cache: SuspendingCache<K, CacheEntry<V>>,
+    cache: FlowStoreCache<K, V>,
     inbound: Flow<VersionedMapEvent<K, V>>,
     scope: CoroutineScope,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
@@ -81,7 +77,7 @@ internal class FlowStoreImpl<K : Any, V : Any>(
   init {
     scope.launch {
       inbound.collect { event ->
-        cacheReflectIfNewer(event)
+        cache.reflectIfNewer(event)
         signal.emit(event)
       }
     }

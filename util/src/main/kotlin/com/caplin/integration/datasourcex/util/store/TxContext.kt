@@ -9,8 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * via [onCommitEnd] (and optional [onRollback] cleanup).
  *
  * Registered actions are **non-suspending** so they can run inside a synchronous commit/rollback
- * callback (e.g. a jOOQ `TransactionListener`). The store's actions are cheap — a version-gated
- * cache update and a `tryEmit` of the delta.
+ * callback (e.g. a jOOQ `TransactionListener`).
  */
 interface TxContext<out T> {
   val transaction: T
@@ -41,7 +40,7 @@ class AutoCommitTxContext<out T>(override val transaction: T) : TxContext<T> {
   /** Fires the registered commit actions once; reusing a completed context throws. */
   fun commit() {
     check(completed.compareAndSet(false, true)) { "Transaction already completed" }
-    for (action in commitActions) action()
+    runAll(commitActions)
   }
 
   /**
@@ -49,6 +48,20 @@ class AutoCommitTxContext<out T>(override val transaction: T) : TxContext<T> {
    */
   fun rollback() {
     if (!completed.compareAndSet(false, true)) return
-    for (action in rollbackActions) action()
+    runAll(rollbackActions)
+  }
+
+  // Run every action even if some throw, so one failure cannot strand the rest; the first failure
+  // propagates with the others suppressed.
+  private fun runAll(actions: List<() -> Unit>) {
+    var failure: Throwable? = null
+    for (action in actions) {
+      try {
+        action()
+      } catch (t: Throwable) {
+        if (failure == null) failure = t else failure.addSuppressed(t)
+      }
+    }
+    failure?.let { throw it }
   }
 }
