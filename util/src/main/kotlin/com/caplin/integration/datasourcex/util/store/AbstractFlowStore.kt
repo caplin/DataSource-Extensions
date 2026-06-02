@@ -2,6 +2,7 @@ package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.cache.SuspendingCache
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
+import java.util.concurrent.CompletableFuture
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,30 +11,56 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onSubscription
 
+internal const val DEFAULT_SIGNAL_BUFFER: Int = 256
+
 /**
  * Shared core for the store-backed [FlowStore] variants: a delta-only [signal] bus, a bounded hot
- * set [cache] of [Versioned] values, and read-through on a miss. The cache holds versions so that
- * each entry's freshness can be compared against incoming deltas.
+ * set [cache] of [CacheEntry] values, and read-through on a miss. Entries carry versions so each
+ * entry's freshness can be compared against incoming deltas and concurrent read-through loads.
  */
 internal abstract class AbstractFlowStore<K : Any, V : Any>(
     protected val loader: CacheLoader<K, V>,
-    protected val cache: SuspendingCache<K, Versioned<V>>,
+    protected val cache: SuspendingCache<K, CacheEntry<V>>,
+    bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
 ) : FlowStore<K, V> {
 
   protected val signal =
       MutableSharedFlow<VersionedMapEvent<K, V>>(
           replay = 0,
-          extraBufferCapacity = Int.MAX_VALUE,
+          extraBufferCapacity = bufferCapacity,
           onBufferOverflow = BufferOverflow.SUSPEND,
       )
 
   override fun asFlow(): Flow<VersionedMapEvent<K, V>> = signal.asSharedFlow()
 
-  override suspend fun get(key: K): V? = cache.getIfPresent(key)?.value ?: loadAndCache(key)?.value
+  override suspend fun get(key: K): V? =
+      (cache.getIfPresent(key) ?: loadAndCache(key))?.valueOrNull()
 
-  /** Loads [key] from the store and populates the cache. */
-  protected open suspend fun loadAndCache(key: K): Versioned<V>? =
-      loader.load(key)?.also { cache.put(key, it) }
+  /**
+   * Loads [key] through the store and caches it, but never regresses a fresher resident entry: a
+   * delta stream can legitimately run ahead of the store a read-through reads from. A resident
+   * [Tombstone] beats a null load, so a removed key is not re-read as absent.
+   */
+  protected open suspend fun loadAndCache(key: K): CacheEntry<V>? =
+      loader.load(key)?.let { cachePutIfNewer(key, Live(it.value, it.version)) }
+          ?: cache.getIfPresent(key)
+
+  /**
+   * Atomically caches [candidate] unless a strictly-newer entry is already resident, returning the
+   * resident entry afterwards. The cache's per-key atomic compute closes the check-then-put race,
+   * so a concurrent writer (commit, read-through, or inbound delta) cannot be clobbered by a stale
+   * read.
+   */
+  protected fun cachePutIfNewer(key: K, candidate: CacheEntry<V>): CacheEntry<V> {
+    val resident =
+        cache.asyncCache().asMap().merge(key, CompletableFuture.completedFuture(candidate)) {
+            oldFuture,
+            newFuture ->
+          val old = oldFuture.getNow(null)
+          if (old != null && old.version >= candidate.version) oldFuture else newFuture
+        }
+    return resident?.getNow(candidate) ?: candidate
+  }
 
   override fun valueFlow(key: K): Flow<V?> =
       flow {
@@ -42,7 +69,7 @@ internal abstract class AbstractFlowStore<K : Any, V : Any>(
                 .onSubscription {
                   val initial = loadAndCache(key)
                   highest = initial?.version ?: Long.MIN_VALUE
-                  this@flow.emit(initial?.value)
+                  this@flow.emit(initial?.valueOrNull())
                 }
                 .collect { event ->
                   if (event.key == key && event.version > highest) {
@@ -53,6 +80,12 @@ internal abstract class AbstractFlowStore<K : Any, V : Any>(
           }
           .distinctUntilChanged()
 }
+
+private fun <V> CacheEntry<V>.valueOrNull(): V? =
+    when (this) {
+      is Live -> value
+      is Tombstone -> null
+    }
 
 internal fun <V : Any> VersionedMapEvent<*, V>.valueOrNull(): V? =
     when (this) {

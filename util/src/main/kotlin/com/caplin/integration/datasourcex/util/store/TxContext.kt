@@ -1,6 +1,7 @@
 package com.caplin.integration.datasourcex.util.store
 
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * A driver-agnostic unit of work. [transaction] is the backend handle (jOOQ, JDBC, R2DBC, ...). The
@@ -23,6 +24,7 @@ interface TxContext<out T> {
 class AutoCommitTxContext<out T>(override val transaction: T) : TxContext<T> {
   private val commitActions = CopyOnWriteArrayList<suspend () -> Unit>()
   private val rollbackActions = CopyOnWriteArrayList<suspend () -> Unit>()
+  private val completed = AtomicBoolean(false)
 
   override fun onCommitEnd(action: suspend () -> Unit) {
     commitActions += action
@@ -32,11 +34,17 @@ class AutoCommitTxContext<out T>(override val transaction: T) : TxContext<T> {
     rollbackActions += action
   }
 
+  /** Fires the registered commit actions once; reusing a completed context throws. */
   suspend fun commit() {
+    check(completed.compareAndSet(false, true)) { "Transaction already completed" }
     for (action in commitActions) action()
   }
 
+  /**
+   * Fires the registered rollback actions; a no-op once the context has committed or rolled back.
+   */
   suspend fun rollback() {
+    if (!completed.compareAndSet(false, true)) return
     for (action in rollbackActions) action()
   }
 }

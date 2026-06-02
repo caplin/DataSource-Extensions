@@ -11,15 +11,15 @@ class InMemoryCacheLoaderWriterTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         val tx = AutoCommitTxContext(Unit)
 
-        store.write("a", "A", 1L, tx)
-        store.write("b", "B", 2L, tx)
+        store.write("a", "A", tx)
+        store.write("b", "B", tx)
 
         store.load("a") shouldBe Versioned("A", 1L)
         store.loadAll(listOf("a", "b", "missing")) shouldBe
             mapOf("a" to Versioned("A", 1L), "b" to Versioned("B", 2L))
         store.loadAllKeys().toList().toSet() shouldBe setOf("a", "b")
 
-        store.delete("a", 3L, tx)
+        store.delete("a", tx)
         store.load("a").shouldBeNull()
       }
 

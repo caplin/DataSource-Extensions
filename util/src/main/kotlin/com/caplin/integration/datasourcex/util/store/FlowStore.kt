@@ -2,9 +2,9 @@ package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.cache.SuspendingCache
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
+import java.util.concurrent.CompletableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 
 /**
@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
  * opaque whole. Every write replaces a key's value entirely — there are no field-level or partial
  * updates and no merge — each published [VersionedMapEvent.Upsert] carries the full value, and a
  * cache miss reads the whole value back through the store. Together with single-writer-per-key
- * ownership (exactly one process writes a given key) this is what makes a key's version sequence
- * totally ordered.
+ * ownership (exactly one process writes a given key, and it serialises writes to that key) this is
+ * what makes a key's version sequence totally ordered.
  *
  * It is therefore unsuitable for values updated field-by-field by multiple writers, partial
  * projections that must be merged, or values large enough that republishing the whole value on
@@ -33,9 +33,14 @@ interface FlowStore<K : Any, V : Any> {
 }
 
 /**
- * Owning, read/write view of a store-backed map. Writes are written through [CacheWriter] and the
- * cache update and delta are applied only when the enclosing transaction commits. [V] must be an
- * aggregate root — see [FlowStore].
+ * Owning, read/write view of a store-backed map. Writes are written through [CacheWriter], which
+ * assigns each write its version, and the cache update and delta are published only when the
+ * enclosing transaction commits.
+ *
+ * The owner must **serialise writes to a given key** (single-writer-per-key): the version is the
+ * store's commit order, so concurrent unserialised writes to the same key would let the persisted
+ * row, not just the cache, settle on the wrong version. [V] must be an aggregate root — see
+ * [FlowStore].
  */
 interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
   suspend fun put(key: K, value: V)
@@ -59,28 +64,37 @@ interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
 fun <K : Any, V : Any> flowStore(
     loader: CacheLoader<K, V>,
     inbound: Flow<VersionedMapEvent<K, V>>,
-    cache: SuspendingCache<K, Versioned<V>>,
+    cache: SuspendingCache<K, CacheEntry<V>>,
     scope: CoroutineScope,
-): FlowStore<K, V> = FlowStoreImpl(loader, cache, inbound, scope)
+    bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
+): FlowStore<K, V> = FlowStoreImpl(loader, cache, inbound, scope, bufferCapacity)
 
 internal class FlowStoreImpl<K : Any, V : Any>(
     loader: CacheLoader<K, V>,
-    cache: SuspendingCache<K, Versioned<V>>,
+    cache: SuspendingCache<K, CacheEntry<V>>,
     inbound: Flow<VersionedMapEvent<K, V>>,
     scope: CoroutineScope,
-) : AbstractFlowStore<K, V>(loader, cache) {
+    bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
+) : AbstractFlowStore<K, V>(loader, cache, bufferCapacity) {
 
   init {
     scope.launch {
       inbound.collect { event ->
-        // Keep a resident entry coherent, gating on the version so a delta older than a
-        // read-through load is dropped. Non-resident keys are left for the next read-through.
-        val cached = cache.asyncCache().getIfPresent(event.key)?.await()
-        if (cached != null && event.version > cached.version) {
-          when (event) {
-            is VersionedMapEvent.Upsert ->
-                cache.put(event.key, Versioned(event.value, event.version))
-            is VersionedMapEvent.Removed -> cache.invalidate(event.key)
+        // Keep a resident entry coherent, gating on version with the cache's per-key atomic compute
+        // so neither a concurrent read-through nor an out-of-order delta can clobber a newer value.
+        // A removal leaves a tombstone so a stale older read-through is rejected by version;
+        // non-resident keys are left for the next read-through.
+        cache.asyncCache().asMap().computeIfPresent(event.key) { _, oldFuture ->
+          val old = oldFuture.getNow(null)
+          if (old == null || event.version <= old.version) {
+            oldFuture
+          } else {
+            val replacement: CacheEntry<V> =
+                when (event) {
+                  is VersionedMapEvent.Upsert -> Live(event.value, event.version)
+                  is VersionedMapEvent.Removed -> Tombstone(event.version)
+                }
+            CompletableFuture.completedFuture(replacement)
           }
         }
         signal.emit(event)

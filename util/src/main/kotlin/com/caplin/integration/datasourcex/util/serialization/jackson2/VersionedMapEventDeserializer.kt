@@ -7,6 +7,11 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.node.ObjectNode
 
+/**
+ * Keys and values round-trip as JSON-native types only: a String key returns a String, but a
+ * numeric key comes back as Integer/Long and a structured value as a Map, not its original type.
+ * Intended for String (or otherwise JSON-native) keys and values.
+ */
 internal class VersionedMapEventDeserializer :
     StdDeserializer<VersionedMapEvent<*, *>>(VersionedMapEvent::class.java) {
   override fun deserialize(p: JsonParser, ctxt: DeserializationContext): VersionedMapEvent<*, *> {
@@ -18,8 +23,11 @@ internal class VersionedMapEventDeserializer :
         node.get("key")?.let { p.codec.treeToValue(it, Any::class.java) }
             ?: throw JsonMappingException.from(p, "Missing key field for VersionedMapEvent")
     val version =
-        node.get("version")?.asLong()
-            ?: throw JsonMappingException.from(p, "Missing version field for VersionedMapEvent")
+        node.get("version")?.takeIf { it.isIntegralNumber }?.asLong()
+            ?: throw JsonMappingException.from(
+                p,
+                "Missing or non-integral version field for VersionedMapEvent",
+            )
     return when (type) {
       "upsert" -> {
         val value =

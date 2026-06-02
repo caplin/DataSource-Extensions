@@ -579,6 +579,10 @@ public final class com/caplin/integration/datasourcex/util/store/AutoCommitTxCon
 	public final fun rollback (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
+public abstract interface class com/caplin/integration/datasourcex/util/store/CacheEntry {
+	public abstract fun getVersion ()J
+}
+
 public abstract interface class com/caplin/integration/datasourcex/util/store/CacheLoader {
 	public abstract fun load (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun loadAll (Ljava/util/Collection;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -594,29 +598,22 @@ public abstract interface class com/caplin/integration/datasourcex/util/store/Ca
 }
 
 public final class com/caplin/integration/datasourcex/util/store/CacheLoaderWriter$DefaultImpls {
-	public static fun deleteAll (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Ljava/util/Collection;JLcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun deleteAll (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Ljava/util/Collection;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun loadAll (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Ljava/util/Collection;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun loadAllKeys (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;)Lkotlinx/coroutines/flow/Flow;
 	public static fun writeAll (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Ljava/util/Map;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/store/CacheWriter {
-	public abstract fun delete (Ljava/lang/Object;JLcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun deleteAll (Ljava/util/Collection;JLcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun write (Ljava/lang/Object;Ljava/lang/Object;JLcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun delete (Ljava/lang/Object;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deleteAll (Ljava/util/Collection;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun write (Ljava/lang/Object;Ljava/lang/Object;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun writeAll (Ljava/util/Map;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/caplin/integration/datasourcex/util/store/CacheWriter$DefaultImpls {
-	public static fun deleteAll (Lcom/caplin/integration/datasourcex/util/store/CacheWriter;Ljava/util/Collection;JLcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun deleteAll (Lcom/caplin/integration/datasourcex/util/store/CacheWriter;Ljava/util/Collection;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static fun writeAll (Lcom/caplin/integration/datasourcex/util/store/CacheWriter;Ljava/util/Map;Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public final class com/caplin/integration/datasourcex/util/store/CountingVersionSource : com/caplin/integration/datasourcex/util/store/VersionSource {
-	public fun <init> ()V
-	public fun <init> (J)V
-	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun next ()J
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/store/FlowStore {
@@ -626,7 +623,21 @@ public abstract interface class com/caplin/integration/datasourcex/util/store/Fl
 }
 
 public final class com/caplin/integration/datasourcex/util/store/FlowStoreKt {
-	public static final fun flowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lkotlinx/coroutines/flow/Flow;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lkotlinx/coroutines/CoroutineScope;)Lcom/caplin/integration/datasourcex/util/store/FlowStore;
+	public static final fun flowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lkotlinx/coroutines/flow/Flow;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lkotlinx/coroutines/CoroutineScope;I)Lcom/caplin/integration/datasourcex/util/store/FlowStore;
+	public static synthetic fun flowStore$default (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lkotlinx/coroutines/flow/Flow;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lkotlinx/coroutines/CoroutineScope;IILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/FlowStore;
+}
+
+public final class com/caplin/integration/datasourcex/util/store/Live : com/caplin/integration/datasourcex/util/store/CacheEntry {
+	public fun <init> (Ljava/lang/Object;J)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()J
+	public final fun copy (Ljava/lang/Object;J)Lcom/caplin/integration/datasourcex/util/store/Live;
+	public static synthetic fun copy$default (Lcom/caplin/integration/datasourcex/util/store/Live;Ljava/lang/Object;JILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/Live;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/Object;
+	public fun getVersion ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/store/MutableFlowStore : com/caplin/integration/datasourcex/util/store/FlowStore {
@@ -639,17 +650,21 @@ public abstract interface class com/caplin/integration/datasourcex/util/store/Mu
 }
 
 public final class com/caplin/integration/datasourcex/util/store/MutableFlowStoreKt {
-	public static final fun mutableFlowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lcom/caplin/integration/datasourcex/util/store/CacheWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lcom/caplin/integration/datasourcex/util/store/VersionSource;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
-	public static final fun mutableFlowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lcom/caplin/integration/datasourcex/util/store/VersionSource;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
-	public static synthetic fun mutableFlowStore$default (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lcom/caplin/integration/datasourcex/util/store/CacheWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lcom/caplin/integration/datasourcex/util/store/VersionSource;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
-	public static synthetic fun mutableFlowStore$default (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;Lcom/caplin/integration/datasourcex/util/store/VersionSource;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
+	public static final fun mutableFlowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lcom/caplin/integration/datasourcex/util/store/CacheWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;I)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
+	public static final fun mutableFlowStore (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;I)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
+	public static synthetic fun mutableFlowStore$default (Lcom/caplin/integration/datasourcex/util/store/CacheLoader;Lcom/caplin/integration/datasourcex/util/store/CacheWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;IILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
+	public static synthetic fun mutableFlowStore$default (Lcom/caplin/integration/datasourcex/util/store/CacheLoaderWriter;Lcom/caplin/integration/datasourcex/util/store/TransactionRunner;Lcom/caplin/integration/datasourcex/util/cache/SuspendingCache;IILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/MutableFlowStore;
 }
 
-public final class com/caplin/integration/datasourcex/util/store/TimestampVersionSource : com/caplin/integration/datasourcex/util/store/VersionSource {
-	public fun <init> ()V
-	public fun <init> (Lkotlin/jvm/functions/Function0;)V
-	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun next ()J
+public final class com/caplin/integration/datasourcex/util/store/Tombstone : com/caplin/integration/datasourcex/util/store/CacheEntry {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/caplin/integration/datasourcex/util/store/Tombstone;
+	public static synthetic fun copy$default (Lcom/caplin/integration/datasourcex/util/store/Tombstone;JILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/Tombstone;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getVersion ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/store/TransactionRunner {
@@ -664,10 +679,6 @@ public abstract interface class com/caplin/integration/datasourcex/util/store/Tx
 
 public final class com/caplin/integration/datasourcex/util/store/TxContext$DefaultImpls {
 	public static fun onRollback (Lcom/caplin/integration/datasourcex/util/store/TxContext;Lkotlin/jvm/functions/Function1;)V
-}
-
-public abstract interface class com/caplin/integration/datasourcex/util/store/VersionSource {
-	public abstract fun next ()J
 }
 
 public final class com/caplin/integration/datasourcex/util/store/Versioned {

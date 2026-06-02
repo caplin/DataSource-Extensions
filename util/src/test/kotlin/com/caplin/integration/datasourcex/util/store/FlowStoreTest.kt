@@ -8,16 +8,18 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.engine.coroutines.backgroundScope
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onSubscription
 
 class FlowStoreTest :
     FunSpec({
       test("get reads through to the store on a miss") {
         val store = InMemoryCacheLoaderWriter<String, String>()
-        store.write("k", "seeded", 1L, AutoCommitTxContext(Unit))
+        store.seed("k", "seeded", 1L)
         val consumer =
             flowStore(
                 store,
@@ -32,38 +34,66 @@ class FlowStoreTest :
 
       test("a delta older than a read-through load is dropped; a newer one is applied") {
         val store = InMemoryCacheLoaderWriter<String, String>()
-        store.write("k", "v5", 5L, AutoCommitTxContext(Unit))
+        store.seed("k", "v5", 5L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
         val cache =
-            Caffeine.newBuilder().buildSuspending<String, Versioned<String>>(backgroundScope)
+            Caffeine.newBuilder().buildSuspending<String, CacheEntry<String>>(backgroundScope)
         val consumer = flowStore(store, inbound, cache, backgroundScope)
-        delay(1.milliseconds)
 
-        consumer.get("k") shouldBe "v5"
+        consumer.asFlow().test {
+          inbound.subscriptionCount.first {
+            it >= 1
+          } // the store's collector has attached to inbound
 
-        inbound.emit(VersionedMapEvent.Upsert("k", "stale", 3L))
-        delay(1.milliseconds)
-        consumer.get("k") shouldBe "v5"
+          consumer.get("k") shouldBe "v5"
 
-        inbound.emit(VersionedMapEvent.Upsert("k", "v9", 9L))
-        delay(1.milliseconds)
-        consumer.get("k") shouldBe "v9"
+          inbound.emit(VersionedMapEvent.Upsert("k", "stale", 3L))
+          awaitItem() // collector processed the delta (gated out)
+          consumer.get("k") shouldBe "v5"
+
+          inbound.emit(VersionedMapEvent.Upsert("k", "v9", 9L))
+          awaitItem()
+          consumer.get("k") shouldBe "v9"
+        }
       }
 
       test("an equal-version delta after a read-through is gated out") {
         val store = InMemoryCacheLoaderWriter<String, String>()
-        store.write("k", "v2", 2L, AutoCommitTxContext(Unit))
+        store.seed("k", "v2", 2L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
         val cache =
-            Caffeine.newBuilder().buildSuspending<String, Versioned<String>>(backgroundScope)
+            Caffeine.newBuilder().buildSuspending<String, CacheEntry<String>>(backgroundScope)
         val consumer = flowStore(store, inbound, cache, backgroundScope)
-        delay(1.milliseconds)
 
-        consumer.get("k") shouldBe "v2"
+        consumer.asFlow().test {
+          inbound.subscriptionCount.first { it >= 1 }
 
-        inbound.emit(VersionedMapEvent.Upsert("k", "wrong", 2L))
-        delay(1.milliseconds)
-        consumer.get("k") shouldBe "v2"
+          consumer.get("k") shouldBe "v2"
+
+          inbound.emit(VersionedMapEvent.Upsert("k", "wrong", 2L))
+          awaitItem()
+          consumer.get("k") shouldBe "v2"
+        }
+      }
+
+      test("a removal tombstones a resident entry so a later read cannot resurrect it") {
+        val store = InMemoryCacheLoaderWriter<String, String>()
+        store.seed("k", "v5", 5L)
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val cache =
+            Caffeine.newBuilder().buildSuspending<String, CacheEntry<String>>(backgroundScope)
+        val consumer = flowStore(store, inbound, cache, backgroundScope)
+
+        consumer.asFlow().test {
+          inbound.subscriptionCount.first { it >= 1 }
+
+          consumer.get("k") shouldBe "v5" // resident Live(v5, 5)
+
+          inbound.emit(VersionedMapEvent.Removed("k", 6L))
+          awaitItem()
+          cache.getIfPresent("k") shouldBe Tombstone(6L)
+          consumer.get("k").shouldBeNull() // tombstone short-circuits the read-through
+        }
       }
 
       test("consumer converges to the owner's state through the delta stream") {
@@ -74,16 +104,21 @@ class FlowStoreTest :
                 inMemoryTransactionRunner,
                 Caffeine.newBuilder().buildSuspending(backgroundScope),
             )
+        val attached = MutableStateFlow(false)
+        val ownerDeltas =
+            (owner.asFlow() as SharedFlow<VersionedMapEvent<String, String>>).onSubscription {
+              attached.value = true
+            }
         val consumer =
             flowStore(
                 store,
-                owner.asFlow(),
+                ownerDeltas,
                 Caffeine.newBuilder().buildSuspending(backgroundScope),
                 backgroundScope,
             )
 
         consumer.valueFlow("k").test {
-          delay(1.milliseconds)
+          attached.first { it } // the consumer's collector has attached to the owner's stream
           awaitItem().shouldBeNull()
 
           owner.put("k", "v1")
