@@ -9,7 +9,6 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onSubscription
@@ -23,7 +22,7 @@ class FlowStoreTest :
             flowStore(
                 store,
                 emptyFlow(),
-                Caffeine.newBuilder().buildFlowStoreCache(backgroundScope),
+                Caffeine.newBuilder().build(),
                 backgroundScope,
             )
 
@@ -35,7 +34,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v5", 5L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(backgroundScope)
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>>()
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -59,7 +58,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v2", 2L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(backgroundScope)
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>>()
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -77,7 +76,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v5", 5L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache = Caffeine.newBuilder().buildFlowStoreCache<String, String>(backgroundScope)
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>>()
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -97,20 +96,17 @@ class FlowStoreTest :
         val owner =
             mutableFlowStore(
                 store,
-                Caffeine.newBuilder().buildFlowStoreCache(backgroundScope),
+                Caffeine.newBuilder().build(),
                 txContext = inMemoryTxContext,
             )
         fun commit(action: (InMemoryTx) -> Unit) = InMemoryTx().also { action(it) }.commit()
         val attached = MutableStateFlow(false)
-        val ownerDeltas =
-            (owner.asFlow() as SharedFlow<VersionedMapEvent<String, String>>).onSubscription {
-              attached.value = true
-            }
+        val ownerDeltas = owner.asFlow().onSubscription { attached.value = true }
         val consumer =
             flowStore(
                 store,
                 ownerDeltas,
-                Caffeine.newBuilder().buildFlowStoreCache(backgroundScope),
+                Caffeine.newBuilder().build(),
                 backgroundScope,
             )
 

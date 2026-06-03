@@ -1,8 +1,12 @@
 package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
+import com.github.benmanes.caffeine.cache.Cache
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -16,41 +20,22 @@ import kotlinx.coroutines.launch
  */
 interface FlowStore<K : Any, V : Any> {
   /** The live, delta-only stream of versioned mutations. */
-  fun asFlow(): Flow<VersionedMapEvent<K, V>>
+  fun asFlow(): SharedFlow<VersionedMapEvent<K, V>>
 
   /** The latest value for [key], starting from a read-through load then following the stream. */
   fun valueFlow(key: K): Flow<V?>
 
   /**
-   * The latest value for [key]: cache-first, reading through to the store on a miss. Not ordered
-   * against [asFlow] — a value just published as a delta may not be visible here yet.
+   * A suspending view of this store whose [AsyncFlowStore.get] dispatches the read-through itself.
    */
-  suspend fun get(key: K): V?
-}
+  val async: AsyncFlowStore<K, V>
 
-/**
- * Read/write view of a store-backed map. Every mutation takes the caller's transaction handle [T]
- * (a jOOQ `Configuration`, a JDBC `Connection`, …): the write is enlisted on it through
- * [CacheWriter], which assigns the version, and the cache update and delta are published only when
- * that transaction commits.
- *
- * The owner must **serialise writes to a given key** (single-writer-per-key): the version is the
- * store's commit order, so unserialised concurrent writes to one key would settle on the wrong
- * version. [V] must be an aggregate root — see [FlowStore].
- */
-interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
   /**
-   * Reads [key]'s current value within [tx], always through the store and bypassing the cache, so
-   * it sees this transaction's own uncommitted writes and can take a locking read. Use for
-   * read-modify-write; use the cache-first [get] outside a transaction.
+   * The latest value for [key]: cache-first, reading through to the store on a miss. The
+   * read-through is blocking — call it within an IO context, as with the store's writes. Not
+   * ordered against [asFlow]: a value just published as a delta may not be visible here yet.
    */
-  fun get(key: K, tx: T): V?
-
-  fun put(key: K, value: V, tx: T)
-
-  fun putAll(from: Map<K, V>, tx: T)
-
-  fun remove(key: K, tx: T)
+  fun get(key: K): V?
 }
 
 /**
@@ -61,18 +46,21 @@ interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
 fun <K : Any, V : Any> flowStore(
     loader: CacheLoader<K, V>,
     inbound: Flow<VersionedMapEvent<K, V>>,
-    cache: FlowStoreCache<K, V>,
+    cache: Cache<K, CacheEntry<V>>,
     scope: CoroutineScope,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
-): FlowStore<K, V> = FlowStoreImpl(loader, cache, inbound, scope, bufferCapacity)
+): FlowStore<K, V> =
+    FlowStoreImpl(loader, FlowStoreCache(cache), inbound, scope, dispatcher, bufferCapacity)
 
 internal class FlowStoreImpl<K : Any, V : Any>(
     loader: CacheLoader<K, V>,
     cache: FlowStoreCache<K, V>,
     inbound: Flow<VersionedMapEvent<K, V>>,
     scope: CoroutineScope,
+    dispatcher: CoroutineDispatcher,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
-) : AbstractFlowStore<K, V>(loader, cache, bufferCapacity) {
+) : AbstractFlowStore<K, V>(loader, cache, dispatcher, bufferCapacity) {
 
   init {
     scope.launch {

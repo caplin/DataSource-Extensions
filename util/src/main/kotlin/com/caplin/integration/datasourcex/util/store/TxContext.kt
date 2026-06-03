@@ -4,12 +4,10 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * A driver-agnostic unit of work. [transaction] is the backend handle (jOOQ, JDBC, R2DBC, ...). The
- * owner of the transaction begins and commits it; callers only register post-commit side-effects
- * via [onCommitEnd] (and optional [onRollback] cleanup).
- *
- * Registered actions are **non-suspending** so they can run inside a synchronous commit/rollback
- * callback (e.g. a jOOQ `TransactionListener`).
+ * A driver-agnostic unit of work. [transaction] is the underlying transaction handle. The owner of
+ * the transaction begins and commits it; callers only register post-commit side-effects via
+ * [onCommitEnd] (and optional [onRollback] cleanup), which run inside a synchronous commit/rollback
+ * callback.
  */
 interface TxContext<out T> {
   val transaction: T

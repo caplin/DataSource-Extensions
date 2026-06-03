@@ -1,9 +1,8 @@
 package com.caplin.integration.datasourcex.util.store
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 
 /**
  * A trivial in-memory unit of work standing in for a database transaction: it buffers the store's
@@ -42,6 +41,7 @@ val inMemoryTxContext: (InMemoryTx) -> TxContext<InMemoryTx> = { handle ->
 class InMemoryCacheLoaderWriter<K : Any, V : Any> : CacheLoaderWriter<K, V, InMemoryTx> {
   private val backing = ConcurrentHashMap<K, Versioned<V>>()
   private val sequence = AtomicLong(0L)
+  val loadCount = AtomicInteger(0)
 
   /** Seeds a specific version directly, for tests that exercise version gating. */
   fun seed(key: K, value: V, version: Long) {
@@ -49,11 +49,12 @@ class InMemoryCacheLoaderWriter<K : Any, V : Any> : CacheLoaderWriter<K, V, InMe
     sequence.updateAndGet { maxOf(it, version) }
   }
 
-  override suspend fun load(key: K): Versioned<V>? = backing[key]
+  override fun load(key: K): Versioned<V>? {
+    loadCount.incrementAndGet()
+    return backing[key]
+  }
 
   override fun load(key: K, tx: TxContext<InMemoryTx>): Versioned<V>? = backing[key]
-
-  override fun loadAllKeys(): Flow<K> = backing.keys.toList().asFlow()
 
   override fun write(key: K, value: V, tx: TxContext<InMemoryTx>): Long {
     val version = sequence.incrementAndGet()

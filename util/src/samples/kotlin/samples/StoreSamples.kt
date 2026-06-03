@@ -1,12 +1,11 @@
 package samples
 
+import com.caplin.integration.datasourcex.util.store.CacheEntry
 import com.caplin.integration.datasourcex.util.store.CacheLoaderWriter
 import com.caplin.integration.datasourcex.util.store.TxContext
 import com.caplin.integration.datasourcex.util.store.Versioned
-import com.caplin.integration.datasourcex.util.store.buildFlowStoreCache
 import com.caplin.integration.datasourcex.util.store.mutableFlowStore
 import com.github.benmanes.caffeine.cache.Caffeine
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.Configuration
@@ -29,15 +28,13 @@ class StoreSamples {
    *
    * The transactional operations ([write], [delete] and the read-modify-write [load]) run on the
    * caller's transaction via `tx.transaction`. The cache-miss read-through [load] has no
-   * transaction, so it runs its blocking jOOQ call on [Dispatchers.IO].
+   * transaction; the store runs its blocking jOOQ call on its IO dispatcher.
    */
   class JooqAccountStore(private val dsl: DSLContext) :
       CacheLoaderWriter<String, Account, Configuration> {
 
-    override suspend fun load(key: String): Versioned<Account>? =
-        withContext(Dispatchers.IO) {
-          dsl.fetchOne("select balance, version from account where id = ?", key)?.toVersioned(key)
-        }
+    override fun load(key: String): Versioned<Account>? =
+        dsl.fetchOne("select balance, version from account where id = ?", key)?.toVersioned(key)
 
     /** A locking read on the transaction's connection so a read-modify-write serialises writers. */
     override fun load(key: String, tx: TxContext<Configuration>): Versioned<Account>? =
@@ -82,9 +79,8 @@ class StoreSamples {
    * neither on rollback. [FlowStorePublishingListener], installed once on the [DSLContext], is what
    * turns each commit into the delta publish.
    */
-  suspend fun jooqSample(rootDsl: DSLContext, scope: CoroutineScope) {
-    val cache =
-        Caffeine.newBuilder().maximumSize(10_000).buildFlowStoreCache<String, Account>(scope)
+  suspend fun jooqSample(rootDsl: DSLContext) {
+    val cache = Caffeine.newBuilder().maximumSize(10_000).build<String, CacheEntry<Account>>()
     val store =
         mutableFlowStore(JooqAccountStore(rootDsl), cache, txContext = Configuration::asTxContext)
 

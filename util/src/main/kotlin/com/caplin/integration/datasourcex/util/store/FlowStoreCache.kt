@@ -1,96 +1,38 @@
 package com.caplin.integration.datasourcex.util.store
 
-import com.caplin.integration.datasourcex.util.cache.SuspendingCache
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
-import com.github.benmanes.caffeine.cache.AsyncCache
-import com.github.benmanes.caffeine.cache.Caffeine
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentHashMap
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.launch
+import com.github.benmanes.caffeine.cache.Cache
 
 /**
- * A [SuspendingCache] of versioned [CacheEntry] values that owns the store's version gating. The
- * Caffeine map only ever holds completed entries; concurrent read-through misses for a key are
- * coalesced through [inFlight] into a single load.
+ * A synchronous Caffeine [Cache] of versioned [CacheEntry] values that owns the store's version
+ * gating. A read-through miss loads single-flight under Caffeine's per-key compute; owner writes
+ * and inbound deltas apply through version-gated [putIfNewer] / [reflectIfNewer].
  */
-class FlowStoreCache<K : Any, V : Any>(
-    cache: AsyncCache<K, CacheEntry<V>>,
-    scope: CoroutineScope,
-) : SuspendingCache<K, CacheEntry<V>>(cache, scope) {
+internal class FlowStoreCache<K : Any, V : Any>(private val cache: Cache<K, CacheEntry<V>>) {
 
-  private val inFlight = ConcurrentHashMap<K, CompletableFuture<CacheEntry<V>?>>()
+  fun getIfPresent(key: K): CacheEntry<V>? = cache.getIfPresent(key)
 
   /**
-   * Returns the resident entry, or single-flight loads it via [load] on a miss and caches it,
-   * without regressing a fresher entry written meanwhile. A null load caches nothing.
+   * Cache-first; single-flight loads via [load] on a miss. A null load caches nothing. The atomic
+   * per-key compute coalesces concurrent misses and serialises loads against deltas for the key.
    */
-  suspend fun loadIfNewer(key: K, load: suspend (K) -> Versioned<V>?): CacheEntry<V>? {
-    getIfPresent(key)?.let {
-      return it
-    }
-    val mine = CompletableFuture<CacheEntry<V>?>()
-    inFlight.putIfAbsent(key, mine)?.let {
-      return it.await()
-    }
-    val job = loaderScope.launch {
-      try {
-        val loaded = load(key)
-        mine.complete(
-            loaded?.let { putIfNewer(key, Live(it.value, it.version)) } ?: getIfPresent(key)
-        )
-      } catch (t: Throwable) {
-        mine.completeExceptionally(t)
-      } finally {
-        inFlight.remove(key, mine)
+  fun getOrLoad(key: K, load: (K) -> Versioned<V>?): CacheEntry<V>? =
+      cache.asMap().compute(key) { _, existing ->
+        existing ?: load(key)?.let { Live(it.value, it.version) }
       }
-    }
-    job.invokeOnCompletion { throwable ->
-      if (throwable != null) {
-        mine.completeExceptionally(throwable)
-      } else if (!mine.isDone) {
-        mine.completeExceptionally(CancellationException("Job completed without completing future"))
-      }
-    }
-    return mine.await()
-  }
+
+  /** Caches [candidate] unless a newer entry is already resident; returns the resident entry. */
+  fun putIfNewer(key: K, candidate: CacheEntry<V>): CacheEntry<V> =
+      cache.asMap().merge(key, candidate) { old, new ->
+        if (old.version >= candidate.version) old else new
+      }!!
 
   /**
-   * Atomically caches [candidate] unless a strictly-newer entry is already resident, returning the
-   * resident entry. The per-key atomic compute closes the check-then-put race.
-   */
-  fun putIfNewer(key: K, candidate: CacheEntry<V>): CacheEntry<V> {
-    val merged =
-        asyncCache().asMap().merge(key, CompletableFuture.completedFuture(candidate)) { old, new ->
-          val current = old.getNow(null)
-          if (current != null && current.version >= candidate.version) old else new
-        }
-    return merged?.getNow(candidate) ?: candidate
-  }
-
-  /**
-   * Applies [event] to a resident or in-flight loading entry only, gated on version; other absent
-   * keys await the next read.
+   * Applies [event] to a resident entry only, gated on version; absent keys await the next read.
    */
   fun reflectIfNewer(event: VersionedMapEvent<K, V>) {
-    asyncCache().asMap().compute(event.key) { _, old ->
-      val current = old?.getNow(null)
-      if (current != null) {
-        if (event.version > current.version) CompletableFuture.completedFuture(event.toEntry()) else old
-      } else if (old != null) {
-        old
-      } else if (inFlight.containsKey(event.key)) {
-        CompletableFuture.completedFuture(event.toEntry())
-      } else {
-        null
-      }
+    cache.asMap().computeIfPresent(event.key) { _, old ->
+      if (event.version > old.version) event.toEntry() else old
     }
   }
 }
-
-/** Builds a [FlowStoreCache] from a configured Caffeine builder. */
-fun <K : Any, V : Any> Caffeine<in K, in CacheEntry<V>>.buildFlowStoreCache(
-    scope: CoroutineScope
-): FlowStoreCache<K, V> = FlowStoreCache(buildAsync(), scope)
