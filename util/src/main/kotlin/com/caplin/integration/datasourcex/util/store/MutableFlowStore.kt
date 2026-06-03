@@ -94,12 +94,13 @@ internal class MutableFlowStoreImpl<K : Any, V : Any, T>(
   }
 
   /**
-   * Emits [event] then updates the cache: the unbounded emit always accepts the delta, so the cache
-   * never sits ahead of an unpublished delta. Both steps are non-suspending and run inside the
-   * synchronous commit callback.
+   * Updates the cache then emits [event]: a [valueFlow] that subscribes concurrently with the
+   * commit either reads the already-updated cache in `onSubscription` or receives the delta, never
+   * losing the update to the gap between the two steps. Both are non-suspending and run inside the
+   * synchronous commit callback; the unbounded buffer means [signal] never rejects the delta.
    */
   private fun publish(event: VersionedMapEvent<K, V>) {
-    signal.tryEmit(event)
     cache.putIfNewer(event.key, event.toEntry())
+    signal.tryEmit(event)
   }
 }

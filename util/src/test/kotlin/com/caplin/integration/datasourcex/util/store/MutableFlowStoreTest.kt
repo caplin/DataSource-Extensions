@@ -9,6 +9,10 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MutableFlowStoreTest :
     FunSpec({
@@ -27,6 +31,33 @@ class MutableFlowStoreTest :
           awaitItem() shouldBe VersionedMapEvent.Upsert("k", "v", 1L)
           cache.getIfPresent("k") shouldBe Live("v", 1L)
         }
+      }
+
+      test(
+          "publish updates the cache before emitting, so a delta observer never sees a stale cache"
+      ) {
+        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>>()
+        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+
+        // An unconfined collector resumes synchronously inside the emitting tryEmit, so it captures
+        // the cache exactly as of the emit. The cache must already reflect the delta — otherwise a
+        // valueFlow subscribing in that window would seed from a stale entry and lose the update.
+        val cacheAtEmit = CompletableDeferred<CacheEntry<String>?>()
+        val collector =
+            CoroutineScope(Dispatchers.Unconfined).launch {
+              store.asFlow().collect { event ->
+                cacheAtEmit.complete(cache.getIfPresent(event.key))
+              }
+            }
+
+        InMemoryTx().also {
+          store.put("k", "v", it)
+          it.commit()
+        }
+
+        cacheAtEmit.await() shouldBe Live("v", 1L)
+        collector.cancel()
       }
 
       test("rollback publishes nothing and the next write gets a strictly greater version") {
