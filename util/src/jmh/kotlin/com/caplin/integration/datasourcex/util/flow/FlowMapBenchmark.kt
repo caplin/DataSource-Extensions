@@ -192,17 +192,16 @@ open class FlowMapBenchmark {
   }
 
   /**
-   * Measures the overhead of reconstructing a [FlowMap] from a stream of events using
-   * [toFlowMapIn].
+   * Measures the overhead of reconstructing a [FlowMap] from a stream of events using [flowMapIn].
    */
   @Benchmark
-  fun toFlowMapInBenchmark() = runBlocking {
+  fun flowMapInBenchmark() = runBlocking {
     val events = flow {
       repeat(100) { emit(Upsert("key$it", null, it)) }
       emit(Populated)
     }
     val scope = CoroutineScope(Dispatchers.Default)
-    events.toFlowMapIn(scope)
+    events.flowMapIn(scope)
     scope.cancel()
   }
 

@@ -15,6 +15,7 @@ dependencies {
   api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   api("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm")
   api("com.fasterxml.jackson.core:jackson-core")
+  api("com.github.ben-manes.caffeine:caffeine")
   implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation(libs.zjsonpatch)
@@ -32,12 +33,18 @@ dependencies {
   compileOnly(libs.fory.core)
   compileOnly(libs.fory.kotlin)
 
+  // Samples (compiled for Dokka only): show MutableFlowStore participating in a blocking jOOQ
+  // transaction. Off the published runtime classpath; jooq is version-managed by the Spring Boot
+  // BOM.
+  samplesImplementation("org.jooq:jooq")
+
   testRuntimeOnly("org.slf4j:slf4j-simple")
 
   testImplementation("org.springframework:spring-core") // For testing the RegexPathMatcher
   testImplementation(libs.turbine)
   testImplementation(libs.kotest.assertions)
   testImplementation(libs.kotest.runner)
+  testImplementation(libs.mockk)
   testImplementation(libs.fory.core)
   testImplementation(libs.fory.kotlin)
   testImplementation(libs.jackson3.databind)
@@ -51,4 +58,9 @@ dependencies {
 
 jmh { duplicateClassesStrategy.set(DuplicatesStrategy.EXCLUDE) }
 
-dokka { dokkaSourceSets.configureEach { includes.from("README.md") } }
+dokka {
+  dokkaSourceSets.configureEach {
+    includes.from("README.md")
+    samples.from(layout.projectDirectory.dir("src/samples/kotlin"))
+  }
+}

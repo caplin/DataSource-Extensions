@@ -360,7 +360,7 @@ private class FlowMapImpl<K : Any, V : Any>(initialMap: PersistentMap<K, V>) :
       }
 }
 
-suspend fun <K : Any, V : Any> Flow<MapEvent<K, V>>.toFlowMapIn(
+suspend fun <K : Any, V : Any> Flow<MapEvent<K, V>>.flowMapIn(
     scope: CoroutineScope
 ): FlowMap<K, V> {
   val flowMap = mutableFlowMapOf<K, V>()
@@ -377,8 +377,8 @@ suspend fun <K : Any, V : Any> Flow<MapEvent<K, V>>.toFlowMapIn(
   return flowMap
 }
 
-@JvmName("simpleToFlowMapIn")
-suspend fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.toFlowMapIn(
+@JvmName("simpleFlowMapIn")
+suspend fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.flowMapIn(
     scope: CoroutineScope
 ): FlowMap<K, V> {
   val flowMap = mutableFlowMapOf<K, V>()
@@ -394,3 +394,14 @@ suspend fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.toFlowMapIn(
   populated.lock()
   return flowMap
 }
+
+@Deprecated("Renamed to flowMapIn", ReplaceWith("this.flowMapIn(scope)"))
+suspend fun <K : Any, V : Any> Flow<MapEvent<K, V>>.toFlowMapIn(
+    scope: CoroutineScope
+): FlowMap<K, V> = flowMapIn(scope)
+
+@JvmName("simpleToFlowMapIn")
+@Deprecated("Renamed to flowMapIn", ReplaceWith("this.flowMapIn(scope)"))
+suspend fun <K : Any, V : Any> Flow<SimpleMapEvent<K, V>>.toFlowMapIn(
+    scope: CoroutineScope
+): FlowMap<K, V> = flowMapIn(scope)
