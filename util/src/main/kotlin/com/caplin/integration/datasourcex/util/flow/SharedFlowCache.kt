@@ -96,10 +96,14 @@ fun <K : Any, V> sharedFlowCache(
  * the terminal is published, so a downstream `retry` re-resolves to a fresh entry (re-running the
  * supplier) rather than re-reading the terminal.
  *
+ * Each subscription re-resolves the entry, and the entry is evicted before its terminal is
+ * published, so a subscriber arriving after completion rebuilds (re-running the supplier) rather
+ * than attaching to the terminated stream - the terminal is never replayed to a late subscriber, so
+ * `replay` does not need to cover it.
+ *
  * @param scope parent scope; each key's sharing coroutine is a child of it.
  * @param started the [SharingStarted] strategy applied to each key's upstream.
- * @param replay replayed values; use `>= 1` so a subscriber arriving after completion still
- *   observes the terminal.
+ * @param replay number of values replayed to new subscribers of a live (not-yet-completed) entry.
  */
 @OptIn(DelicateCoroutinesApi::class)
 fun <K : Any, T> completingSharedFlowCache(

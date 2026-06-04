@@ -41,15 +41,16 @@ class FlowStoreCacheTest :
         cache.putIfNewer("k", Live("v9", 9L)) shouldBe Live("v9", 9L)
       }
 
-      test("reflectIfNewer updates a resident entry only, version-gated") {
+      test("reflectIfNewer seeds an absent key and updates a resident entry, version-gated") {
         val cache = newCache()
 
-        cache.reflectIfNewer(VersionedMapEvent.Upsert("k", "v1", 1L)) // absent -> no-op
-        cache.getIfPresent("k").shouldBeNull()
+        cache.reflectIfNewer(VersionedMapEvent.Upsert("k", "v1", 1L)) // absent -> seeded
+        cache.getIfPresent("k") shouldBe Live("v1", 1L)
 
-        cache.putIfNewer("k", Live("v5", 5L))
-        cache.reflectIfNewer(VersionedMapEvent.Upsert("k", "v3", 3L)) // older -> ignored
-        cache.getIfPresent("k") shouldBe Live("v5", 5L)
+        cache.reflectIfNewer(VersionedMapEvent.Upsert("k", "v3", 3L)) // newer -> applied
+        cache.getIfPresent("k") shouldBe Live("v3", 3L)
+        cache.reflectIfNewer(VersionedMapEvent.Upsert("k", "stale", 2L)) // older -> ignored
+        cache.getIfPresent("k") shouldBe Live("v3", 3L)
         cache.reflectIfNewer(VersionedMapEvent.Removed("k", 6L)) // newer -> tombstone
         cache.getIfPresent("k") shouldBe Tombstone(6L)
       }

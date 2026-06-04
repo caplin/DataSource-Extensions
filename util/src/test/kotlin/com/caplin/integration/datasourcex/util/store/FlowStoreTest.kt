@@ -48,6 +48,32 @@ class FlowStoreTest :
         }
       }
 
+      test(
+          "a delta for an absent key is reflected, so a later read does not regress to a stale value"
+      ) {
+        // The owner committed v9 and published the delta, but the read path (a lagging replica,
+        // modelled by leaving the backing store at v5) has not yet applied it. The consumer has
+        // already seen v9 on its stream, so it must serve v9 and never regress to the replica's v5.
+        val store = InMemoryStore<String, String>()
+        store.seed("k", "v5", 5L)
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val consumer = flowStore(store, inbound, Caffeine.newBuilder(), backgroundScope)
+
+        consumer.asFlow().test {
+          inbound.subscriptionCount.first { it >= 1 }
+
+          // v9 reaches the stream before any read-through has populated the cache.
+          inbound.emit(VersionedMapEvent.Upsert("k", "v9", 9L))
+          awaitItem() shouldBe VersionedMapEvent.Upsert("k", "v9", 9L)
+
+          // The delta must have been reflected even though the key was absent, so get serves v9
+          // without falling back to the stale replica read. (Currently reflectIfNewer only updates
+          // resident keys, so the delta is dropped and get reads v5 — this assertion fails.)
+          consumer.get("k") shouldBe "v9"
+          store.loadCount.get() shouldBe 0 // the delta populated the cache; no read-through needed
+        }
+      }
+
       test("an equal-version delta after a read-through is gated out") {
         val store = InMemoryStore<String, String>()
         store.seed("k", "v2", 2L)

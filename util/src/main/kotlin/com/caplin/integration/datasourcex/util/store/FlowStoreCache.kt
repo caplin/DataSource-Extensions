@@ -43,11 +43,13 @@ internal class FlowStoreCache<K : Any, V : Any>(private val cache: Cache<K, Cach
       }!!
 
   /**
-   * Applies [event] to a resident entry only, gated on version; absent keys await the next read.
+   * Applies [event] to the cache, gated on version: a strictly-newer delta updates a resident entry
+   * or seeds an absent one. Seeding absent keys keeps the cache consistent with the stream the
+   * consumer has already observed, so a later read-through can never regress to a value older than
+   * a delta the consumer saw (e.g. a lagging replica read). The [Caffeine] size bound still caps
+   * the hot set, evicting cold keys as deltas for them arrive.
    */
   fun reflectIfNewer(event: VersionedMapEvent<K, V>) {
-    cache.asMap().computeIfPresent(event.key) { _, old ->
-      if (event.version > old.version) event.toEntry() else old
-    }
+    putIfNewer(event.key, event.toEntry())
   }
 }
