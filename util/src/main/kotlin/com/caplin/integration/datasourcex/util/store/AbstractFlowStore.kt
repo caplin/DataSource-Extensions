@@ -20,7 +20,7 @@ internal const val DEFAULT_SIGNAL_BUFFER: Int = 256
  * [dispatcher].
  */
 internal abstract class AbstractFlowStore<K : Any, V : Any>(
-    protected val loader: CacheLoader<K, V>,
+    protected val loader: StoreReader<K, V>,
     protected val cache: FlowStoreCache<K, V>,
     protected val dispatcher: CoroutineDispatcher,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,

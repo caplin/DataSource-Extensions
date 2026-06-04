@@ -1,7 +1,7 @@
 package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
-import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,28 +39,60 @@ interface FlowStore<K : Any, V : Any> {
 }
 
 /**
- * Creates a read-only [FlowStore] consumer fed by an [inbound] delta stream (the owner's published
- * mutations) and reading [loader] on a cache miss. The collection of [inbound] is launched in
- * [scope]. [V] must be an aggregate root — see [FlowStore].
+ * Operator form of [flowStore], reading this delta stream as the `inbound` source: `deltas
+ * .flowStoreIn(reader, caffeine, scope)`. Mirrors `shareIn`/`stateIn` — collection is launched in
+ * [scope] and the returned [FlowStore] is the read-only consumer. See [flowStore] for the
+ * lifecycle, caching, and [dispatcher] semantics.
  */
-fun <K : Any, V : Any> flowStore(
-    loader: CacheLoader<K, V>,
-    inbound: Flow<VersionedMapEvent<K, V>>,
-    cache: Cache<K, CacheEntry<V>?>,
+fun <K : Any, V : Any> Flow<VersionedMapEvent<K, V>>.flowStoreIn(
+    reader: StoreReader<K, V>,
+    caffeine: Caffeine<Any, Any>,
     scope: CoroutineScope,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
 ): FlowStore<K, V> =
-    FlowStoreImpl(loader, FlowStoreCache(cache), inbound, scope, dispatcher, bufferCapacity)
+    flowStore(
+        reader,
+        this,
+        caffeine,
+        scope,
+        dispatcher,
+        bufferCapacity,
+    )
+
+/**
+ * Creates a read-only [FlowStore] consumer fed by an [inbound] delta stream (the owner's published
+ * mutations) and reading [reader] on a cache miss. The collection of [inbound] is launched in
+ * [scope], so cancelling [scope] stops it and a failure of [inbound] surfaces through [scope] (its
+ * parent / exception handler), after which the store serves only stale reads. The hot set is a
+ * [Caffeine] cache built from [caffeine] (size it to bound memory). The blocking read-through load
+ * runs on [dispatcher] (IO by default). [V] must be an aggregate root — see [FlowStore].
+ */
+fun <K : Any, V : Any> flowStore(
+    reader: StoreReader<K, V>,
+    inbound: Flow<VersionedMapEvent<K, V>>,
+    caffeine: Caffeine<Any, Any>,
+    scope: CoroutineScope,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
+): FlowStore<K, V> =
+    FlowStoreImpl(
+        reader,
+        caffeine.buildFlowStoreCache(),
+        inbound,
+        scope,
+        dispatcher,
+        bufferCapacity,
+    )
 
 internal class FlowStoreImpl<K : Any, V : Any>(
-    loader: CacheLoader<K, V>,
+    reader: StoreReader<K, V>,
     cache: FlowStoreCache<K, V>,
     inbound: Flow<VersionedMapEvent<K, V>>,
     scope: CoroutineScope,
     dispatcher: CoroutineDispatcher,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
-) : AbstractFlowStore<K, V>(loader, cache, dispatcher, bufferCapacity) {
+) : AbstractFlowStore<K, V>(reader, cache, dispatcher, bufferCapacity) {
 
   init {
     scope.launch {

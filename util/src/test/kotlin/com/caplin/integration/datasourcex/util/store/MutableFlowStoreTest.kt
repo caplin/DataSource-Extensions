@@ -2,6 +2,7 @@ package com.caplin.integration.datasourcex.util.store
 
 import app.cash.turbine.test
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
+import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -14,12 +15,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+private fun <K : Any, V : Any> newStore(
+    backing: Store<K, V, InMemoryTx>,
+    cache: Cache<K, CacheEntry<V>?>,
+) = MutableFlowStoreImpl(backing, FlowStoreCache(cache), Dispatchers.IO, inMemoryTxContext)
+
 class MutableFlowStoreTest :
     FunSpec({
       test("put publishes a versioned delta and updates the cache only on commit") {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         store.asFlow().test {
           val tx = InMemoryTx()
@@ -36,9 +42,9 @@ class MutableFlowStoreTest :
       test(
           "publish updates the cache before emitting, so a delta observer never sees a stale cache"
       ) {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         // An unconfined collector resumes synchronously inside the emitting tryEmit, so it captures
         // the cache exactly as of the emit. The cache must already reflect the delta — otherwise a
@@ -61,9 +67,9 @@ class MutableFlowStoreTest :
       }
 
       test("rollback publishes nothing and the next write gets a strictly greater version") {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         store.asFlow().test {
           val tx = InMemoryTx()
@@ -79,10 +85,10 @@ class MutableFlowStoreTest :
       }
 
       test("a writer failure propagates and leaves the cache and stream untouched") {
-        val backing = mockk<CacheLoaderWriter<String, String, InMemoryTx>>()
+        val backing = mockk<Store<String, String, InMemoryTx>>()
         every { backing.write(any(), any(), any()) } throws RuntimeException("boom")
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         store.asFlow().test {
           shouldThrow<RuntimeException> { store.put("k", "v", InMemoryTx()) }
@@ -92,9 +98,9 @@ class MutableFlowStoreTest :
       }
 
       test("get reflects the committed value only after commit") {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         InMemoryTx().also {
           store.put("k", "v1", it)
@@ -111,21 +117,21 @@ class MutableFlowStoreTest :
       }
 
       test("get(key, tx) reads through the store within the transaction, bypassing the cache") {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         backing.seed("k", "fresh-in-db", 9L)
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
         // A stale, lower-versioned entry sits in the cache.
         cache.put("k", Live("stale-in-cache", 1L))
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         store.get("k") shouldBe "stale-in-cache" // cache-first
         store.get("k", InMemoryTx()) shouldBe "fresh-in-db" // bypasses the cache, reads the store
       }
 
       test("remove publishes a Removed delta and tombstones the cache") {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         store.asFlow().test {
           InMemoryTx().also {
@@ -144,11 +150,30 @@ class MutableFlowStoreTest :
         }
       }
 
+      test("putAll publishes a delta per entry on commit") {
+        val backing = InMemoryStore<String, String>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
+        val store = newStore(backing, cache)
+
+        store.asFlow().test {
+          val tx = InMemoryTx()
+          store.putAll(mapOf("a" to "A", "b" to "B"), tx)
+          expectNoEvents()
+
+          tx.commit()
+          setOf(awaitItem(), awaitItem()) shouldBe
+              setOf(
+                  VersionedMapEvent.Upsert("a", "A", 1L),
+                  VersionedMapEvent.Upsert("b", "B", 2L),
+              )
+        }
+      }
+
       test("putAll fails before commit when the writer omits a version, publishing nothing") {
-        val backing = mockk<CacheLoaderWriter<String, String, InMemoryTx>>()
+        val backing = mockk<Store<String, String, InMemoryTx>>()
         every { backing.writeAll(any(), any()) } returns mapOf("a" to 1L) // "b" missing
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         store.asFlow().test {
           val tx = InMemoryTx()
@@ -159,9 +184,9 @@ class MutableFlowStoreTest :
       }
 
       test("async.get short-circuits a cache hit and reads through on a miss") {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         InMemoryTx().also {
           store.put("k", "v1", it)
@@ -176,9 +201,9 @@ class MutableFlowStoreTest :
       }
 
       test("async mutations write through and publish on commit") {
-        val backing = InMemoryCacheLoaderWriter<String, String>()
+        val backing = InMemoryStore<String, String>()
         val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
-        val store = mutableFlowStore(backing, cache, txContext = inMemoryTxContext)
+        val store = newStore(backing, cache)
 
         store.asFlow().test {
           val tx = InMemoryTx()
@@ -188,6 +213,62 @@ class MutableFlowStoreTest :
           tx.commit()
           awaitItem() shouldBe VersionedMapEvent.Upsert("k", "v1", 1L)
           store.async.get("k") shouldBe "v1"
+        }
+      }
+
+      test("get(key, tx) returns null for an absent key") {
+        val backing = InMemoryStore<String, String>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
+        val store = newStore(backing, cache)
+
+        store.get("missing", InMemoryTx()).shouldBeNull()
+      }
+
+      test("async putAll and remove write through and publish on commit") {
+        val backing = InMemoryStore<String, String>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
+        val store = newStore(backing, cache)
+
+        store.asFlow().test {
+          val tx = InMemoryTx()
+          store.async.putAll(mapOf("a" to "A", "b" to "B"), tx)
+          expectNoEvents()
+          tx.commit()
+          setOf(awaitItem(), awaitItem()) shouldBe
+              setOf(
+                  VersionedMapEvent.Upsert("a", "A", 1L),
+                  VersionedMapEvent.Upsert("b", "B", 2L),
+              )
+
+          val tx2 = InMemoryTx()
+          store.async.remove("a", tx2)
+          tx2.commit()
+          awaitItem() shouldBe VersionedMapEvent.Removed("a", 3L)
+        }
+      }
+
+      test("async.get(key, tx) reads through within the transaction") {
+        val backing = InMemoryStore<String, String>()
+        backing.seed("k", "fresh-in-db", 9L)
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
+        val store = newStore(backing, cache)
+
+        store.async.get("k", InMemoryTx()) shouldBe "fresh-in-db"
+        store.async.asFlow().replayCache shouldBe emptyList() // delegates to the delta stream
+      }
+
+      test("async.valueFlow follows the mutable store") {
+        val backing = InMemoryStore<String, String>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
+        val store = newStore(backing, cache)
+
+        store.async.valueFlow("k").test {
+          awaitItem().shouldBeNull()
+          InMemoryTx().also {
+            store.put("k", "v1", it)
+            it.commit()
+          }
+          awaitItem() shouldBe "v1"
         }
       }
     })

@@ -1,7 +1,6 @@
 package samples
 
-import com.caplin.integration.datasourcex.util.store.CacheEntry
-import com.caplin.integration.datasourcex.util.store.CacheLoaderWriter
+import com.caplin.integration.datasourcex.util.store.Store
 import com.caplin.integration.datasourcex.util.store.TxContext
 import com.caplin.integration.datasourcex.util.store.Versioned
 import com.caplin.integration.datasourcex.util.store.mutableFlowStore
@@ -23,15 +22,14 @@ class StoreSamples {
   data class Account(val id: String, val balance: Long)
 
   /**
-   * A [CacheLoaderWriter] over a jOOQ `account` table whose `version` is drawn from a database
-   * sequence, so the version is the store's durable commit order rather than an in-process counter.
+   * A [Store] over a jOOQ `account` table whose `version` is drawn from a database sequence, so the
+   * version is the store's durable commit order rather than an in-process counter.
    *
    * The transactional operations ([write], [delete] and the read-modify-write [load]) run on the
    * caller's transaction via `tx.transaction`. The cache-miss read-through [load] has no
    * transaction; the store runs its blocking jOOQ call on its IO dispatcher.
    */
-  class JooqAccountStore(private val dsl: DSLContext) :
-      CacheLoaderWriter<String, Account, Configuration> {
+  class JooqAccountStore(private val dsl: DSLContext) : Store<String, Account, Configuration> {
 
     override fun load(key: String): Versioned<Account>? =
         dsl.fetchOne("select balance, version from account where id = ?", key)?.toVersioned(key)
@@ -80,9 +78,12 @@ class StoreSamples {
    * turns each commit into the delta publish.
    */
   suspend fun jooqSample(rootDsl: DSLContext) {
-    val cache = Caffeine.newBuilder().maximumSize(10_000).build<String, CacheEntry<Account>?>()
     val store =
-        mutableFlowStore(JooqAccountStore(rootDsl), cache, txContext = Configuration::asTxContext)
+        mutableFlowStore(
+            JooqAccountStore(rootDsl),
+            Caffeine.newBuilder().maximumSize(10_000),
+            txContext = Configuration::asTxContext,
+        )
 
     // Install the publishing listener once on the DSLContext; transactions opened from it run the
     // store's buffered commit/rollback actions in their commit/rollback callbacks.

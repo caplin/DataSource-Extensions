@@ -2,7 +2,17 @@ package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
 import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
+
+/**
+ * Builds a [FlowStoreCache] from a caller-supplied [Caffeine] spec. The entry type is internal, so
+ * the public factories take the untyped builder and stamp the value type here. The value is
+ * nullable so a read-through miss can cache nothing (Caffeine's compute skips a null result).
+ */
+@Suppress("UNCHECKED_CAST")
+internal fun <K : Any, V : Any> Caffeine<Any, Any>.buildFlowStoreCache(): FlowStoreCache<K, V> =
+    FlowStoreCache(build<K, CacheEntry<V>?>())
 
 /**
  * A synchronous Caffeine [Cache] of versioned [CacheEntry] values that owns the store's version

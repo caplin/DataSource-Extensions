@@ -2,6 +2,7 @@ package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -51,5 +52,11 @@ class FlowStoreCacheTest :
         cache.getIfPresent("k") shouldBe Live("v5", 5L)
         cache.reflectIfNewer(VersionedMapEvent.Removed("k", 6L)) // newer -> tombstone
         cache.getIfPresent("k") shouldBe Tombstone(6L)
+      }
+
+      test("rejects a LoadingCache, whose own loader would bypass version gating") {
+        val loading = Caffeine.newBuilder().build<String, CacheEntry<String>?> { Live("v", 1L) }
+
+        shouldThrow<IllegalArgumentException> { FlowStoreCache(loading) }
       }
     })

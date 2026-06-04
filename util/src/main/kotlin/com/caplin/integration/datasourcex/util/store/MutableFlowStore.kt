@@ -1,20 +1,20 @@
 package com.caplin.integration.datasourcex.util.store
 
 import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
-import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
 /**
  * Read/write view of a store-backed map. Every mutation takes the caller's transaction handle [T]:
- * the write is enlisted on it through [CacheWriter], which assigns the version, and the cache
+ * the write is enlisted on it through [StoreWriter], which assigns the version, and the cache
  * update and delta are published only when that transaction commits.
  *
  * The owner must **serialise writes to a given key** (single-writer-per-key): the version is the
  * store's commit order, so unserialised concurrent writes to one key would settle on the wrong
  * version. Serialise at the transaction layer — a locking read such as `SELECT … FOR UPDATE` via
- * [CacheLoaderWriter.load], held across the transaction — not an in-process lock, which orders the
- * calls but not the commits. [V] must be an aggregate root — see [FlowStore].
+ * [Store.load], held across the transaction — not an in-process lock, which orders the calls but
+ * not the commits. [V] must be an aggregate root — see [FlowStore].
  */
 interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
   override val async: AsyncMutableFlowStore<K, V, T>
@@ -34,7 +34,8 @@ interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
 }
 
 /**
- * Creates a [MutableFlowStore] backed by [store] and the bounded hot set [cache].
+ * Creates a [MutableFlowStore] backed by [store], with a bounded hot set built from [caffeine]
+ * (size it to bound memory).
  *
  * Each mutation takes the caller's transaction handle [T], which [txContext] adapts into a
  * [TxContext] so the write can enlist on it and register its publish. Mutations are non-suspending
@@ -42,19 +43,20 @@ interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
  * onto its stream. The stream's buffer is unbounded so the commit callback never suspends on
  * backpressure; a permanently slow consumer therefore grows the buffer without bound (eventually
  * OOM) rather than blocking the committer. [store] assigns each write's version; the blocking [get]
- * read-through runs on the caller's thread, as the writes do. [V] must be an aggregate root — see
- * [FlowStore].
+ * read-through runs on the caller's thread, as the writes do. The suspending [async] operations and
+ * the [valueFlow] read-through instead run their blocking work on [dispatcher] (IO by default). [V]
+ * must be an aggregate root — see [FlowStore].
  */
 fun <K : Any, V : Any, T> mutableFlowStore(
-    store: CacheLoaderWriter<K, V, T>,
-    cache: Cache<K, CacheEntry<V>?>,
+    store: Store<K, V, T>,
+    caffeine: Caffeine<Any, Any>,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     txContext: (T) -> TxContext<T>,
 ): MutableFlowStore<K, V, T> =
-    MutableFlowStoreImpl(store, FlowStoreCache(cache), dispatcher, txContext)
+    MutableFlowStoreImpl(store, caffeine.buildFlowStoreCache(), dispatcher, txContext)
 
 internal class MutableFlowStoreImpl<K : Any, V : Any, T>(
-    private val writer: CacheLoaderWriter<K, V, T>,
+    private val writer: Store<K, V, T>,
     cache: FlowStoreCache<K, V>,
     dispatcher: CoroutineDispatcher,
     private val txContext: (T) -> TxContext<T>,

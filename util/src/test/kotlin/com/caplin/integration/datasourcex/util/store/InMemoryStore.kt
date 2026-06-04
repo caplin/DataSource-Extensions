@@ -38,7 +38,7 @@ val inMemoryTxContext: (InMemoryTx) -> TxContext<InMemoryTx> = { handle ->
  * backing [ConcurrentHashMap], versioned from a shared counter that stands in for a DB sequence;
  * the [TxContext] is ignored.
  */
-class InMemoryCacheLoaderWriter<K : Any, V : Any> : CacheLoaderWriter<K, V, InMemoryTx> {
+class InMemoryStore<K : Any, V : Any> : Store<K, V, InMemoryTx> {
   private val backing = ConcurrentHashMap<K, Versioned<V>>()
   private val sequence = AtomicLong(0L)
   val loadCount = AtomicInteger(0)
