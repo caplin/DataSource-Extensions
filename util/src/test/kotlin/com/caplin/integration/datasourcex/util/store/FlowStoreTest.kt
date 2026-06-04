@@ -145,4 +145,111 @@ class FlowStoreTest :
 
         consumer.async.asFlow().replayCache shouldBe emptyList() // delegates to the delta stream
       }
+
+      test("asFlow(query) emits the snapshot then follows newer deltas") {
+        val store = InMemoryStore<String, String>()
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val consumer = flowStore(store, inbound, Caffeine.newBuilder(), backgroundScope)
+        val query = { mapOf("a" to Versioned("a1", 1L), "b" to Versioned("b2", 2L)) }
+
+        consumer.asFlow(query).test {
+          setOf(awaitItem(), awaitItem()) shouldBe
+              setOf(
+                  VersionedMapEvent.Upsert("a", "a1", 1L),
+                  VersionedMapEvent.Upsert("b", "b2", 2L),
+              )
+          inbound.subscriptionCount.first { it >= 1 }
+
+          inbound.emit(VersionedMapEvent.Upsert("a", "a3", 3L))
+          awaitItem() shouldBe VersionedMapEvent.Upsert("a", "a3", 3L)
+        }
+      }
+
+      test("asFlow(query) gates a delta older-or-equal to the snapshot version") {
+        val store = InMemoryStore<String, String>()
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val consumer = flowStore(store, inbound, Caffeine.newBuilder(), backgroundScope)
+        val query = { mapOf("k" to Versioned("v5", 5L)) }
+
+        consumer.asFlow(query).test {
+          awaitItem() shouldBe VersionedMapEvent.Upsert("k", "v5", 5L)
+          inbound.subscriptionCount.first { it >= 1 }
+
+          inbound.emit(VersionedMapEvent.Upsert("k", "stale", 5L)) // equal version -> gated
+          inbound.emit(VersionedMapEvent.Upsert("k", "v9", 9L)) // newer -> emitted
+          awaitItem() shouldBe VersionedMapEvent.Upsert("k", "v9", 9L)
+          expectNoEvents()
+        }
+      }
+
+      test("asFlow(query) with no predicate follows the whole store: new keys and removals") {
+        val store = InMemoryStore<String, String>()
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val consumer = flowStore(store, inbound, Caffeine.newBuilder(), backgroundScope)
+        val query = { emptyMap<String, Versioned<String>>() }
+
+        consumer.asFlow(query).test {
+          inbound.subscriptionCount.first { it >= 1 }
+
+          inbound.emit(VersionedMapEvent.Upsert("new", "x", 1L)) // new key enters the view
+          awaitItem() shouldBe VersionedMapEvent.Upsert("new", "x", 1L)
+
+          inbound.emit(VersionedMapEvent.Removed("new", 2L)) // removal forwards
+          awaitItem() shouldBe VersionedMapEvent.Removed("new", 2L)
+        }
+      }
+
+      test("asFlow(query, predicate) ignores a non-matching upsert for an untracked key") {
+        val store = InMemoryStore<String, String>()
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val consumer = flowStore(store, inbound, Caffeine.newBuilder(), backgroundScope)
+        val query = { emptyMap<String, Versioned<String>>() }
+        val predicate = { _: String, v: String -> v.startsWith("keep") }
+
+        consumer.asFlow(query, predicate).test {
+          inbound.subscriptionCount.first { it >= 1 }
+
+          inbound.emit(
+              VersionedMapEvent.Upsert("a", "drop-me", 1L)
+          ) // untracked, no match -> ignored
+          inbound.emit(VersionedMapEvent.Upsert("b", "keep-me", 2L)) // matches -> enters
+          awaitItem() shouldBe VersionedMapEvent.Upsert("b", "keep-me", 2L)
+          expectNoEvents()
+        }
+      }
+
+      test("asFlow(query, predicate) emits Removed when an in-view item stops matching") {
+        val store = InMemoryStore<String, String>()
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val consumer = flowStore(store, inbound, Caffeine.newBuilder(), backgroundScope)
+        val query = { mapOf("k" to Versioned("keep-1", 1L)) }
+        val predicate = { _: String, v: String -> v.startsWith("keep") }
+
+        consumer.asFlow(query, predicate).test {
+          awaitItem() shouldBe VersionedMapEvent.Upsert("k", "keep-1", 1L)
+          inbound.subscriptionCount.first { it >= 1 }
+
+          inbound.emit(VersionedMapEvent.Upsert("k", "gone-2", 2L)) // no longer matches -> leaves
+          awaitItem() shouldBe VersionedMapEvent.Removed("k", 2L)
+          expectNoEvents()
+        }
+      }
+
+      test("asFlow(query, predicate) forwards a removal only for a key in the view") {
+        val store = InMemoryStore<String, String>()
+        val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
+        val consumer = flowStore(store, inbound, Caffeine.newBuilder(), backgroundScope)
+        val query = { mapOf("k" to Versioned("keep-1", 1L)) }
+        val predicate = { _: String, v: String -> v.startsWith("keep") }
+
+        consumer.asFlow(query, predicate).test {
+          awaitItem() shouldBe VersionedMapEvent.Upsert("k", "keep-1", 1L)
+          inbound.subscriptionCount.first { it >= 1 }
+
+          inbound.emit(VersionedMapEvent.Removed("other", 2L)) // untracked -> ignored
+          inbound.emit(VersionedMapEvent.Removed("k", 3L)) // in view -> forwarded
+          awaitItem() shouldBe VersionedMapEvent.Removed("k", 3L)
+          expectNoEvents()
+        }
+      }
     })

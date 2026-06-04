@@ -22,6 +22,20 @@ interface FlowStore<K : Any, V : Any> {
   /** The live, delta-only stream of versioned mutations. */
   fun asFlow(): SharedFlow<VersionedMapEvent<K, V>>
 
+  /**
+   * A get-and-subscribe view: emits the entries [query] loads now (as [VersionedMapEvent.Upsert]),
+   * then follows the live stream, version-gated per key so the snapshot and the tail never
+   * conflict. [query] is the bulk current state (key to value+version); it runs blocking on the
+   * store's dispatcher and is not written to the cache. [predicate] scopes the live tail to the
+   * same logical set: a live upsert that matches enters or updates the view, one that stops
+   * matching leaves it as a [VersionedMapEvent.Removed], and removals forward only for keys in the
+   * view. [query] and [predicate] must agree (query = current rows matching predicate).
+   */
+  fun asFlow(
+      query: () -> Map<K, Versioned<V>>,
+      predicate: (K, V) -> Boolean = { _, _ -> true },
+  ): Flow<VersionedMapEvent<K, V>>
+
   /** The latest value for [key], starting from a read-through load then following the stream. */
   fun valueFlow(key: K): Flow<V?>
 

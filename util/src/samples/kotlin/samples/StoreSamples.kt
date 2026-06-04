@@ -1,11 +1,14 @@
 package samples
 
+import com.caplin.integration.datasourcex.util.flow.VersionedMapEvent
+import com.caplin.integration.datasourcex.util.store.FlowStore
 import com.caplin.integration.datasourcex.util.store.Store
 import com.caplin.integration.datasourcex.util.store.TxContext
 import com.caplin.integration.datasourcex.util.store.Versioned
 import com.caplin.integration.datasourcex.util.store.mutableFlowStore
 import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.jooq.Configuration
 import org.jooq.DSLContext
@@ -102,6 +105,31 @@ class StoreSamples {
       }
     }
   }
+
+  /**
+   * Snapshot-and-subscribe over the same store: [FlowStore.asFlow] runs a bulk jOOQ query for the
+   * accounts currently in credit, emits them as the starting state, then follows the live delta
+   * stream. The predicate keeps the tail scoped to that set, so an account whose balance drops to
+   * zero leaves the view as a [VersionedMapEvent.Removed].
+   */
+  fun creditedAccounts(
+      store: FlowStore<String, Account>,
+      dsl: DSLContext,
+  ): Flow<VersionedMapEvent<String, Account>> =
+      store.asFlow(
+          query = {
+            dsl.fetch("select id, balance, version from account where balance > 0").associate { row
+              ->
+              val id = row.get("id", String::class.java)
+              id to
+                  Versioned(
+                      Account(id, row.get("balance", Long::class.java)),
+                      row.get("version", Long::class.java),
+                  )
+            }
+          },
+          predicate = { _, account -> account.balance > 0 },
+      )
 }
 
 private const val COMMIT_ACTIONS = "datasourcex.flowstore.commit-actions"

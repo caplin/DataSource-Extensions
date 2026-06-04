@@ -13,6 +13,11 @@ import kotlinx.coroutines.withContext
 interface AsyncFlowStore<K : Any, V : Any> {
   fun asFlow(): SharedFlow<VersionedMapEvent<K, V>>
 
+  fun asFlow(
+      query: () -> Map<K, Versioned<V>>,
+      predicate: (K, V) -> Boolean = { _, _ -> true },
+  ): Flow<VersionedMapEvent<K, V>>
+
   fun valueFlow(key: K): Flow<V?>
 
   suspend fun get(key: K): V?
@@ -39,6 +44,11 @@ internal class AsyncFlowStoreImpl<K : Any, V : Any>(private val store: AbstractF
     AsyncFlowStore<K, V> {
   override fun asFlow(): SharedFlow<VersionedMapEvent<K, V>> = store.asFlow()
 
+  override fun asFlow(
+      query: () -> Map<K, Versioned<V>>,
+      predicate: (K, V) -> Boolean,
+  ): Flow<VersionedMapEvent<K, V>> = store.asFlow(query, predicate)
+
   override fun valueFlow(key: K): Flow<V?> = store.valueFlow(key)
 
   override suspend fun get(key: K): V? = store.getSuspending(key)
@@ -49,6 +59,11 @@ internal class AsyncMutableFlowStoreImpl<K : Any, V : Any, T>(
     private val dispatcher: CoroutineDispatcher,
 ) : AsyncMutableFlowStore<K, V, T> {
   override fun asFlow(): SharedFlow<VersionedMapEvent<K, V>> = store.asFlow()
+
+  override fun asFlow(
+      query: () -> Map<K, Versioned<V>>,
+      predicate: (K, V) -> Boolean,
+  ): Flow<VersionedMapEvent<K, V>> = store.asFlow(query, predicate)
 
   override fun valueFlow(key: K): Flow<V?> = store.valueFlow(key)
 

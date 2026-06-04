@@ -566,8 +566,14 @@ public final class com/caplin/integration/datasourcex/util/serialization/jackson
 
 public abstract interface class com/caplin/integration/datasourcex/util/store/AsyncFlowStore {
 	public abstract fun asFlow ()Lkotlinx/coroutines/flow/SharedFlow;
+	public abstract fun asFlow (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun asFlow$default (Lcom/caplin/integration/datasourcex/util/store/AsyncFlowStore;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public abstract fun get (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun valueFlow (Ljava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/caplin/integration/datasourcex/util/store/AsyncFlowStore$DefaultImpls {
+	public static synthetic fun asFlow$default (Lcom/caplin/integration/datasourcex/util/store/AsyncFlowStore;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/store/AsyncMutableFlowStore : com/caplin/integration/datasourcex/util/store/AsyncFlowStore {
@@ -579,9 +585,15 @@ public abstract interface class com/caplin/integration/datasourcex/util/store/As
 
 public abstract interface class com/caplin/integration/datasourcex/util/store/FlowStore {
 	public abstract fun asFlow ()Lkotlinx/coroutines/flow/SharedFlow;
+	public abstract fun asFlow (Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun asFlow$default (Lcom/caplin/integration/datasourcex/util/store/FlowStore;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public abstract fun get (Ljava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getAsync ()Lcom/caplin/integration/datasourcex/util/store/AsyncFlowStore;
 	public abstract fun valueFlow (Ljava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/caplin/integration/datasourcex/util/store/FlowStore$DefaultImpls {
+	public static synthetic fun asFlow$default (Lcom/caplin/integration/datasourcex/util/store/FlowStore;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 }
 
 public final class com/caplin/integration/datasourcex/util/store/FlowStoreKt {

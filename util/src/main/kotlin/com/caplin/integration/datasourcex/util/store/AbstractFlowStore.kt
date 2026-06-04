@@ -50,6 +50,40 @@ internal abstract class AbstractFlowStore<K : Any, V : Any>(
     return withContext(dispatcher) { cache.getOrLoad(key, loader::load) }?.valueOrNull()
   }
 
+  override fun asFlow(
+      query: () -> Map<K, Versioned<V>>,
+      predicate: (K, V) -> Boolean,
+  ): Flow<VersionedMapEvent<K, V>> = flow {
+    val highest = HashMap<K, Long>() // keys in view -> last version emitted
+    signal
+        .onSubscription {
+          val snapshot = withContext(dispatcher) { query() }
+          snapshot.forEach { (key, v) ->
+            highest[key] = v.version
+            this@flow.emit(VersionedMapEvent.Upsert(key, v.value, v.version))
+          }
+        }
+        .collect { event ->
+          val baseline = highest[event.key]
+          if (baseline != null && event.version <= baseline) return@collect
+          when (event) {
+            is VersionedMapEvent.Upsert ->
+                if (predicate(event.key, event.value)) {
+                  highest[event.key] = event.version
+                  this@flow.emit(event)
+                } else if (baseline != null) {
+                  highest.remove(event.key)
+                  this@flow.emit(VersionedMapEvent.Removed(event.key, event.version))
+                }
+            is VersionedMapEvent.Removed ->
+                if (baseline != null) {
+                  highest.remove(event.key)
+                  this@flow.emit(event)
+                }
+          }
+        }
+  }
+
   override fun valueFlow(key: K): Flow<V?> =
       flow {
             var highest = Long.MIN_VALUE
