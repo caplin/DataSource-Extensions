@@ -185,9 +185,11 @@ public abstract interface class com/caplin/integration/datasourcex/util/flow/Flo
 }
 
 public final class com/caplin/integration/datasourcex/util/flow/FlowMapKt {
+	public static final fun flowMapIn (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun mutableFlowMapOf ()Lcom/caplin/integration/datasourcex/util/flow/MutableFlowMap;
 	public static final fun mutableFlowMapOf ([Lkotlin/Pair;)Lcom/caplin/integration/datasourcex/util/flow/MutableFlowMap;
 	public static final fun runningFoldToMapFlowMapStreamEvent (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun simpleFlowMapIn (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun simpleToFlowMapIn (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun toFlowMapIn (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun toMutableFlowMap (Ljava/util/Map;)Lcom/caplin/integration/datasourcex/util/flow/MutableFlowMap;
@@ -369,6 +371,17 @@ public final class com/caplin/integration/datasourcex/util/flow/SetEventKt {
 	public static final fun runningFoldToSet (Lkotlinx/coroutines/flow/Flow;ZZ)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun runningFoldToSet$default (Lkotlinx/coroutines/flow/Flow;ZZILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static final fun toEvents (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/caplin/integration/datasourcex/util/flow/SharedFlowCache {
+	public final fun get (Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/SharedFlow;
+}
+
+public final class com/caplin/integration/datasourcex/util/flow/SharedFlowCacheKt {
+	public static final fun completingSharedFlowCache (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/SharingStarted;I)Lcom/caplin/integration/datasourcex/util/flow/CompletingSharedFlowCache;
+	public static synthetic fun completingSharedFlowCache$default (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/SharingStarted;IILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/flow/CompletingSharedFlowCache;
+	public static final fun sharedFlowCache (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/SharingStarted;I)Lcom/caplin/integration/datasourcex/util/flow/SharedFlowCache;
+	public static synthetic fun sharedFlowCache$default (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/coroutines/flow/SharingStarted;IILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/flow/SharedFlowCache;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/flow/SimpleMapEvent {
