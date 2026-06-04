@@ -40,8 +40,7 @@ internal abstract class AbstractFlowStore<K : Any, V : Any>(
   // Blocking on a miss; the caller dispatches it, as with the transactional operations.
   override fun get(key: K): V? = readThrough(key)?.valueOrNull()
 
-  private fun readThrough(key: K): CacheEntry<V>? =
-      cache.getIfPresent(key) ?: cache.getOrLoad(key, loader::load)
+  private fun readThrough(key: K): CacheEntry<V>? = cache.getOrLoad(key, loader::load)
 
   // Suspending [get] for the [async] view: a cache hit returns inline; only a miss is dispatched.
   internal suspend fun getSuspending(key: K): V? {

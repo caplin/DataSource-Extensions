@@ -80,7 +80,7 @@ class StoreSamples {
    * turns each commit into the delta publish.
    */
   suspend fun jooqSample(rootDsl: DSLContext) {
-    val cache = Caffeine.newBuilder().maximumSize(10_000).build<String, CacheEntry<Account>>()
+    val cache = Caffeine.newBuilder().maximumSize(10_000).build<String, CacheEntry<Account>?>()
     val store =
         mutableFlowStore(JooqAccountStore(rootDsl), cache, txContext = Configuration::asTxContext)
 

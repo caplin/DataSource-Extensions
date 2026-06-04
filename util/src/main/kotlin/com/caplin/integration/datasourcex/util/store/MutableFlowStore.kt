@@ -47,7 +47,7 @@ interface MutableFlowStore<K : Any, V : Any, T> : FlowStore<K, V> {
  */
 fun <K : Any, V : Any, T> mutableFlowStore(
     store: CacheLoaderWriter<K, V, T>,
-    cache: Cache<K, CacheEntry<V>>,
+    cache: Cache<K, CacheEntry<V>?>,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     txContext: (T) -> TxContext<T>,
 ): MutableFlowStore<K, V, T> =

@@ -34,7 +34,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v5", 5L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -58,7 +58,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v2", 2L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {
@@ -76,7 +76,7 @@ class FlowStoreTest :
         val store = InMemoryCacheLoaderWriter<String, String>()
         store.seed("k", "v5", 5L)
         val inbound = MutableSharedFlow<VersionedMapEvent<String, String>>(extraBufferCapacity = 16)
-        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>>()
+        val cache = Caffeine.newBuilder().build<String, CacheEntry<String>?>()
         val consumer = flowStore(store, inbound, cache, backgroundScope)
 
         consumer.asFlow().test {

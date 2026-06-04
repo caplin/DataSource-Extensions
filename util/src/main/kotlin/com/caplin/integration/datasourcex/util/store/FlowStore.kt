@@ -46,7 +46,7 @@ interface FlowStore<K : Any, V : Any> {
 fun <K : Any, V : Any> flowStore(
     loader: CacheLoader<K, V>,
     inbound: Flow<VersionedMapEvent<K, V>>,
-    cache: Cache<K, CacheEntry<V>>,
+    cache: Cache<K, CacheEntry<V>?>,
     scope: CoroutineScope,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
     bufferCapacity: Int = DEFAULT_SIGNAL_BUFFER,
