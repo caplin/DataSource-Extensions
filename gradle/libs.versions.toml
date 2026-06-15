@@ -11,7 +11,7 @@ ktfmt = "0.61"
 fory = "1.0.0"
 
 # Caplin Dependencies
-datasource = "8.0.11-1836-95c6e774"
+datasource = "8.0.12-1871-367ddb14"
 
 # Test Dependencies
 kotest = "6.1.11"
