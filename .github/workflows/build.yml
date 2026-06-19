@@ -77,7 +77,7 @@ jobs:
             util/build/test-results/test/TEST-*.xml
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           files: build/reports/kover/report.xml
           fail_ci_if_error: false
