@@ -20,6 +20,14 @@ class ValueOrCompletionSerializationTest :
         deserialized shouldBe event
       }
 
+      test("Value (null)") {
+        val event: ValueOrCompletion<String?> = ValueOrCompletion.Value(null)
+        val json = mapper.writeValueAsString(event)
+        val deserialized =
+            mapper.readValue(json, object : TypeReference<ValueOrCompletion<String?>>() {})
+        deserialized shouldBe event
+      }
+
       test("Completion (null)") {
         val event: ValueOrCompletion<String> = ValueOrCompletion.Completion(null)
         val json = mapper.writeValueAsString(event)
