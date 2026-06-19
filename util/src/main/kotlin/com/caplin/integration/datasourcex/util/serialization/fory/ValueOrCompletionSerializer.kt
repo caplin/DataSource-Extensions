@@ -38,7 +38,7 @@ internal class ValueOrCompletionSerializer(
   override fun read(readContext: ReadContext): ValueOrCompletion<*> {
     return when (Type.entries[readContext.readByte().toInt()]) {
       Type.VALUE -> {
-        val value = readContext.readRef() as Any
+        val value = readContext.readRef()
         ValueOrCompletion.Value(value)
       }
       Type.COMPLETION -> {

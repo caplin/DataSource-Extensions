@@ -50,6 +50,13 @@ class ValueOrCompletionSerializationTest :
             deserialized shouldBe event
           }
 
+          test("Value (null)") {
+            val event = ValueOrCompletion.Value<String?>(null)
+            val bytes = fory.serialize(event)
+            val deserialized = fory.deserialize(bytes)
+            deserialized shouldBe event
+          }
+
           test("Completion") {
             val event = ValueOrCompletion.Completion(null)
             val bytes = fory.serialize(event)
@@ -92,7 +99,7 @@ class ValueOrCompletionSerializationTest :
               val bytes = foryNoType.serialize(event)
               val deserialized = foryNoType.deserialize(bytes) as ValueOrCompletion.Completion
               deserialized.throwable.shouldBeInstanceOf<RuntimeException>()
-              deserialized.throwable?.message shouldBe "aah"
+              deserialized.throwable.message shouldBe "aah"
             }
           }
         },

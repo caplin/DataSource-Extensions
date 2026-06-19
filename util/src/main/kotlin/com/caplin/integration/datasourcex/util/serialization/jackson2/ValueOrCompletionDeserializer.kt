@@ -16,9 +16,10 @@ internal class ValueOrCompletionDeserializer :
             ?: throw JsonMappingException.from(p, "Missing type field for ValueOrCompletion")
     return when (type) {
       "value" -> {
-        val value =
-            node.get("value")?.let { p.codec.treeToValue(it, Any::class.java) }
+        val valueNode =
+            node.get("value")
                 ?: throw JsonMappingException.from(p, "Missing value field for value type")
+        val value = if (valueNode.isNull) null else p.codec.treeToValue(valueNode, Any::class.java)
         ValueOrCompletion.Value(value)
       }
       "completion" -> {
