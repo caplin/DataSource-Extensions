@@ -16,7 +16,7 @@ datasource = "8.0.12-1871-367ddb14"
 # Test Dependencies
 kotest = "6.1.11"
 turbine = "1.2.1"
-mockk = "1.14.9"
+mockk = "1.14.11"
 
 # Spring BOM should manage other dependencies versions.
 
