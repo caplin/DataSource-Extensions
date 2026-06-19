@@ -15,9 +15,10 @@ internal class ValueOrCompletionDeserializer :
             ?: throw DatabindException.from(p, "Missing type field for ValueOrCompletion")
     return when (type) {
       "value" -> {
-        val value =
-            node.get("value")?.let { ctxt.readTreeAsValue(it, Any::class.java) }
+        val valueNode =
+            node.get("value")
                 ?: throw DatabindException.from(p, "Missing value field for value type")
+        val value = if (valueNode.isNull) null else ctxt.readTreeAsValue(valueNode, Any::class.java)
         ValueOrCompletion.Value(value)
       }
       "completion" -> {

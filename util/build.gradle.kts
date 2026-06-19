@@ -17,6 +17,7 @@ dependencies {
   // Jackson 3 is the default JSON binding on this (Spring Boot 4) line; versions come from the
   // Spring Boot BOM.
   api("tools.jackson.core:jackson-databind")
+  api("com.github.ben-manes.caffeine:caffeine")
   implementation("tools.jackson.module:jackson-module-kotlin")
   implementation(libs.zjsonpatch)
 
@@ -35,12 +36,18 @@ dependencies {
   compileOnly(libs.fory.core)
   compileOnly(libs.fory.kotlin)
 
+  // Samples (compiled for Dokka only): show MutableFlowStore participating in a blocking jOOQ
+  // transaction. Off the published runtime classpath; jooq is version-managed by the Spring Boot
+  // BOM.
+  samplesImplementation("org.jooq:jooq")
+
   testRuntimeOnly("org.slf4j:slf4j-simple")
 
   testImplementation("org.springframework:spring-core") // For testing the RegexPathMatcher
   testImplementation(libs.turbine)
   testImplementation(libs.kotest.assertions)
   testImplementation(libs.kotest.runner)
+  testImplementation(libs.mockk)
   testImplementation(libs.fory.core)
   testImplementation(libs.fory.kotlin)
   // Jackson 2 is compileOnly in main; the Jackson 2 serialization/handler tests need it at runtime.
@@ -58,4 +65,9 @@ dependencies {
 
 jmh { duplicateClassesStrategy.set(DuplicatesStrategy.EXCLUDE) }
 
-dokka { dokkaSourceSets.configureEach { includes.from("README.md") } }
+dokka {
+  dokkaSourceSets.configureEach {
+    includes.from("README.md")
+    samples.from(layout.projectDirectory.dir("src/samples/kotlin"))
+  }
+}

@@ -196,7 +196,7 @@ class FlowMapTest :
         val primaryMap = mutableFlowMapOf("1" to "A", "2" to "Ax")
 
         val filteredMap =
-            primaryMap.asFlow { _, value -> value.contains("x") }.toFlowMapIn(backgroundScope)
+            primaryMap.asFlow { _, value -> value.contains("x") }.flowMapIn(backgroundScope)
 
         filteredMap["1"] shouldBe null
         filteredMap["2"].shouldNotBeNull() shouldBeEqual "Ax"
