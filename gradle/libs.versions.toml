@@ -1,8 +1,7 @@
 [versions]
-springBoot = "3.5.15"
-kotlin = "2.2.0"
+springBoot = "4.0.6"
+kotlin = "2.2.21"
 kotlinCollectionsImmutable = "0.5.0"
-jackson3 = "3.2.0"
 zjsonpatch = "0.6.2"
 jmh = "1.37"
 jmh-plugin = "0.7.3"
@@ -31,8 +30,6 @@ spring-dependency-management-plugin = "1.1.7"
 
 [libraries]
 kotlin-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinCollectionsImmutable" }
-jackson3-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson3" }
-jackson3-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jackson3" }
 zjsonpatch = { module = "io.github.vishwakarma:zjsonpatch", version.ref = "zjsonpatch" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 fory-core = { module = "org.apache.fory:fory-core", version.ref = "fory" }

@@ -20,8 +20,8 @@ annotation class DataMessageMapping(
      * Methods annotated with this message should return one or more objects to be serialized to
      * JSON.
      *
-     * The JSON handler installed in [DataSource] will be used. By default, this is the
-     * [com.fasterxml.jackson.databind.ObjectMapper] provided by Spring Boot.
+     * The JSON handler installed in [DataSource] will be used. By default, this is backed by the
+     * [tools.jackson.databind.ObjectMapper] provided by Spring Boot.
      */
     JSON,
 

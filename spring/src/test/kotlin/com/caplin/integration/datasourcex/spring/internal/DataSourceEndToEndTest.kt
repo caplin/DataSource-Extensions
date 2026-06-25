@@ -9,8 +9,6 @@ import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.
 import com.caplin.integration.datasourcex.spring.annotations.DataService
 import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationVariable
 import com.caplin.integration.datasourcex.spring.annotations.IngressToken.USER_ID
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.extensions.spring.SpringExtension
@@ -29,6 +27,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.test.context.TestPropertySource
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 
 /**
  * End-to-end test of the Spring Boot starter: a real application context wires the
@@ -176,7 +176,7 @@ class DataSourceEndToEndTest : FunSpec() {
 
     @Bean fun dataSource(): DataSource = fake.dataSource
 
-    @Bean fun objectMapper(): ObjectMapper = jacksonObjectMapper()
+    @Bean fun objectMapper(): ObjectMapper = jacksonMapperBuilder().build()
   }
 
   private companion object {

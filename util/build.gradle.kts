@@ -14,17 +14,20 @@ dependencies {
   api("org.slf4j:slf4j-api")
   api("org.jetbrains.kotlinx:kotlinx-coroutines-core")
   api("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm")
-  api("com.fasterxml.jackson.core:jackson-core")
+  // Jackson 3 is the default JSON binding on this (Spring Boot 4) line; versions come from the
+  // Spring Boot BOM.
+  api("tools.jackson.core:jackson-databind")
   api("com.github.ben-manes.caffeine:caffeine")
-  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  implementation("tools.jackson.module:jackson-module-kotlin")
   implementation(libs.zjsonpatch)
 
-  // Jackson 3 support is opt-in: consumers that want the Jackson 3 serializers / JsonHandler must
-  // bring Jackson 3 onto their own classpath. Kept compileOnly here so it stays off the default
-  // (Jackson 2) runtime path.
-  compileOnly(libs.jackson3.databind)
-  compileOnly(libs.jackson3.module.kotlin)
+  // Jackson 2 support is opt-in: consumers that want the Jackson 2 serializers / JsonHandler must
+  // bring Jackson 2 onto their own classpath (e.g. via spring-boot-jackson2). Kept compileOnly so
+  // it
+  // stays off the default (Jackson 3) runtime path.
+  compileOnly("com.fasterxml.jackson.core:jackson-databind")
+  compileOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+  compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -47,13 +50,17 @@ dependencies {
   testImplementation(libs.mockk)
   testImplementation(libs.fory.core)
   testImplementation(libs.fory.kotlin)
-  testImplementation(libs.jackson3.databind)
-  testImplementation(libs.jackson3.module.kotlin)
+  // Jackson 2 is compileOnly in main; the Jackson 2 serialization/handler tests need it at runtime.
+  testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
   jmh(libs.jmh.core)
   jmh(libs.jmh.generator)
-  jmh(libs.jackson3.databind)
-  jmh(libs.jackson3.module.kotlin)
+  // JacksonSerializationBenchmark exercises both Jackson lines; Jackson 2 (compileOnly in main)
+  // must
+  // be added explicitly for the jmh runtime.
+  jmh("com.fasterxml.jackson.module:jackson-module-kotlin")
+  jmh("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
 
 jmh { duplicateClassesStrategy.set(DuplicatesStrategy.EXCLUDE) }

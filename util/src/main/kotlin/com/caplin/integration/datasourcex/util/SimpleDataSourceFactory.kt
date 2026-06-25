@@ -75,14 +75,14 @@ object SimpleDataSourceFactory {
    *
    * @param simpleConfig The simple configuration for the data source.
    * @param jsonHandler The [JsonHandler] to use for serializing and deserializing JSON payloads.
-   *   This defaults to the Jackson 2 [defaultJackson2JsonHandler] backed by
-   *   [defaultJackson2ObjectMapper].
+   *   This defaults to the Jackson 3 [defaultJackson3JsonHandler] backed by
+   *   [defaultJackson3ObjectMapper].
    * @return The created data source.
    */
   @JvmStatic
   fun createDataSource(
       simpleConfig: SimpleDataSourceConfig,
-      jsonHandler: JsonHandler<*> = defaultJackson2JsonHandler,
+      jsonHandler: JsonHandler<*> = defaultJackson3JsonHandler,
   ): DataSource {
     val logPath =
         simpleConfig.logDirectory
