@@ -4,9 +4,7 @@ package com.caplin.integration.datasourcex.util.store
  * A versioned cache entry. [Live] holds a present value; [Tombstone] marks a removed key so a
  * stale, older read-through is rejected by version instead of silently repopulating the value.
  */
-internal sealed interface CacheEntry<out V> {
-  val version: Long
-}
+internal sealed interface CacheEntry<out V> : Versionable
 
 internal data class Live<out V>(val value: V, override val version: Long) : CacheEntry<V>
 
