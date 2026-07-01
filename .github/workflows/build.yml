@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -29,7 +29,7 @@ jobs:
           CAPLIN_PASSWORD: ${{ secrets.CAPLIN_PASSWORD }}
 
       - name: Cache build artifacts
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             */build
@@ -39,7 +39,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -51,7 +51,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Restore build artifacts
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             */build
@@ -86,7 +86,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -98,7 +98,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Restore build artifacts
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             */build
@@ -152,7 +152,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
