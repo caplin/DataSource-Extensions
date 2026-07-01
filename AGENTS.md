@@ -22,7 +22,7 @@ The repo is typically checked out on Windows. PowerShell uses `.\gradlew.bat`; B
 ./gradlew spotlessCheck                 # verify formatting
 ./gradlew apiCheck                      # binary-compatibility check (see "Public API" below)
 ./gradlew apiDump                       # regenerate .api snapshots
-./gradlew dokkaGenerate                 # build docs site (output in docs/build/dokka/html)
+./gradlew dokkaGenerate                 # build docs site (output in api-docs/build/dokka/html)
 ./gradlew :examples:spring-kotlin:bootRun  # run an example app against a local Liberator
 ```
 
@@ -44,7 +44,7 @@ spring                ← spring-boot-starter-datasource (depends on reactive/ko
 util                  ← datasourcex-util — FlowMap, custom Flow operators, AntPatternNamespace,
                         Fory serialization helpers. No DataSource SDK dependency.
 examples/             ← spring-java, spring-kotlin, spring-kotlin-chat — manual smoke tests
-docs/                 ← aggregated Dokka site (published to GitHub Pages from main)
+api-docs/             ← aggregated Dokka site (published to GitHub Pages from main)
 ```
 
 The published Maven coordinates use the module's renamed name (`datasourcex-kotlin`, `spring-boot-starter-datasource`, etc.), not the Gradle path — set up in `settings.gradle.kts`.
@@ -89,3 +89,17 @@ When you intentionally change public API: run `./gradlew apiDump`, review the di
 - Tests: JUnit 5 platform, Kotest assertions (`shouldBe`), MockK for mocks, Turbine for `Flow` assertions.
 - `samples` source set: each library module has a `src/samples/kotlin/` directory whose contents are pulled into Dokka output. The `samples` package is excluded from coverage (see root `build.gradle.kts`).
 - Kover aggregates coverage across all published modules at the root project; per-module reports also exist.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked as GitHub issues in `caplin/DataSource-Extensions` (via the `gh` CLI); external pull requests are also pulled into the triage queue. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default label vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

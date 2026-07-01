@@ -57,7 +57,7 @@ include("version-catalog")
 
 project(":version-catalog").name = "datasourcex-version-catalog"
 
-include("docs")
+include("api-docs")
 
 include("examples:spring-java")
 
