@@ -1,15 +1,15 @@
-import com.vanniktech.maven.publish.SonatypeHost.Companion.CENTRAL_PORTAL
-
 plugins { id("com.vanniktech.maven.publish") }
 
 group = "com.caplin.integration.datasourcex"
 
-val configuredVersion = System.getenv("GITHUB_REF_NAME") ?: "dev"
+val refName = System.getenv("GITHUB_REF_NAME") ?: "dev"
 
-version = configuredVersion
+// Pre-release tags (X.Y.Z-rcN) publish as an overwriting SNAPSHOT to stay under Maven Central's
+// monthly release/file limits; a clean X.Y.Z tag publishes a release. See docs/adr/0002.
+version = if (refName.contains('-')) "${refName.substringBefore('-')}-SNAPSHOT" else refName
 
 mavenPublishing {
-  publishToMavenCentral(CENTRAL_PORTAL)
+  publishToMavenCentral()
 
   signAllPublications()
 
