@@ -30,9 +30,9 @@ class Samples {
             pattern(
                 pattern = "/{username}/example/subjectPattern/{myKey}",
                 configure = { objectMappings = mapOf("username" to "%u") },
-            ) { _, parameters ->
-              val username: String by parameters
-              val myKey: String by parameters
+            ) {
+              val username: String by pathVariables
+              val myKey: String by pathVariables
               flow {
                 var count = 0
                 while (true) {

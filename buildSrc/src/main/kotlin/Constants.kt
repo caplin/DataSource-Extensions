@@ -45,10 +45,18 @@ val containerEventBulkClassName = ClassName(apiPackageName, "ContainerEvent.Bulk
 val containerEventRowEventUpsertClassName =
     ClassName(apiPackageName, "ContainerEvent.RowEvent.Upsert")
 val pathSupplierClassName = ClassName(apiPackageName, "PathSupplier")
+val requestClassName = ClassName(apiPackageName, "Request")
+val requestSupplierClassName = ClassName(apiPackageName, "RequestSupplier")
+val channelRequestClassName = ClassName(apiPackageName, "ChannelRequest")
+val channelRequestSupplierClassName = ClassName(apiPackageName, "ChannelRequestSupplier")
+val channelSupplierClassName = ClassName(apiPackageName, "ChannelSupplier")
+
+@Suppress("DEPRECATION")
 val pathVariablesSupplierClassName = ClassName(apiPackageName, "PathVariablesSupplier")
+
+@Suppress("DEPRECATION")
 val pathVariablesChannelSupplierClassName =
     ClassName(apiPackageName, "PathVariablesChannelSupplier")
-val channelSupplierClassName = ClassName(apiPackageName, "ChannelSupplier")
 val configBlockClassName = ClassName(apiPackageName, "ConfigBlock")
 
 val pathParameter = ParameterSpec.builder("path", STRING).build()

@@ -1,4 +1,5 @@
 import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
@@ -57,6 +58,13 @@ object Channel : FunctionProvider {
         if (publisherType.requiresProjection) WildcardTypeName.producerOf(parameterTypeName)
         else parameterTypeName
 
+    val channelRequestReceiveType =
+        channelRequestClassName.parameterizedBy(
+            publisherType.className.parameterizedBy(
+                if (parameterTypeName == ANY) r else parameterTypeName,
+            ),
+        )
+
     val channelSupplierParameter =
         ParameterSpec.builder(
                 "supplier",
@@ -69,10 +77,10 @@ object Channel : FunctionProvider {
             )
             .build()
 
-    val pathVariablesChannelSupplierParameter =
+    val channelRequestSupplierParameter =
         ParameterSpec.builder(
                 "supplier",
-                pathVariablesChannelSupplierClassName.parameterizedBy(
+                channelRequestSupplierClassName.parameterizedBy(
                     publisherType.className.parameterizedBy(
                         if (parameterTypeName == ANY) r else parameterTypeName,
                     ),
@@ -91,10 +99,10 @@ object Channel : FunctionProvider {
               }
             }
             .addParameter(configureParameter)
-            .addParameter(pathVariablesChannelSupplierParameter)
+            .addParameter(channelRequestSupplierParameter)
             .addCode(
                 """
-                            %N.%N(%N, %N,%L) { path, pathVariables, receive -> %N.asFlow(%N(path, pathVariables, %N.asPublisher(receive))) }
+                            %N.%N(%N, %N,%L) { request -> %N.asFlow(with(%N) { %T(request.path, request.pathVariables, request.queryParameters, %N.asPublisher(request.receive)).invoke() }) }
                         """
                     .trimIndent(),
                 binderProperty,
@@ -104,7 +112,8 @@ object Channel : FunctionProvider {
                 if (parameterTypeName == ANY) CodeBlock.of(" %N,", receiveType)
                 else CodeBlock.of(""),
                 adapterProperty,
-                pathVariablesChannelSupplierParameter,
+                channelRequestSupplierParameter,
+                channelRequestReceiveType,
                 adapterProperty,
             )
             .build()
@@ -120,7 +129,7 @@ object Channel : FunctionProvider {
                   }
                 }
                 .addParameter(configureParameter)
-                .addParameter(pathVariablesChannelSupplierParameter)
+                .addParameter(channelRequestSupplierParameter)
                 .addCode(
                     """
                             %N(%N, %T::class.java, %N, %N)
@@ -130,13 +139,139 @@ object Channel : FunctionProvider {
                     antNamespaceParameter,
                     r,
                     configureParameter,
-                    pathVariablesChannelSupplierParameter,
+                    channelRequestSupplierParameter,
                 )
                 .build()
         else null
 
     val byPatternFunction =
         FunSpec.builder("pattern")
+            .addParameter(patternParameter)
+            .apply {
+              if (parameterTypeName == ANY) {
+                addTypeVariable(r)
+                addParameter(receiveType)
+              }
+            }
+            .addParameter(configureParameter)
+            .addParameter(channelRequestSupplierParameter)
+            .addCode(
+                """
+                            val namespace = %T(%N)
+                            %N(namespace,%L %N, %N)
+                        """
+                    .trimIndent(),
+                antPatternNamespaceClassName,
+                patternParameter,
+                byNamespaceFunction,
+                if (parameterTypeName == ANY) CodeBlock.of(" %N,", receiveType)
+                else CodeBlock.of(""),
+                configureParameter,
+                channelRequestSupplierParameter,
+            )
+            .build()
+
+    val byPatternReifiedFunction =
+        if (parameterTypeName == ANY)
+            FunSpec.builder("pattern")
+                .addParameter(patternParameter)
+                .apply {
+                  if (parameterTypeName == ANY) {
+                    addModifiers(INLINE)
+                    addTypeVariable(r.copy(reified = true))
+                  }
+                }
+                .addParameter(configureParameter)
+                .addParameter(channelRequestSupplierParameter)
+                .addCode(
+                    """
+                            %N(%N, %T::class.java, %N, %N)
+                        """
+                        .trimIndent(),
+                    byPatternFunction,
+                    patternParameter,
+                    r,
+                    configureParameter,
+                    channelRequestSupplierParameter,
+                )
+                .build()
+        else null
+
+    val receiveTypeCode =
+        if (parameterTypeName == ANY) CodeBlock.of(" %N,", receiveType) else CodeBlock.of("")
+
+    val pathVariablesChannelSupplierParameter =
+        ParameterSpec.builder(
+                "supplier",
+                pathVariablesChannelSupplierClassName.parameterizedBy(
+                    publisherType.className.parameterizedBy(
+                        if (parameterTypeName == ANY) r else parameterTypeName,
+                    ),
+                    publisherType.className.parameterizedBy(projectedParameterTypeName),
+                ),
+            )
+            .build()
+
+    val deprecatedAnnotation =
+        AnnotationSpec.builder(Deprecated::class)
+            .addMember(
+                "%S",
+                "Use the supplier overload taking a ChannelRequest, which also carries query parameters.",
+            )
+            .build()
+
+    val suppressDeprecationAnnotation =
+        AnnotationSpec.builder(Suppress::class).addMember("%S", "DEPRECATION").build()
+
+    val byNamespaceDeprecatedFunction =
+        FunSpec.builder("namespace")
+            .addAnnotation(deprecatedAnnotation)
+            .addAnnotation(suppressDeprecationAnnotation)
+            .addParameter(antNamespaceParameter)
+            .apply {
+              if (parameterTypeName == ANY) {
+                addTypeVariable(r)
+                addParameter(receiveType)
+              }
+            }
+            .addParameter(configureParameter)
+            .addParameter(pathVariablesChannelSupplierParameter)
+            .addCode(
+                "%N(%N,%L %N, %T { %N(path, pathVariables, receive) })",
+                byNamespaceFunction,
+                antNamespaceParameter,
+                receiveTypeCode,
+                configureParameter,
+                channelRequestSupplierClassName,
+                pathVariablesChannelSupplierParameter,
+            )
+            .build()
+
+    val byNamespaceReifiedDeprecatedFunction =
+        if (parameterTypeName == ANY)
+            FunSpec.builder("namespace")
+                .addAnnotation(deprecatedAnnotation)
+                .addAnnotation(suppressDeprecationAnnotation)
+                .addModifiers(INLINE)
+                .addTypeVariable(r.copy(reified = true))
+                .addParameter(antNamespaceParameter)
+                .addParameter(configureParameter)
+                .addParameter(pathVariablesChannelSupplierParameter)
+                .addCode(
+                    "%N(%N, %T::class.java, %N, %N)",
+                    byNamespaceDeprecatedFunction,
+                    antNamespaceParameter,
+                    r,
+                    configureParameter,
+                    pathVariablesChannelSupplierParameter,
+                )
+                .build()
+        else null
+
+    val byPatternDeprecatedFunction =
+        FunSpec.builder("pattern")
+            .addAnnotation(deprecatedAnnotation)
+            .addAnnotation(suppressDeprecationAnnotation)
             .addParameter(patternParameter)
             .apply {
               if (parameterTypeName == ANY) {
@@ -154,32 +289,26 @@ object Channel : FunctionProvider {
                     .trimIndent(),
                 antPatternNamespaceClassName,
                 patternParameter,
-                byNamespaceFunction,
-                if (parameterTypeName == ANY) CodeBlock.of(" %N,", receiveType)
-                else CodeBlock.of(""),
+                byNamespaceDeprecatedFunction,
+                receiveTypeCode,
                 configureParameter,
                 pathVariablesChannelSupplierParameter,
             )
             .build()
 
-    val byPatternReifiedFunction =
+    val byPatternReifiedDeprecatedFunction =
         if (parameterTypeName == ANY)
             FunSpec.builder("pattern")
+                .addAnnotation(deprecatedAnnotation)
+                .addAnnotation(suppressDeprecationAnnotation)
+                .addModifiers(INLINE)
+                .addTypeVariable(r.copy(reified = true))
                 .addParameter(patternParameter)
-                .apply {
-                  if (parameterTypeName == ANY) {
-                    addModifiers(INLINE)
-                    addTypeVariable(r.copy(reified = true))
-                  }
-                }
                 .addParameter(configureParameter)
                 .addParameter(pathVariablesChannelSupplierParameter)
                 .addCode(
-                    """
-                            %N(%N, %T::class.java, %N, %N)
-                        """
-                        .trimIndent(),
-                    byPatternFunction,
+                    "%N(%N, %T::class.java, %N, %N)",
+                    byPatternDeprecatedFunction,
                     patternParameter,
                     r,
                     configureParameter,
@@ -210,7 +339,7 @@ object Channel : FunctionProvider {
                 """
                             val namespace = %T(%N)
                             check(namespace.isExact) { %S }
-                            %N(namespace,%L %N) { _, _, %N -> %N(%N) }
+                            %N(namespace,%L %N) { %N(receive) }
                         """
                     .trimIndent(),
                 antPatternNamespaceClassName,
@@ -220,9 +349,7 @@ object Channel : FunctionProvider {
                 if (parameterTypeName == ANY) CodeBlock.of(" %N,", receiveType)
                 else CodeBlock.of(""),
                 configureParameter,
-                receivedFlowParameter,
                 channelSupplierParameter,
-                receivedFlowParameter,
             )
             .build()
 
@@ -256,8 +383,12 @@ object Channel : FunctionProvider {
         listOfNotNull(
             byNamespaceFunction,
             byNamespaceReifiedFunction,
+            byNamespaceDeprecatedFunction,
+            byNamespaceReifiedDeprecatedFunction,
             byPatternFunction,
             byPatternReifiedFunction,
+            byPatternDeprecatedFunction,
+            byPatternReifiedDeprecatedFunction,
             byPathFunction,
             byPathReifiedFunction,
         ),

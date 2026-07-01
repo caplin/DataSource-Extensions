@@ -1,3 +1,4 @@
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.MemberName
@@ -46,7 +47,7 @@ object ActiveContainer : FunctionProvider {
     val publisherPatternSupplierParameter =
         ParameterSpec.builder(
                 "supplier",
-                pathVariablesSupplierClassName.parameterizedBy(
+                requestSupplierClassName.parameterizedBy(
                     publisherType.className.parameterizedBy(containerEventTypeName),
                 ),
             )
@@ -60,7 +61,7 @@ object ActiveContainer : FunctionProvider {
             .addParameter(publisherPatternSupplierParameter)
             .addCode(
                 """
-                        %N.%N(%N, %N) { path -> %N.asFlow(%N(path, %N.extractPathVariables(path))) }
+                        %N.%N(%N, %N) { path -> %N.asFlow(with(%N) { %T(path, %N.extractPathVariables(path), %N.extractQueryParameters(path)).invoke() }) }
                     """
                     .trimIndent(),
                 binderProperty,
@@ -69,6 +70,8 @@ object ActiveContainer : FunctionProvider {
                 antNamespaceParameter,
                 adapterProperty,
                 publisherPatternSupplierParameter,
+                requestClassName,
+                antNamespaceParameter,
                 antNamespaceParameter,
             )
             .build()
@@ -93,6 +96,66 @@ object ActiveContainer : FunctionProvider {
             )
             .build()
 
+    val deprecatedSupplierParameter =
+        ParameterSpec.builder(
+                "supplier",
+                pathVariablesSupplierClassName.parameterizedBy(
+                    publisherType.className.parameterizedBy(containerEventTypeName),
+                ),
+            )
+            .build()
+
+    val deprecatedAnnotation =
+        AnnotationSpec.builder(Deprecated::class)
+            .addMember(
+                "%S",
+                "Use the supplier overload taking a Request, which also carries query parameters.",
+            )
+            .build()
+
+    val suppressDeprecationAnnotation =
+        AnnotationSpec.builder(Suppress::class).addMember("%S", "DEPRECATION").build()
+
+    val byNamespaceDeprecatedFunction =
+        FunSpec.builder("namespace")
+            .addAnnotation(deprecatedAnnotation)
+            .addAnnotation(suppressDeprecationAnnotation)
+            .addAnnotation(JvmOverloads::class)
+            .addParameter(antNamespaceParameter)
+            .addParameter(configureParameter)
+            .addParameter(deprecatedSupplierParameter)
+            .addCode(
+                "%N(%N, %N, %T { %N(path, pathVariables) })",
+                primaryFunction,
+                antNamespaceParameter,
+                configureParameter,
+                requestSupplierClassName,
+                deprecatedSupplierParameter,
+            )
+            .build()
+
+    val byPatternDeprecatedFunction =
+        FunSpec.builder("pattern")
+            .addAnnotation(deprecatedAnnotation)
+            .addAnnotation(suppressDeprecationAnnotation)
+            .addAnnotation(JvmOverloads::class)
+            .addParameter(patternParameter)
+            .addParameter(configureParameter)
+            .addParameter(deprecatedSupplierParameter)
+            .addCode(
+                """
+                        val namespace = %T(%N)
+                        %N(namespace, %N, %N)
+                    """
+                    .trimIndent(),
+                antPatternNamespaceClassName,
+                patternParameter,
+                byNamespaceDeprecatedFunction,
+                configureParameter,
+                deprecatedSupplierParameter,
+            )
+            .build()
+
     val byPathFunction =
         FunSpec.builder("path")
             .addAnnotation(JvmOverloads::class)
@@ -103,7 +166,7 @@ object ActiveContainer : FunctionProvider {
                 """
                         val namespace = %T(%N)
                         check(namespace.isExact) { %S }
-                        %N(namespace, %N) { _, _ -> %N }
+                        %N(namespace, %N) { %N }
                     """
                     .trimIndent(),
                 antPatternNamespaceClassName,
@@ -142,7 +205,9 @@ object ActiveContainer : FunctionProvider {
     return Functions(
         listOf(
             primaryFunction,
+            byNamespaceDeprecatedFunction,
             byPatternFunction,
+            byPatternDeprecatedFunction,
             byPathFunction,
             byPathValueFunction,
         ),
