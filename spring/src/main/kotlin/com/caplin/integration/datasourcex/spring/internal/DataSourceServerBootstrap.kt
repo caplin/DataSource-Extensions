@@ -11,7 +11,6 @@ import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeM
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
 import com.caplin.integration.datasourcex.util.getLogger
-import java.nio.charset.Charset
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.awaitCancellation
@@ -48,7 +47,7 @@ internal class DataSourceServerBootstrap(
     private val logger = getLogger<DataSourceServerBootstrap>()
     private val emptyPayload = emptyFlow<Nothing>().asPublisher()
 
-    internal val bootstrapCharset = Charset.forName("UTF-8")
+    internal val bootstrapCharset = AntPatternNamespace.CHARSET
     private val fireAndForgetOkResponse = mapOf("Result" to "ok")
   }
 
@@ -193,8 +192,8 @@ internal class DataSourceServerBootstrap(
                           pattern,
                           dataSourceRequestType.payloadType!!,
                           { channelType = dataSourceRequestType.channelType },
-                      ) { subject, _, receiveFlow ->
-                        createFlow(subject, receiveFlow)
+                      ) {
+                        createFlow(path, receive)
                       }
                     }
                   }
@@ -217,8 +216,8 @@ internal class DataSourceServerBootstrap(
                                   else -> error("Unreachable")
                                 }
                           },
-                      ) { subject, _, receiveFlow ->
-                        createFlow(subject, receiveFlow)
+                      ) {
+                        createFlow(path, receive)
                       }
                     }
                   }
@@ -255,15 +254,13 @@ internal class DataSourceServerBootstrap(
 
               when (val type = dataSourceRequestType.type) {
                 RequestType.Stream.ObjectType.MAPPING ->
-                    active { mapping { pattern(pattern) { subject, _ -> createFlow(subject) } } }
+                    active { mapping { pattern(pattern) { createFlow(path) } } }
 
                 RequestType.Stream.ObjectType.JSON ->
-                    active { json { pattern(pattern) { subject, _ -> createFlow(subject) } } }
+                    active { json { pattern(pattern) { createFlow(path) } } }
 
                 RequestType.Stream.ObjectType.CONTAINER_JSON ->
-                    activeContainer {
-                      json { pattern(pattern) { subject, _ -> createFlow(subject) } }
-                    }
+                    activeContainer { json { pattern(pattern) { createFlow(path) } } }
 
                 RequestType.Stream.ObjectType.TYPE1,
                 RequestType.Stream.ObjectType.GENERIC ->
@@ -281,8 +278,8 @@ internal class DataSourceServerBootstrap(
                                     else -> error("Unreachable")
                                   }
                             },
-                        ) { subject, _ ->
-                          createFlow(subject)
+                        ) {
+                          createFlow(path)
                         }
                       }
                     }
@@ -305,8 +302,8 @@ internal class DataSourceServerBootstrap(
                                     else -> error("Unreachable")
                                   }
                             },
-                        ) { subject, _ ->
-                          createFlow(subject)
+                        ) {
+                          createFlow(path)
                         }
                       }
                     }

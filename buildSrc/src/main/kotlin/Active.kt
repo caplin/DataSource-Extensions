@@ -1,3 +1,4 @@
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
@@ -40,7 +41,7 @@ object Active : FunctionProvider {
     val publisherPatternSupplierParameter =
         ParameterSpec.builder(
                 "supplier",
-                pathVariablesSupplierClassName.parameterizedBy(
+                requestSupplierClassName.parameterizedBy(
                     publisherType.className.parameterizedBy(projectedParameterTypeName),
                 ),
             )
@@ -61,7 +62,7 @@ object Active : FunctionProvider {
             .addParameter(publisherPatternSupplierParameter)
             .addCode(
                 """
-                        %N.%N(%N, %N) { %N.asFlow(%N(it, %N.extractPathVariables(it))) }
+                        %N.%N(%N, %N) { %N.asFlow(with(%N) { %T(it, %N.extractPathVariables(it), %N.extractQueryParameters(it)).invoke() }) }
                     """
                     .trimIndent(),
                 binderProperty,
@@ -70,6 +71,8 @@ object Active : FunctionProvider {
                 antNamespaceParameter,
                 adapterProperty,
                 publisherPatternSupplierParameter,
+                requestClassName,
+                antNamespaceParameter,
                 antNamespaceParameter,
             )
             .build()
@@ -101,6 +104,66 @@ object Active : FunctionProvider {
             )
             .build()
 
+    val deprecatedSupplierParameter =
+        ParameterSpec.builder(
+                "supplier",
+                pathVariablesSupplierClassName.parameterizedBy(
+                    publisherType.className.parameterizedBy(projectedParameterTypeName),
+                ),
+            )
+            .build()
+
+    val deprecatedAnnotation =
+        AnnotationSpec.builder(Deprecated::class)
+            .addMember(
+                "%S",
+                "Use the supplier overload taking a Request, which also carries query parameters.",
+            )
+            .build()
+
+    val suppressDeprecationAnnotation =
+        AnnotationSpec.builder(Suppress::class).addMember("%S", "DEPRECATION").build()
+
+    val byNamespaceDeprecatedFunction =
+        FunSpec.builder("namespace")
+            .addAnnotation(deprecatedAnnotation)
+            .addAnnotation(suppressDeprecationAnnotation)
+            .addAnnotation(JvmOverloads::class)
+            .addParameter(antNamespaceParameter)
+            .addParameter(configureParameter)
+            .addParameter(deprecatedSupplierParameter)
+            .addCode(
+                "%N(%N, %N, %T { %N(path, pathVariables) })",
+                byNamespaceFunction,
+                antNamespaceParameter,
+                configureParameter,
+                requestSupplierClassName,
+                deprecatedSupplierParameter,
+            )
+            .build()
+
+    val byPatternDeprecatedFunction =
+        FunSpec.builder("pattern")
+            .addAnnotation(deprecatedAnnotation)
+            .addAnnotation(suppressDeprecationAnnotation)
+            .addAnnotation(JvmOverloads::class)
+            .addParameter(patternParameter)
+            .addParameter(configureParameter)
+            .addParameter(deprecatedSupplierParameter)
+            .addCode(
+                """
+                        val namespace = %T(%N)
+                        %N(namespace, %N, %N)
+                    """
+                    .trimIndent(),
+                antPatternNamespaceClassName,
+                patternParameter,
+                byNamespaceDeprecatedFunction,
+                configureParameter,
+                deprecatedSupplierParameter,
+            )
+            .build()
+
     val byPathFunction =
         FunSpec.builder("path")
             .addAnnotation(JvmOverloads::class)
@@ -112,7 +175,7 @@ object Active : FunctionProvider {
                 """
                         val namespace = %T(%N)
                         check(namespace.isExact) { %S }
-                        %N(namespace, %N) { _, _ -> %N }
+                        %N(namespace, %N) { %N }
                     """
                     .trimIndent(),
                 antPatternNamespaceClassName,
@@ -151,7 +214,9 @@ object Active : FunctionProvider {
     return Functions(
         listOf(
             byNamespaceFunction,
+            byNamespaceDeprecatedFunction,
             byPatternFunction,
+            byPatternDeprecatedFunction,
             byPathFunction,
             byPathValueFunction,
         ),
@@ -169,14 +234,14 @@ object Active : FunctionProvider {
         Bind a [%N] to a [%N] of data publishers.
         
         For example, if a [%T] for /fx/ is bound then when a request for /fx/gbpusd is received
-        the [%N] will be called with /fx/gbpusd as the %N parameter to return a [%T] which will be subscribed to
+        the [%N] will be called with a [%T] whose path is /fx/gbpusd to return a [%T] which will be subscribed to
         in order to provide data.
-        
+
         @param %N A namespace for matching subjects for which this [%N] will be invoked.
         @param %N A configuration block that can be used to set up the behaviour of this publisher.
         @param %N This will be invoked on each incoming request. It should parse the `subject` and provide a
         %T capable of supplying data in response.
-         
+
         @see %T
         @see %T
         @see %T
@@ -186,7 +251,7 @@ object Active : FunctionProvider {
               flowSupplierParameter,
               prefixNamespaceClassName,
               flowSupplierParameter,
-              pathParameter,
+              requestClassName,
               publisherType,
               antNamespaceParameter,
               flowSupplierParameter,
@@ -210,21 +275,21 @@ object Active : FunctionProvider {
         Bind an ant pattern to a [%N] of data publishers.
          
         For example, if [%N] is provided as /fx&#47;* then when a request for /fx/gbpusd is received
-        the [%N] will be called with /fx/gbpusd as the %N parameter to return a [%T] which will be subscribed to
+        the [%N] will be called with a [%T] whose path is /fx/gbpusd to return a [%T] which will be subscribed to
         in order to provide data.
-         
+
         @param %N The ant pattern for matching subjects for which this [%N] will be invoked.
         @param %N A configuration block that can be used to set up the behaviour of this publisher.
         @param %N This will be invoked on each incoming request. It should parse the `subject` and provide a
         %T capable of supplying data in response.
-        
+
         @see %T
     """
                   .trimIndent(),
               flowSupplierParameter,
               patternParameter,
               flowSupplierParameter,
-              pathParameter,
+              requestClassName,
               publisherType,
               patternParameter,
               flowSupplierParameter,

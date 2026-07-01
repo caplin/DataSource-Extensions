@@ -29,12 +29,12 @@ import com.caplin.integration.datasourcex.reactive.api.ActiveContainerConfig
 import com.caplin.integration.datasourcex.reactive.api.BroadcastConfig
 import com.caplin.integration.datasourcex.reactive.api.BroadcastEvent
 import com.caplin.integration.datasourcex.reactive.api.ChannelConfig
+import com.caplin.integration.datasourcex.reactive.api.ChannelRequest
 import com.caplin.integration.datasourcex.reactive.api.ChannelType
 import com.caplin.integration.datasourcex.reactive.api.ConfigBlock
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent
 import com.caplin.integration.datasourcex.reactive.api.InsertAt
 import com.caplin.integration.datasourcex.reactive.api.PathSupplier
-import com.caplin.integration.datasourcex.reactive.api.PathVariablesChannelSupplier
 import com.caplin.integration.datasourcex.reactive.api.RecordType
 import com.caplin.integration.datasourcex.reactive.api.ServiceConfig
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
@@ -223,7 +223,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindChannelRecord(
       configure: ConfigBlock<ChannelConfig.Record>,
       namespace: AntPatternNamespace,
-      supplier: PathVariablesChannelSupplier<Flow<Map<String, String>>, Flow<Map<String, String>>>,
+      supplier: (ChannelRequest<Flow<Map<String, String>>>) -> Flow<Map<String, String>>,
   ) {
     val config = with(configure) { ChannelConfig.Record().apply { invoke() } }
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
@@ -285,9 +285,12 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
 
                 val sendToClientJob =
                     supplier(
-                            channel.subject,
-                            namespace.extractPathVariables(channel.subject),
-                            fromClientChannel.consumeAsFlow(),
+                            ChannelRequest(
+                                channel.subject,
+                                namespace.extractPathVariables(channel.subject),
+                                namespace.extractQueryParameters(channel.subject),
+                                fromClientChannel.consumeAsFlow(),
+                            ),
                         )
                         .onEach { value -> channel.sendMessage(channel.createMessage(value)) }
                         .onCompletion { throwable ->
@@ -316,7 +319,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
       configure: ConfigBlock<ChannelConfig.Json>,
       namespace: AntPatternNamespace,
       receiveType: Class<R>,
-      supplier: PathVariablesChannelSupplier<Flow<R>, Flow<Any>>,
+      supplier: (ChannelRequest<Flow<R>>) -> Flow<Any>,
   ) {
     val config = with(configure) { ChannelConfig.Json().apply { invoke() } }
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
@@ -366,9 +369,12 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
 
                 val sendToClientJob =
                     supplier(
-                            channel.subject,
-                            namespace.extractPathVariables(channel.subject),
-                            fromClientChannel.consumeAsFlow(),
+                            ChannelRequest(
+                                channel.subject,
+                                namespace.extractPathVariables(channel.subject),
+                                namespace.extractQueryParameters(channel.subject),
+                                fromClientChannel.consumeAsFlow(),
+                            ),
                         )
                         .onEach { value -> channel.send(value) }
                         .onCompletion { throwable ->

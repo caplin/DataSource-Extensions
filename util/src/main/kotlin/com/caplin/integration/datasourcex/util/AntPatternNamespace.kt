@@ -2,6 +2,9 @@ package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.Service
 import com.caplin.datasource.namespace.Namespace
+import java.net.URLDecoder
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 /**
  * An implementation of [Namespace] that matches subjects based on Ant style path patterns.
@@ -19,6 +22,23 @@ class AntPatternNamespace(pattern: String) : Namespace {
   companion object {
 
     private const val MAX_WILDCARDS = 10
+
+    /** The [Charset] used to URL-decode path variables and query parameters. */
+    @JvmField val CHARSET: Charset = StandardCharsets.UTF_8
+
+    /**
+     * Parses the query portion of a subject (the part after the first `?`, without the `?` itself)
+     * into a map of decoded parameter names to values.
+     *
+     * Names and values are URL-decoded. A parameter with no `=` (e.g. `flag`) or an empty value
+     * (e.g. `empty=`) maps to an empty string. When a key repeats, the last value wins.
+     */
+    private fun parseQueryString(query: String): Map<String, String> =
+        query.split("&").filter(String::isNotEmpty).associate { parameter ->
+          urlDecode(parameter.substringBefore('=')) to urlDecode(parameter.substringAfter('=', ""))
+        }
+
+    private fun urlDecode(value: String): String = URLDecoder.decode(value, CHARSET)
 
     @JvmStatic
     fun Service.addIncludeNamespace(antPatternNamespace: AntPatternNamespace) {
@@ -71,26 +91,44 @@ class AntPatternNamespace(pattern: String) : Namespace {
 
   private val matcher = AntRegexPathMatcher(pattern)
 
-  override fun match(subject: String): Boolean = matcher.regex.matchEntire(subject) != null
+  override fun match(subject: String): Boolean =
+      matcher.regex.matchEntire(subject.pathPortion) != null
 
   /**
-   * Extracts path variables from a matching subject.
+   * Extracts path variables from a matching subject. Values are URL-decoded. Any trailing `?query`
+   * is ignored, so a subject that carries query parameters yields the same path variables as the
+   * query-less subject.
    *
-   * @param subject The subject to extract variables from. Must match the [pattern].
+   * @param subject The subject to extract variables from. Its path portion must match the
+   *   [pattern].
    * @return A map of path variable names to their extracted values.
    * @throws IllegalStateException If the subject does not match the pattern.
    */
   fun extractPathVariables(subject: String): Map<String, String> {
     val groups =
-        checkNotNull(matcher.regex.matchEntire(subject)) {
+        checkNotNull(matcher.regex.matchEntire(subject.pathPortion)) {
               "Subject $subject does not match pattern $pattern"
             }
             .groups
 
     return matcher.pathVariables
-        .mapNotNull { name -> groups[name]?.value?.let { value -> name to value } }
+        .mapNotNull { name -> groups[name]?.value?.let { value -> name to urlDecode(value) } }
         .toMap()
   }
+
+  /**
+   * Extracts the query parameters from the optional trailing `?a=b&c=d` portion of a subject.
+   *
+   * @param subject The subject to extract query parameters from.
+   * @return A map of query parameter names to values, or an empty map when the subject has no
+   *   query.
+   */
+  fun extractQueryParameters(subject: String): Map<String, String> =
+      parseQueryString(subject.substringAfter('?', ""))
+
+  /** The subject with any trailing `?query` removed. */
+  private val String.pathPortion: String
+    get() = substringBefore('?')
 
   /**
    * Indicates whether this pattern only matches one exact path (i.e. no use of `?`, `*`, `**` or

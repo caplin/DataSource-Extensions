@@ -1,4 +1,5 @@
 import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -161,7 +162,14 @@ abstract class GenerateApi : DefaultTask() {
                   .build()
 
           val packageName = "$rootPackageName.${publisherType.packageName}"
-          val fileBuilder = FileSpec.builder(packageName, bindTypeName)
+          val fileBuilder =
+              FileSpec.builder(packageName, bindTypeName)
+                  .addAnnotation(
+                      AnnotationSpec.builder(Suppress::class)
+                          .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+                          .addMember("%S", "DEPRECATION")
+                          .build(),
+                  )
 
           val classBuilder =
               TypeSpec.classBuilder(ClassName(packageName, bindTypeName))

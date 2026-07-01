@@ -15,6 +15,8 @@ import com.caplin.integration.datasourcex.reactive.api.ContainerEvent
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent.RowEvent.Remove
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent.RowEvent.Upsert
 import com.caplin.integration.datasourcex.reactive.api.InsertAt.HEAD
+import com.caplin.integration.datasourcex.reactive.api.Request
+import com.caplin.integration.datasourcex.reactive.api.RequestSupplier
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion
 import com.caplin.integration.datasourcex.util.flow.ValueOrCompletion.Completion
@@ -97,30 +99,27 @@ class BindTest :
               String,
               MutableSharedFlow<ValueOrCompletion<ContainerEvent<Map<String, String>>>>,
           >()
-      val genericContainerFunction:
-          (String, Map<String, String>) -> Flow<ContainerEvent<Map<String, String>>> =
-          { containerSubject: String, _: Map<String, String> ->
+      val genericContainerFunction: RequestSupplier<Flow<ContainerEvent<Map<String, String>>>> =
+          RequestSupplier {
             MutableSharedFlow<ValueOrCompletion<ContainerEvent<Map<String, String>>>>()
-                .also { requestedContainerSubjects[containerSubject] = it }
+                .also { requestedContainerSubjects[path] = it }
                 .dematerialize()
           }
 
       val requestedGenericSubjects =
           ConcurrentHashMap<String, MutableSharedFlow<ValueOrCompletion<Map<String, String>>>>()
-      val genericSubjectFunction: (String, Map<String, String>) -> Flow<Map<String, String>> =
-          { subject: String, _: Map<String, String> ->
-            MutableSharedFlow<ValueOrCompletion<Map<String, String>>>()
-                .also { requestedGenericSubjects[subject] = it }
-                .dematerialize()
-          }
+      val genericSubjectFunction: RequestSupplier<Flow<Map<String, String>>> = RequestSupplier {
+        MutableSharedFlow<ValueOrCompletion<Map<String, String>>>()
+            .also { requestedGenericSubjects[path] = it }
+            .dematerialize()
+      }
 
       val requestedJsonSubjects = mutableMapOf<String, MutableSharedFlow<ValueOrCompletion<Any>>>()
-      val jsonSubjectFunction: (String, Map<String, String>) -> Flow<Any> =
-          { subject: String, _: Map<String, String> ->
-            MutableSharedFlow<ValueOrCompletion<Any>>()
-                .also { requestedJsonSubjects[subject] = it }
-                .dematerialize()
-          }
+      val jsonSubjectFunction: RequestSupplier<Flow<Any>> = RequestSupplier {
+        MutableSharedFlow<ValueOrCompletion<Any>>()
+            .also { requestedJsonSubjects[path] = it }
+            .dematerialize()
+      }
 
       test("Generic Container - Emits empty update after timeout") {
         dataSource.bind(scope = backgroundScope) {
@@ -663,5 +662,28 @@ class BindTest :
         }
 
         sharedFlow.subscriptionCount.value shouldBeEqual 0
+      }
+
+      test("Json - receiver supplier receives decoded path variables and query parameters") {
+        var captured: Request? = null
+        dataSource.bind(scope = backgroundScope) {
+          active {
+            json {
+              namespace(AntPatternNamespace("/QUERY/{productPair}")) {
+                captured = this
+                MutableSharedFlow<ValueOrCompletion<Any>>().dematerialize()
+              }
+            }
+          }
+        }
+
+        dataProviderCaptor.onRequest("/QUERY/EUR%2FUSD?location=ONSHORE&tenor=SPOT")
+        delay(1.milliseconds)
+
+        captured!!.also { request ->
+          request.path shouldBeEqual "/QUERY/EUR%2FUSD?location=ONSHORE&tenor=SPOT"
+          request.pathVariables shouldBeEqual mapOf("productPair" to "EUR/USD")
+          request.queryParameters shouldBeEqual mapOf("location" to "ONSHORE", "tenor" to "SPOT")
+        }
       }
     })

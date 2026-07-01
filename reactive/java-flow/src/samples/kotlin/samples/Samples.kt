@@ -31,9 +31,9 @@ class Samples {
             pattern(
                 pattern = "/example/{username}/subjectPattern/{myKey}",
                 configure = { objectMappings = mapOf("username" to "%u") },
-                supplier = { _, parameters ->
-                  val username = parameters["username"]
-                  val myKey = parameters["myKey"]
+                supplier = {
+                  val username = pathVariables["username"]
+                  val myKey = pathVariables["myKey"]
                   FlowAdapters.toFlowPublisher(
                       Flux.interval(Duration.ofSeconds(1)).map { count: Long ->
                         JsonObject("$username $myKey $count")
