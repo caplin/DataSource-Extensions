@@ -24,7 +24,7 @@ spotless-plugin = "8.6.0"
 dokka-plugin = "2.2.0"
 binary-compatibility-validator-plugin = "0.18.1"
 kover-plugin = "0.9.8"
-vanniktech-maven-publish-plugin = "0.31.0"
+vanniktech-maven-publish-plugin = "0.37.0"
 spring-dependency-management-plugin = "1.1.7"
 
 
