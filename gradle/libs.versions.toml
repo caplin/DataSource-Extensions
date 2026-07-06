@@ -20,7 +20,7 @@ mockk = "1.14.11"
 # Spring BOM should manage other dependencies versions.
 
 # Plugins
-spotless-plugin = "8.7.0"
+spotless-plugin = "8.8.0"
 dokka-plugin = "2.2.0"
 binary-compatibility-validator-plugin = "0.18.1"
 kover-plugin = "0.9.8"
