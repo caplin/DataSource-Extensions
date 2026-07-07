@@ -15,9 +15,15 @@ import java.nio.charset.StandardCharsets
  *
  * Simple path variables such as `{client}` are supported, and can be accessed via
  * [extractPathVariables].
+ *
+ * @property rawPathVariables Path variable names whose values are returned unchanged by
+ *   [extractPathVariables] instead of being URL-decoded. Intended for values injected by Liberator
+ *   (such as usernames mapped from `%u`/`%U`) that are not URL-encoded. Empty by default.
  */
 @Suppress("MaxLineLength")
-class AntPatternNamespace(pattern: String) : Namespace {
+class AntPatternNamespace
+@JvmOverloads
+constructor(pattern: String, val rawPathVariables: Set<String> = emptySet()) : Namespace {
 
   companion object {
 
@@ -95,9 +101,9 @@ class AntPatternNamespace(pattern: String) : Namespace {
       matcher.regex.matchEntire(subject.pathPortion) != null
 
   /**
-   * Extracts path variables from a matching subject. Values are URL-decoded. Any trailing `?query`
-   * is ignored, so a subject that carries query parameters yields the same path variables as the
-   * query-less subject.
+   * Extracts path variables from a matching subject. Values are URL-decoded, except for any listed
+   * in [rawPathVariables] which are returned verbatim. Any trailing `?query` is ignored, so a
+   * subject that carries query parameters yields the same path variables as the query-less subject.
    *
    * @param subject The subject to extract variables from. Its path portion must match the
    *   [pattern].
@@ -112,7 +118,11 @@ class AntPatternNamespace(pattern: String) : Namespace {
             .groups
 
     return matcher.pathVariables
-        .mapNotNull { name -> groups[name]?.value?.let { value -> name to urlDecode(value) } }
+        .mapNotNull { name ->
+          groups[name]?.value?.let { value ->
+            name to if (name in rawPathVariables) value else urlDecode(value)
+          }
+        }
         .toMap()
   }
 
@@ -125,6 +135,10 @@ class AntPatternNamespace(pattern: String) : Namespace {
    */
   fun extractQueryParameters(subject: String): Map<String, String> =
       parseQueryString(subject.substringAfter('?', ""))
+
+  /** Returns a copy of this namespace with [rawPathVariables] replaced. */
+  fun copy(rawPathVariables: Set<String> = this.rawPathVariables): AntPatternNamespace =
+      AntPatternNamespace(pattern, rawPathVariables)
 
   /** The subject with any trailing `?query` removed. */
   private val String.pathPortion: String

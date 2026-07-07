@@ -62,7 +62,7 @@ object Active : FunctionProvider {
             .addParameter(publisherPatternSupplierParameter)
             .addCode(
                 """
-                        %N.%N(%N, %N) { %N.asFlow(with(%N) { %T(it, %N.extractPathVariables(it), %N.extractQueryParameters(it)).invoke() }) }
+                        %N.%N(%N, %N) { request -> %N.asFlow(with(%N) { request.invoke() }) }
                     """
                     .trimIndent(),
                 binderProperty,
@@ -71,9 +71,6 @@ object Active : FunctionProvider {
                 antNamespaceParameter,
                 adapterProperty,
                 publisherPatternSupplierParameter,
-                requestClassName,
-                antNamespaceParameter,
-                antNamespaceParameter,
             )
             .build()
 

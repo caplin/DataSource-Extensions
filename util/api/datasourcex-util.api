@@ -2,14 +2,19 @@ public final class com/caplin/integration/datasourcex/util/AntPatternNamespace :
 	public static final field CHARSET Ljava/nio/charset/Charset;
 	public static final field Companion Lcom/caplin/integration/datasourcex/util/AntPatternNamespace$Companion;
 	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/Set;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/Set;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public static final fun addExcludeNamespace (Lcom/caplin/datasource/Service;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;)V
 	public static final fun addIncludeNamespace (Lcom/caplin/datasource/Service;Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;)V
+	public final fun copy (Ljava/util/Set;)Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;
+	public static synthetic fun copy$default (Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;Ljava/util/Set;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/AntPatternNamespace;
 	public final fun extractPathVariables (Ljava/lang/String;)Ljava/util/Map;
 	public final fun extractQueryParameters (Ljava/lang/String;)Ljava/util/Map;
 	public final fun getObjectMap (Ljava/util/Map;)Lcom/caplin/integration/datasourcex/util/AntPatternNamespace$ObjectMap;
 	public final fun getPathVariables ()Ljava/util/Set;
 	public final fun getPattern ()Ljava/lang/String;
 	public final fun getPosixExtendedPattern ()Ljava/lang/String;
+	public final fun getRawPathVariables ()Ljava/util/Set;
 	public final fun isExact ()Z
 	public fun match (Ljava/lang/String;)Z
 	public fun toString ()Ljava/lang/String;

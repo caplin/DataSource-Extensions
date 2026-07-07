@@ -173,6 +173,12 @@ public final class com/caplin/integration/datasourcex/reactive/api/ContainerEven
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/caplin/integration/datasourcex/reactive/api/DataSourceSettings {
+	public static final field INSTANCE Lcom/caplin/integration/datasourcex/reactive/api/DataSourceSettings;
+	public static final fun getDecodeUsernameObjectMappings ()Z
+	public static final fun setDecodeUsernameObjectMappings (Z)V
+}
+
 public final class com/caplin/integration/datasourcex/reactive/api/InsertAt : java/lang/Enum {
 	public static final field HEAD Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;
 	public static final field TAIL Lcom/caplin/integration/datasourcex/reactive/api/InsertAt;

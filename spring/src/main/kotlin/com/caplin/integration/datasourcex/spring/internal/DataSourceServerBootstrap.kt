@@ -3,6 +3,7 @@ package com.caplin.integration.datasourcex.spring.internal
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.Service
 import com.caplin.integration.datasourcex.reactive.api.ActiveContainerConfig.Companion.ITEMS_SUFFIX_DEFAULT
+import com.caplin.integration.datasourcex.reactive.api.DataSourceSettings
 import com.caplin.integration.datasourcex.reactive.api.RecordType
 import com.caplin.integration.datasourcex.reactive.kotlin.bind
 import com.caplin.integration.datasourcex.spring.annotations.DataService
@@ -41,6 +42,7 @@ internal class DataSourceServerBootstrap(
     private val dataSource: DataSource,
     private val dataSourceMessageHandler: DataSourceMessageHandler?,
     private val dataSourceInfo: DataSourceInfo,
+    private val decodeUsernameObjectMappings: Boolean = true,
 ) : ApplicationEventPublisherAware, SmartLifecycle {
 
   companion object {
@@ -61,6 +63,8 @@ internal class DataSourceServerBootstrap(
 
   override fun start() {
     checkNotNull(dataSource.extraConfiguration.jsonHandler) { "No JsonHandler found on DataSource" }
+
+    DataSourceSettings.decodeUsernameObjectMappings = decodeUsernameObjectMappings
 
     val services = mutableMapOf<String, Service>()
     dataSourceMessageHandler?.run {
@@ -110,7 +114,7 @@ internal class DataSourceServerBootstrap(
                       val variableName =
                           checkNotNull(
                               destinationVariable.value.takeIf { it.isNotEmpty() }
-                                  ?: parameter?.parameterName
+                                  ?: parameter.parameterName
                           ) {
                             "Unable to resolve name for $parameter"
                           }
@@ -191,7 +195,10 @@ internal class DataSourceServerBootstrap(
                       pattern(
                           pattern,
                           dataSourceRequestType.payloadType!!,
-                          { channelType = dataSourceRequestType.channelType },
+                          {
+                            channelType = dataSourceRequestType.channelType
+                            objectMappings = mappings
+                          },
                       ) {
                         createFlow(path, receive)
                       }
@@ -207,6 +214,7 @@ internal class DataSourceServerBootstrap(
                           pattern,
                           {
                             channelType = dataSourceRequestType.channelType
+                            objectMappings = mappings
                             recordType =
                                 when (type) {
                                   RequestType.Channel.ObjectType.TYPE1 -> RecordType.TYPE1
@@ -254,13 +262,21 @@ internal class DataSourceServerBootstrap(
 
               when (val type = dataSourceRequestType.type) {
                 RequestType.Stream.ObjectType.MAPPING ->
-                    active { mapping { pattern(pattern) { createFlow(path) } } }
+                    active {
+                      mapping {
+                        pattern(pattern, { objectMappings = mappings }) { createFlow(path) }
+                      }
+                    }
 
                 RequestType.Stream.ObjectType.JSON ->
-                    active { json { pattern(pattern) { createFlow(path) } } }
+                    active {
+                      json { pattern(pattern, { objectMappings = mappings }) { createFlow(path) } }
+                    }
 
                 RequestType.Stream.ObjectType.CONTAINER_JSON ->
-                    activeContainer { json { pattern(pattern) { createFlow(path) } } }
+                    activeContainer {
+                      json { pattern(pattern, { objectMappings = mappings }) { createFlow(path) } }
+                    }
 
                 RequestType.Stream.ObjectType.TYPE1,
                 RequestType.Stream.ObjectType.GENERIC ->
@@ -269,6 +285,7 @@ internal class DataSourceServerBootstrap(
                         pattern(
                             pattern,
                             {
+                              objectMappings = mappings
                               recordType =
                                   when (type) {
                                     RequestType.Stream.ObjectType.TYPE1 -> RecordType.TYPE1
@@ -291,6 +308,7 @@ internal class DataSourceServerBootstrap(
                         pattern(
                             pattern,
                             {
+                              objectMappings = mappings
                               rowRecordType =
                                   when (type) {
                                     RequestType.Stream.ObjectType.CONTAINER_TYPE1 ->
@@ -337,11 +355,11 @@ internal class DataSourceServerBootstrap(
           .apply {
             setLeaveMutable(true)
             setHeader(
-                DataSourceRequestTypeMessageCondition.Companion.REQUEST_TYPE_HEADER,
+                DataSourceRequestTypeMessageCondition.REQUEST_TYPE_HEADER,
                 requestType,
             )
             setHeader(DestinationPatternsMessageCondition.LOOKUP_DESTINATION_HEADER, route)
-            setHeader(DataSourcePayloadReturnValueHandler.Companion.RESPONSE_HEADER, sendFlow)
+            setHeader(DataSourcePayloadReturnValueHandler.RESPONSE_HEADER, sendFlow)
           }
           .messageHeaders
 }

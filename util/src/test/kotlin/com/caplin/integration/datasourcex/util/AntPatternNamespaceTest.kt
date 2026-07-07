@@ -29,6 +29,28 @@ class AntPatternNamespaceTest :
             mapOf("productPair" to "EUR/USD")
       }
 
+      test("extractPathVariables returns rawPathVariables verbatim without decoding") {
+        val namespace =
+            AntPatternNamespace(
+                "/PRIVATE/{username}/{productPair}",
+                rawPathVariables = setOf("username"),
+            )
+
+        namespace.extractPathVariables("/PRIVATE/john%2Fdoe/EUR%2FUSD") shouldBe
+            mapOf("username" to "john%2Fdoe", "productPair" to "EUR/USD")
+      }
+
+      test("copy derives a namespace with different rawPathVariables but the same pattern") {
+        val namespace = AntPatternNamespace("/PRIVATE/{username}/{productPair}")
+        val raw = namespace.copy(rawPathVariables = setOf("username"))
+
+        raw.pattern shouldBe namespace.pattern
+        namespace.extractPathVariables("/PRIVATE/john%2Fdoe/EURUSD") shouldBe
+            mapOf("username" to "john/doe", "productPair" to "EURUSD")
+        raw.extractPathVariables("/PRIVATE/john%2Fdoe/EURUSD") shouldBe
+            mapOf("username" to "john%2Fdoe", "productPair" to "EURUSD")
+      }
+
       test("extractQueryParameters returns an empty map when there is no query") {
         AntPatternNamespace("/CALENDAR/TENORDATES/{productPair}")
             .extractQueryParameters("/CALENDAR/TENORDATES/EURUSD") shouldBe emptyMap()

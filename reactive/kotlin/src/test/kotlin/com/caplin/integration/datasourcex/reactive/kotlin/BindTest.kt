@@ -14,6 +14,7 @@ import com.caplin.datasource.publisher.CachingPublisher
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent.RowEvent.Remove
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent.RowEvent.Upsert
+import com.caplin.integration.datasourcex.reactive.api.DataSourceSettings
 import com.caplin.integration.datasourcex.reactive.api.InsertAt.HEAD
 import com.caplin.integration.datasourcex.reactive.api.Request
 import com.caplin.integration.datasourcex.reactive.api.RequestSupplier
@@ -684,6 +685,38 @@ class BindTest :
           request.path shouldBeEqual "/QUERY/EUR%2FUSD?location=ONSHORE&tenor=SPOT"
           request.pathVariables shouldBeEqual mapOf("productPair" to "EUR/USD")
           request.queryParameters shouldBeEqual mapOf("location" to "ONSHORE", "tenor" to "SPOT")
+        }
+      }
+
+      test(
+          "Json - username object-mapping variables are left un-decoded when decoding is disabled"
+      ) {
+        DataSourceSettings.decodeUsernameObjectMappings = false
+        try {
+          var captured: Request? = null
+          dataSource.bind(scope = backgroundScope) {
+            active {
+              json {
+                namespace(
+                    AntPatternNamespace("/PRIVATE/{username}/{productPair}"),
+                    { objectMappings = mapOf("username" to "%u") },
+                ) {
+                  captured = this
+                  MutableSharedFlow<ValueOrCompletion<Any>>().dematerialize()
+                }
+              }
+            }
+          }
+
+          dataProviderCaptor.onRequest("/PRIVATE/john%2Fdoe/EUR%2FUSD")
+          delay(1.milliseconds)
+
+          // The username (mapped from %u) is injected raw by Liberator, so it is not decoded, while
+          // the ordinary path variable still is.
+          captured!!.pathVariables shouldBeEqual
+              mapOf("username" to "john%2Fdoe", "productPair" to "EUR/USD")
+        } finally {
+          DataSourceSettings.decodeUsernameObjectMappings = true
         }
       }
     })

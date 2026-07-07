@@ -33,9 +33,10 @@ import com.caplin.integration.datasourcex.reactive.api.ChannelRequest
 import com.caplin.integration.datasourcex.reactive.api.ChannelType
 import com.caplin.integration.datasourcex.reactive.api.ConfigBlock
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent
+import com.caplin.integration.datasourcex.reactive.api.DataSourceSettings
 import com.caplin.integration.datasourcex.reactive.api.InsertAt
-import com.caplin.integration.datasourcex.reactive.api.PathSupplier
 import com.caplin.integration.datasourcex.reactive.api.RecordType
+import com.caplin.integration.datasourcex.reactive.api.Request
 import com.caplin.integration.datasourcex.reactive.api.ServiceConfig
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
@@ -74,7 +75,31 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
 
   private companion object {
     private val logger = getLogger<Binder>()
+
+    /** Liberator object-map tokens that inject the requesting user's (un-encoded) name. */
+    private val USERNAME_OBJECT_MAP_TOKENS = setOf("%u", "%U")
   }
+
+  /**
+   * Returns a copy of this namespace that leaves username object-mapping path variables (`%u`/`%U`)
+   * un-decoded when [DataSourceSettings.decodeUsernameObjectMappings] is disabled, since Liberator
+   * injects them without URL-encoding. Any explicitly-provided rawPathVariables are preserved.
+   * Returns the namespace unchanged otherwise.
+   */
+  private fun AntPatternNamespace.withUsernameDecoding(
+      objectMappings: Map<String, String>?
+  ): AntPatternNamespace =
+      if (DataSourceSettings.decodeUsernameObjectMappings || objectMappings.isNullOrEmpty()) this
+      else
+          copy(
+              rawPathVariables =
+                  rawPathVariables +
+                      objectMappings.filterValues { it in USERNAME_OBJECT_MAP_TOKENS }.keys
+          )
+
+  /** Decomposes [subject] into a [Request] using this namespace's extraction rules. */
+  private fun AntPatternNamespace.request(subject: String): Request =
+      Request(subject, extractPathVariables(subject), extractQueryParameters(subject))
 
   private data class ServiceInfo(
       val service: Service,
@@ -103,9 +128,10 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindActiveMapping(
       configure: ConfigBlock<ActiveConfig.Mapping>,
       namespace: AntPatternNamespace,
-      supplier: PathSupplier<Flow<String>>,
+      supplier: (Request) -> Flow<String>,
   ) {
     val config = with(configure) { ActiveConfig.Mapping().apply { invoke() } }
+    val namespace = namespace.withUsernameDecoding(config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     dataSource.createActivePublisher(
@@ -130,14 +156,14 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
             subscriptions
                 .computeIfAbsent(request.subject) { subject ->
                   val state =
-                      supplier(subject)
+                      supplier(namespace.request(subject))
                           .catch {
                             subscriptions.remove(subject)
                             publisher.publishNotFound(subject)
                           }
                           .stateIn(
                               dataSource,
-                              started = SharingStarted.Companion.WhileSubscribed(),
+                              started = SharingStarted.WhileSubscribed(),
                               null,
                           )
                   val job = state.filterNotNull().onEach(::publishMapping).launchIn(dataSource)
@@ -159,13 +185,14 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindActiveJson(
       configure: ConfigBlock<ActiveConfig.Json>,
       namespace: AntPatternNamespace,
-      supplier: PathSupplier<Flow<Any>>,
+      supplier: (Request) -> Flow<Any>,
   ) {
     val config = with(configure) { ActiveConfig.Json().apply { invoke() } }
+    val namespace = namespace.withUsernameDecoding(config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     with(JsonContext()) {
-      bindActiveSubjects(namespace, { supplier(it) }) { subject, value ->
+      bindActiveSubjects(namespace, { supplier(namespace.request(it)) }) { subject, value ->
         createMessage(subject, value)
       }
     }
@@ -174,13 +201,14 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindActiveRecord(
       configure: ConfigBlock<ActiveConfig.Record>,
       namespace: AntPatternNamespace,
-      supplier: PathSupplier<Flow<Map<String, String>>>,
+      supplier: (Request) -> Flow<Map<String, String>>,
   ) {
     val config = with(configure) { ActiveConfig.Record().apply { invoke() } }
+    val namespace = namespace.withUsernameDecoding(config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     with(RecordContext(config.images, config.recordType)) {
-      bindActiveSubjects(namespace, { supplier(it) }) { subject, value ->
+      bindActiveSubjects(namespace, { supplier(namespace.request(it)) }) { subject, value ->
         createMessage(subject, value)
       }
     }
@@ -189,14 +217,15 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindActiveContainerJson(
       configure: ConfigBlock<ActiveContainerConfig.Json>,
       namespace: AntPatternNamespace,
-      supplier: (path: String) -> Flow<ContainerEvent<Any>>,
+      supplier: (Request) -> Flow<ContainerEvent<Any>>,
   ) {
     val config = with(configure) { ActiveContainerConfig.Json().apply { invoke() } }
+    val namespace = namespace.withUsernameDecoding(config.objectMappings)
     with(JsonContext()) {
       bindContainers(
           namespace,
           config,
-          supplier,
+          { supplier(namespace.request(it)) },
       ) { subject, value ->
         createMessage(subject, value)
       }
@@ -206,14 +235,15 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindActiveContainerRecord(
       configure: ConfigBlock<ActiveContainerConfig.Record>,
       namespace: AntPatternNamespace,
-      supplier: (path: String) -> Flow<ContainerEvent<Map<String, String>>>,
+      supplier: (Request) -> Flow<ContainerEvent<Map<String, String>>>,
   ) {
     val config = with(configure) { ActiveContainerConfig.Record().apply { invoke() } }
+    val namespace = namespace.withUsernameDecoding(config.objectMappings)
     with(RecordContext(config.rowImages, config.rowRecordType)) {
       bindContainers(
           namespace,
           config,
-          supplier,
+          { supplier(namespace.request(it)) },
       ) { subject, value ->
         createMessage(subject, value)
       }
@@ -226,6 +256,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
       supplier: (ChannelRequest<Flow<Map<String, String>>>) -> Flow<Map<String, String>>,
   ) {
     val config = with(configure) { ChannelConfig.Record().apply { invoke() } }
+    val namespace = namespace.withUsernameDecoding(config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     val type = config.channelType
@@ -278,7 +309,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                 val fromClientChannel =
                     Channel<Map<String, String>>(
                         when (type) {
-                          ChannelType.BIDIRECTIONAL_STREAM -> Channel.Factory.BUFFERED
+                          ChannelType.BIDIRECTIONAL_STREAM -> Channel.BUFFERED
                           ChannelType.UNIDIRECTIONAL_STREAM -> 1
                         },
                     )
@@ -322,6 +353,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
       supplier: (ChannelRequest<Flow<R>>) -> Flow<Any>,
   ) {
     val config = with(configure) { ChannelConfig.Json().apply { invoke() } }
+    val namespace = namespace.withUsernameDecoding(config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     val type = config.channelType
@@ -362,7 +394,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                 val fromClientChannel =
                     Channel<R>(
                         when (type) {
-                          ChannelType.BIDIRECTIONAL_STREAM -> Channel.Factory.BUFFERED
+                          ChannelType.BIDIRECTIONAL_STREAM -> Channel.BUFFERED
                           ChannelType.UNIDIRECTIONAL_STREAM -> 1
                         },
                     )
