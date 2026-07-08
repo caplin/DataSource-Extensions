@@ -34,7 +34,8 @@ interface Subject {
         override val queryParameters = query
         override val path = buildPath(parts, query)
 
-        override fun toString() = path
+        override fun toString(): String =
+            "Subject(queryParameters=$queryParameters, pathParameters=$pathParameters)"
       }
     }
 

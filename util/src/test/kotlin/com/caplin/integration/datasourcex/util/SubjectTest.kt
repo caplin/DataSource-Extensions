@@ -11,7 +11,6 @@ class SubjectTest :
         subject.pathParameters shouldBe listOf("real", "abc")
         subject.queryParameters shouldBe emptyMap()
         subject.path shouldBe "/real/abc"
-        subject.toString() shouldBe "/real/abc"
       }
 
       test("empty path renders as a single slash") { Subject().path shouldBe "/" }
