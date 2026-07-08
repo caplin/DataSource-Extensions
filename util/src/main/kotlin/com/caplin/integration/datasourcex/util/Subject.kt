@@ -16,6 +16,13 @@ interface Subject {
   val queryParameters: Map<String, String>
 
   companion object {
+
+    private data class SubjectImpl(
+        override val pathParameters: List<String>,
+        override val queryParameters: Map<String, String>,
+        override val path: String = buildPath(pathParameters, queryParameters),
+    ) : Subject
+
     /**
      * Creates a [Subject] from its [pathParameters] and optional [queryParameters]. Its [path] is
      * rendered by URL-encoding each path part and joining them under a leading `/`, with any query
@@ -26,18 +33,7 @@ interface Subject {
     operator fun invoke(
         pathParameters: List<String>,
         queryParameters: Map<String, String> = emptyMap(),
-    ): Subject {
-      val parts = pathParameters
-      val query = queryParameters
-      return object : Subject {
-        override val pathParameters = parts
-        override val queryParameters = query
-        override val path = buildPath(parts, query)
-
-        override fun toString(): String =
-            "Subject(queryParameters=$queryParameters, pathParameters=$pathParameters)"
-      }
-    }
+    ): Subject = SubjectImpl(pathParameters, queryParameters)
 
     /** Creates a [Subject] from its path parts, with no query parameters. */
     @JvmStatic

@@ -84,37 +84,14 @@ public final class com/caplin/integration/datasourcex/util/ReadWriteLock {
 	public final fun writeUnlock ()V
 }
 
-public final class com/caplin/integration/datasourcex/util/SimpleDataSource : com/caplin/datasource/DataSource {
-	public fun <init> (Lcom/caplin/datasource/DataSource;)V
-	public fun addChannelListener (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/channel/ChannelListener;)V
-	public fun addConnectionListener (Lcom/caplin/datasource/ConnectionListener;)V
-	public fun addGenericChannelListener (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/channel/ChannelListener;)V
-	public fun addJsonChannelListener (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/channel/JsonChannelListener;)V
-	public final fun awaitConnected (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public fun createActiveJsonSubscription (Ljava/lang/String;Lcom/caplin/datasource/subscription/SubjectConsumer;Ljava/lang/Class;)Lcom/caplin/datasource/subscription/ActiveSubscription;
-	public fun createActivePublisher (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/DataProvider;)Lcom/caplin/datasource/publisher/ActivePublisher;
-	public fun createActiveSubscription (Ljava/lang/String;Lcom/caplin/datasource/subscription/SubscriptionListener;)Lcom/caplin/datasource/subscription/ActiveSubscription;
-	public fun createBroadcastJsonSubscription (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/subscription/SubjectConsumer;Ljava/lang/Class;)Lcom/caplin/datasource/subscription/BroadcastSubscription;
-	public fun createBroadcastPublisher (Lcom/caplin/datasource/namespace/Namespace;)Lcom/caplin/datasource/publisher/BroadcastPublisher;
-	public fun createBroadcastSubscription (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/subscription/SubscriptionListener;)Lcom/caplin/datasource/subscription/BroadcastSubscription;
-	public fun createCachingPublisher (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/CachingDataProvider;)Lcom/caplin/datasource/publisher/CachingPublisher;
-	public fun createCachingPublisher (Ljava/lang/String;Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/CachingDataProvider;)Lcom/caplin/datasource/publisher/CachingPublisher;
-	public fun createCompatibilityPublisher (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/DataProvider;)Lcom/caplin/datasource/publisher/CompatibilityPublisher;
-	public fun createService (Lcom/caplin/datasource/Service;)V
-	public fun getCommandOption (Ljava/lang/String;[Ljava/lang/String;)Ljava/lang/String;
-	public fun getConfiguration ()Lcom/caplin/datasource/DataSourceConfiguration;
-	public fun getExtraConfiguration ()Lcom/caplin/datasource/Configuration;
-	public fun getFieldManager ()Lcom/caplin/datasource/fields/FieldManager;
-	public fun getLogger ()Ljava/util/logging/Logger;
-	public fun getMBeanServer ()Ljavax/management/MBeanServer;
-	public final fun getPeerStates ()Lkotlinx/coroutines/flow/SharedFlow;
-	public fun getPeers ()Ljava/util/Set;
-	public fun getPeersInOrder ()Ljava/util/List;
-	public fun removeConnectionListener (Lcom/caplin/datasource/ConnectionListener;)V
-	public fun setStatusDown ()V
-	public fun setStatusUp ()V
-	public fun start ()V
-	public fun stop ()V
+public abstract interface class com/caplin/integration/datasourcex/util/SimpleDataSource : com/caplin/datasource/DataSource, java/lang/AutoCloseable {
+	public static final field Companion Lcom/caplin/integration/datasourcex/util/SimpleDataSource$Companion;
+	public abstract fun awaitConnected (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getPeerStates ()Lkotlinx/coroutines/flow/SharedFlow;
+}
+
+public final class com/caplin/integration/datasourcex/util/SimpleDataSource$Companion {
+	public final fun invoke (Lcom/caplin/datasource/DataSource;)Lcom/caplin/integration/datasourcex/util/SimpleDataSource;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/SimpleDataSourceConfig {
