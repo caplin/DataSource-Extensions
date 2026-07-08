@@ -18,7 +18,7 @@ internal class DataSourceServerAutoConfiguration {
       dataSource: DataSource,
       dataSourceMessageHandler: DataSourceMessageHandler,
       dataSourceInfo: DataSourceInfo,
-      @Value($$"${caplin.datasource.decode-username-object-mappings:true}")
+      @Value($$"${caplin.datasource.decode-username-object-mappings:false}")
       decodeUsernameObjectMappings: Boolean,
   ): DataSourceServerBootstrap =
       DataSourceServerBootstrap(

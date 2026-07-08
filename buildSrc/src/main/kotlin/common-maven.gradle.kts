@@ -11,7 +11,11 @@ version = if (refName.contains('-')) "${refName.substringBefore('-')}-SNAPSHOT" 
 mavenPublishing {
   publishToMavenCentral()
 
-  signAllPublications()
+  // Only sign when a signing key is configured (as CI does via ORG_GRADLE_PROJECT_signingInMemoryKey).
+  // Local builds and publishToMavenLocal have no key and must not require one.
+  if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+    signAllPublications()
+  }
 
   pom {
     name = project.name

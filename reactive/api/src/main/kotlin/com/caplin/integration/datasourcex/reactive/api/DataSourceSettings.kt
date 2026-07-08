@@ -5,8 +5,7 @@ object DataSourceSettings {
 
   /**
    * Whether path variables populated by Liberator username object-mappings (`%u`/`%U`) are
-   * URL-decoded when extracted from a subject. Defaults to `true`. Set to `false` when usernames
-   * are injected without URL-encoding and must be left intact.
+   * URL-decoded when extracted from a subject. Defaults to `false`.
    */
-  @JvmStatic var decodeUsernameObjectMappings: Boolean = true
+  @JvmStatic var decodeUsernameObjectMappings: Boolean = false
 }

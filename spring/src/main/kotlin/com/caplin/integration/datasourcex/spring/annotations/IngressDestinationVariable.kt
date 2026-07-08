@@ -5,7 +5,7 @@ import kotlin.annotation.AnnotationTarget.VALUE_PARAMETER
 import org.springframework.messaging.handler.annotation.DestinationVariable
 
 /**
- * An annotation that extends the behavior of [DestinationVariable] to enable ingress mapping.
+ * An annotation that extends the behaviour of [DestinationVariable] to enable ingress mapping.
  *
  * This annotation can be used to define a destination template variable to extract, along with the
  * token that should be mapped into this position on ingress by Liberator.

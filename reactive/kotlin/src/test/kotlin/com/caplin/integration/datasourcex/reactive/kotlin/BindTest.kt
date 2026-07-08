@@ -688,11 +688,24 @@ class BindTest :
         }
       }
 
+      test("decodeUsernameObjectMappings defaults to false") {
+        DataSourceSettings.decodeUsernameObjectMappings shouldBeEqual false
+      }
+
+      suspend fun withUsernameDecoding(enabled: Boolean, block: suspend () -> Unit) {
+        val original = DataSourceSettings.decodeUsernameObjectMappings
+        DataSourceSettings.decodeUsernameObjectMappings = enabled
+        try {
+          block()
+        } finally {
+          DataSourceSettings.decodeUsernameObjectMappings = original
+        }
+      }
+
       test(
           "Json - username object-mapping variables are left un-decoded when decoding is disabled"
       ) {
-        DataSourceSettings.decodeUsernameObjectMappings = false
-        try {
+        withUsernameDecoding(enabled = false) {
           var captured: Request? = null
           dataSource.bind(scope = backgroundScope) {
             active {
@@ -715,8 +728,32 @@ class BindTest :
           // the ordinary path variable still is.
           captured!!.pathVariables shouldBeEqual
               mapOf("username" to "john%2Fdoe", "productPair" to "EUR/USD")
-        } finally {
-          DataSourceSettings.decodeUsernameObjectMappings = true
+        }
+      }
+
+      test("Json - username object-mapping variables are decoded when decoding is enabled") {
+        withUsernameDecoding(enabled = true) {
+          var captured: Request? = null
+          dataSource.bind(scope = backgroundScope) {
+            active {
+              json {
+                namespace(
+                    AntPatternNamespace("/PRIVATE/{username}/{productPair}"),
+                    { objectMappings = mapOf("username" to "%u") },
+                ) {
+                  captured = this
+                  MutableSharedFlow<ValueOrCompletion<Any>>().dematerialize()
+                }
+              }
+            }
+          }
+
+          dataProviderCaptor.onRequest("/PRIVATE/john%2Fdoe/EUR%2FUSD")
+          delay(1.milliseconds)
+
+          // With decoding enabled the username is URL-decoded like any other path variable.
+          captured!!.pathVariables shouldBeEqual
+              mapOf("username" to "john/doe", "productPair" to "EUR/USD")
         }
       }
     })

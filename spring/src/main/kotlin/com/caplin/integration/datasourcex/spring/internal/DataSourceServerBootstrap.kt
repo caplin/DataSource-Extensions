@@ -42,7 +42,7 @@ internal class DataSourceServerBootstrap(
     private val dataSource: DataSource,
     private val dataSourceMessageHandler: DataSourceMessageHandler?,
     private val dataSourceInfo: DataSourceInfo,
-    private val decodeUsernameObjectMappings: Boolean = true,
+    private val decodeUsernameObjectMappings: Boolean = false,
 ) : ApplicationEventPublisherAware, SmartLifecycle {
 
   companion object {
