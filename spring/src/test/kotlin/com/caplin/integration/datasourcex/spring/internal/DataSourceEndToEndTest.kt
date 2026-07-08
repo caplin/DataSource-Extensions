@@ -134,8 +134,9 @@ class DataSourceEndToEndTest : FunSpec() {
     ): Flow<Map<String, String>> = flowOf(mapOf("ccy" to ccy, "bid" to "1.10"))
 
     @DataMessageMapping("/map/{id}", type = MAPPING)
-    fun map(@IngressDestinationVariable(token = USER_ID, value = "id") id: String): Flow<String> =
-        flowOf("/real/$id")
+    fun map(
+        @IngressDestinationVariable(token = USER_ID, value = "id") id: String
+    ): Flow<List<String>> = flowOf(listOf("real", id))
 
     @DataMessageMapping("/ticks")
     fun ticks(): Flow<Any> = flowOf(mapOf("seq" to "1"), mapOf("seq" to "2"), mapOf("seq" to "3"))

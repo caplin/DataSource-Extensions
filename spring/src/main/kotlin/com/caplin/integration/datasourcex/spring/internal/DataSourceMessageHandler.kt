@@ -168,9 +168,9 @@ internal open class DataSourceMessageHandler :
           it.type == MAPPING
         } != null
     if (isSubjectMapping) {
-      check(String::class.isSuperclassOf(returnType.kotlin)) {
+      check(List::class.isSuperclassOf(returnType.kotlin)) {
         "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
-            "$MAPPING must return a String or stream of Strings"
+            "$MAPPING must return a List<String> or stream of List<String>"
       }
     }
 
