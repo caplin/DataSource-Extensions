@@ -2,6 +2,8 @@ package com.caplin.integration.datasourcex.util
 
 import com.caplin.datasource.DataSource
 import com.caplin.datasource.messaging.json.JsonHandler
+import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson3JsonHandler
+import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.defaultJackson3ObjectMapper
 import com.caplin.integration.datasourcex.util.serialization.jackson2.Jackson2JsonHandler
 import com.caplin.integration.datasourcex.util.serialization.jackson2.registerDataSourceModule
 import com.caplin.integration.datasourcex.util.serialization.jackson3.Jackson3JsonHandler
@@ -83,7 +85,7 @@ object SimpleDataSourceFactory {
   fun createDataSource(
       simpleConfig: SimpleDataSourceConfig,
       jsonHandler: JsonHandler<*> = defaultJackson3JsonHandler,
-  ): DataSource {
+  ): SimpleDataSource {
     val logPath =
         simpleConfig.logDirectory
             ?: run {
@@ -165,7 +167,9 @@ object SimpleDataSourceFactory {
             """
             .trimMargin()
 
-    return DataSource.fromConfigString(config, Logger.getLogger(DataSource::class.qualifiedName))
-        .apply { extraConfiguration.jsonHandler = jsonHandler }
+    return SimpleDataSource(
+        DataSource.fromConfigString(config, Logger.getLogger(DataSource::class.qualifiedName))
+            .apply { extraConfiguration.jsonHandler = jsonHandler },
+    )
   }
 }

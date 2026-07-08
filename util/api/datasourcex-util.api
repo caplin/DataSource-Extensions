@@ -84,6 +84,39 @@ public final class com/caplin/integration/datasourcex/util/ReadWriteLock {
 	public final fun writeUnlock ()V
 }
 
+public final class com/caplin/integration/datasourcex/util/SimpleDataSource : com/caplin/datasource/DataSource {
+	public fun <init> (Lcom/caplin/datasource/DataSource;)V
+	public fun addChannelListener (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/channel/ChannelListener;)V
+	public fun addConnectionListener (Lcom/caplin/datasource/ConnectionListener;)V
+	public fun addGenericChannelListener (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/channel/ChannelListener;)V
+	public fun addJsonChannelListener (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/channel/JsonChannelListener;)V
+	public final fun awaitConnected (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun createActiveJsonSubscription (Ljava/lang/String;Lcom/caplin/datasource/subscription/SubjectConsumer;Ljava/lang/Class;)Lcom/caplin/datasource/subscription/ActiveSubscription;
+	public fun createActivePublisher (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/DataProvider;)Lcom/caplin/datasource/publisher/ActivePublisher;
+	public fun createActiveSubscription (Ljava/lang/String;Lcom/caplin/datasource/subscription/SubscriptionListener;)Lcom/caplin/datasource/subscription/ActiveSubscription;
+	public fun createBroadcastJsonSubscription (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/subscription/SubjectConsumer;Ljava/lang/Class;)Lcom/caplin/datasource/subscription/BroadcastSubscription;
+	public fun createBroadcastPublisher (Lcom/caplin/datasource/namespace/Namespace;)Lcom/caplin/datasource/publisher/BroadcastPublisher;
+	public fun createBroadcastSubscription (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/subscription/SubscriptionListener;)Lcom/caplin/datasource/subscription/BroadcastSubscription;
+	public fun createCachingPublisher (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/CachingDataProvider;)Lcom/caplin/datasource/publisher/CachingPublisher;
+	public fun createCachingPublisher (Ljava/lang/String;Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/CachingDataProvider;)Lcom/caplin/datasource/publisher/CachingPublisher;
+	public fun createCompatibilityPublisher (Lcom/caplin/datasource/namespace/Namespace;Lcom/caplin/datasource/publisher/DataProvider;)Lcom/caplin/datasource/publisher/CompatibilityPublisher;
+	public fun createService (Lcom/caplin/datasource/Service;)V
+	public fun getCommandOption (Ljava/lang/String;[Ljava/lang/String;)Ljava/lang/String;
+	public fun getConfiguration ()Lcom/caplin/datasource/DataSourceConfiguration;
+	public fun getExtraConfiguration ()Lcom/caplin/datasource/Configuration;
+	public fun getFieldManager ()Lcom/caplin/datasource/fields/FieldManager;
+	public fun getLogger ()Ljava/util/logging/Logger;
+	public fun getMBeanServer ()Ljavax/management/MBeanServer;
+	public final fun getPeerStates ()Lkotlinx/coroutines/flow/SharedFlow;
+	public fun getPeers ()Ljava/util/Set;
+	public fun getPeersInOrder ()Ljava/util/List;
+	public fun removeConnectionListener (Lcom/caplin/datasource/ConnectionListener;)V
+	public fun setStatusDown ()V
+	public fun setStatusUp ()V
+	public fun start ()V
+	public fun stop ()V
+}
+
 public abstract interface class com/caplin/integration/datasourcex/util/SimpleDataSourceConfig {
 	public abstract fun getExtraConfig ()Ljava/lang/String;
 	public abstract fun getLocalLabel ()Ljava/lang/String;
@@ -134,8 +167,8 @@ public final class com/caplin/integration/datasourcex/util/SimpleDataSourceConfi
 
 public final class com/caplin/integration/datasourcex/util/SimpleDataSourceFactory {
 	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/SimpleDataSourceFactory;
-	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;)Lcom/caplin/datasource/DataSource;
-	public static synthetic fun createDataSource$default (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;ILjava/lang/Object;)Lcom/caplin/datasource/DataSource;
+	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;)Lcom/caplin/integration/datasourcex/util/SimpleDataSource;
+	public static synthetic fun createDataSource$default (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/SimpleDataSource;
 	public static final fun createJackson2JsonHandler (Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/caplin/integration/datasourcex/util/serialization/jackson2/Jackson2JsonHandler;
 	public static final fun createJackson3JsonHandler (Ltools/jackson/databind/ObjectMapper;)Lcom/caplin/integration/datasourcex/util/serialization/jackson3/Jackson3JsonHandler;
 	public final fun getDefaultJackson2JsonHandler ()Lcom/caplin/integration/datasourcex/util/serialization/jackson2/Jackson2JsonHandler;
