@@ -5,7 +5,6 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier.INTERNAL
 import com.squareup.kotlinpoet.KModifier.PRIVATE
-import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.ParameterSpec
@@ -43,8 +42,8 @@ private val mappingMessageType =
         name = "Mapping",
         doc =
             "[mapping](https://www.caplin.com/developer/caplin-platform/platform-architecture/mapping) from one subject to another",
-        sendClassName = LIST,
-        sendTypeName = LIST.parameterizedBy(STRING),
+        sendClassName = subjectClassName,
+        sendTypeName = subjectClassName,
     )
 
 private val jsonMessageType =

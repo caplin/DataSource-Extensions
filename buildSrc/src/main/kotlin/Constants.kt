@@ -47,6 +47,7 @@ val containerEventRowEventUpsertClassName =
 val pathSupplierClassName = ClassName(apiPackageName, "PathSupplier")
 val requestClassName = ClassName(apiPackageName, "Request")
 val requestSupplierClassName = ClassName(apiPackageName, "RequestSupplier")
+val subjectClassName = ClassName("com.caplin.integration.datasourcex.util", "Subject")
 val channelRequestClassName = ClassName(apiPackageName, "ChannelRequest")
 val channelRequestSupplierClassName = ClassName(apiPackageName, "ChannelRequestSupplier")
 val channelSupplierClassName = ClassName(apiPackageName, "ChannelSupplier")

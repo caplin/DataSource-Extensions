@@ -7,6 +7,7 @@ import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.
 import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.Type.RECORD_TYPE1
 import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationVariable
 import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeMessageCondition.RequestType
+import com.caplin.integration.datasourcex.util.Subject
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Method
 import java.net.URLDecoder
@@ -168,9 +169,9 @@ internal open class DataSourceMessageHandler :
           it.type == MAPPING
         } != null
     if (isSubjectMapping) {
-      check(List::class.isSuperclassOf(returnType.kotlin)) {
+      check(Subject::class.isSuperclassOf(returnType.kotlin)) {
         "Methods annotated with @${DataMessageMapping::class.simpleName} with a type of " +
-            "$MAPPING must return a List<String> or stream of List<String>"
+            "$MAPPING must return a Subject or stream of Subject"
       }
     }
 

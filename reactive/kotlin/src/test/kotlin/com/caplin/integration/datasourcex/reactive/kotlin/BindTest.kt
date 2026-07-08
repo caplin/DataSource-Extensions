@@ -684,6 +684,7 @@ class BindTest :
         captured!!.also { request ->
           request.path shouldBeEqual "/QUERY/EUR%2FUSD?location=ONSHORE&tenor=SPOT"
           request.pathVariables shouldBeEqual mapOf("productPair" to "EUR/USD")
+          request.pathParameters shouldBeEqual listOf("EUR/USD")
           request.queryParameters shouldBeEqual mapOf("location" to "ONSHORE", "tenor" to "SPOT")
         }
       }
@@ -728,6 +729,8 @@ class BindTest :
           // the ordinary path variable still is.
           captured!!.pathVariables shouldBeEqual
               mapOf("username" to "john%2Fdoe", "productPair" to "EUR/USD")
+          // pathParameters mirrors pathVariables' values in pattern order.
+          captured!!.pathParameters shouldBeEqual listOf("john%2Fdoe", "EUR/USD")
         }
       }
 

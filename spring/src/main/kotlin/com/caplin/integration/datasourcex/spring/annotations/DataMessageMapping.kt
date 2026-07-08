@@ -40,12 +40,13 @@ annotation class DataMessageMapping(
     RECORD_TYPE1,
 
     /**
-     * Functions of this type should return a `List<String>` (or a stream of them). Each part is
-     * URL-encoded and the parts are joined under a leading `/` to form the target subject.
+     * Functions of this type should return a `Subject` (or a stream of them). Its path parts are
+     * URL-encoded and joined under a leading `/`, with any query parameters appended, to form the
+     * target subject.
      *
      * The requesting peer should then additionally request on the returned path. If a stream is
-     * returned, then the remapping can be updated by emitting a second list, and the requesting
-     * peer will request on the new path, discarding the previously mapped path.
+     * returned, then the remapping can be updated by emitting a second `Subject`, and the
+     * requesting peer will request on the new path, discarding the previously mapped path.
      * > Note that the returned path will not pass through `object-map` or authentication module
      * > mappings before being requested.
      */

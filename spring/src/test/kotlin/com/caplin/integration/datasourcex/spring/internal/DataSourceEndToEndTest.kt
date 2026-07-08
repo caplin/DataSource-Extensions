@@ -9,6 +9,7 @@ import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping.
 import com.caplin.integration.datasourcex.spring.annotations.DataService
 import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationVariable
 import com.caplin.integration.datasourcex.spring.annotations.IngressToken.USER_ID
+import com.caplin.integration.datasourcex.util.Subject
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.extensions.spring.SpringExtension
@@ -70,6 +71,13 @@ class DataSourceEndToEndTest : FunSpec() {
     test("active mapping subject publishes the remapped subject") {
       fake.request("/map/abc")
       eventually(TIMEOUT) { fake.publishedMappings shouldContain ("/map/abc" to "/real/abc") }
+    }
+
+    test("active mapping subject publishes the remapped subject with query parameters") {
+      fake.request("/mapq/abc")
+      eventually(TIMEOUT) {
+        fake.publishedMappings shouldContain ("/mapq/abc" to "/real/abc?depth=5")
+      }
     }
 
     test("a streaming subject publishes each update in order then NotFound on completion") {
@@ -134,9 +142,13 @@ class DataSourceEndToEndTest : FunSpec() {
     ): Flow<Map<String, String>> = flowOf(mapOf("ccy" to ccy, "bid" to "1.10"))
 
     @DataMessageMapping("/map/{id}", type = MAPPING)
-    fun map(
+    fun map(@IngressDestinationVariable(token = USER_ID, value = "id") id: String): Flow<Subject> =
+        flowOf(Subject("real", id))
+
+    @DataMessageMapping("/mapq/{id}", type = MAPPING)
+    fun mapWithQuery(
         @IngressDestinationVariable(token = USER_ID, value = "id") id: String
-    ): Flow<List<String>> = flowOf(listOf("real", id))
+    ): Flow<Subject> = flowOf(Subject(listOf("real", id), mapOf("depth" to "5")))
 
     @DataMessageMapping("/ticks")
     fun ticks(): Flow<Any> = flowOf(mapOf("seq" to "1"), mapOf("seq" to "2"), mapOf("seq" to "3"))

@@ -3,6 +3,7 @@ package com.caplin.integration.datasourcex.spring.internal
 import com.caplin.integration.datasourcex.reactive.api.ContainerEvent
 import com.caplin.integration.datasourcex.spring.annotations.DataMessageMapping
 import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeMessageCondition.RequestType
+import com.caplin.integration.datasourcex.util.Subject
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -91,7 +92,7 @@ internal class DataSourceMessageHandlerTests :
         requestType.shouldBeInstanceOf<RequestType.Stream.Updating>()
       }
 
-      test("should infer MAPPING for Flow<List<String>> with MAPPING") {
+      test("should infer MAPPING for Flow<Subject> with MAPPING") {
         val condition = getExtendMapping("mappingUpdating")
         val requestType = condition.requestTypes.single() as RequestType.Stream
         requestType.type shouldBe RequestType.Stream.ObjectType.MAPPING
@@ -119,7 +120,7 @@ class TestController {
   fun type1Updating(): Flow<Map<String, String>> = mockk()
 
   @DataMessageMapping("/mapping-up", type = DataMessageMapping.Type.MAPPING)
-  fun mappingUpdating(): Flow<List<String>> = mockk()
+  fun mappingUpdating(): Flow<Subject> = mockk()
 }
 
 internal class TestDataSourceMessageHandler : DataSourceMessageHandler() {

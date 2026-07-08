@@ -40,8 +40,8 @@ import com.caplin.integration.datasourcex.reactive.api.Request
 import com.caplin.integration.datasourcex.reactive.api.ServiceConfig
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
+import com.caplin.integration.datasourcex.util.Subject
 import com.caplin.integration.datasourcex.util.getLogger
-import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -102,22 +102,12 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   private fun AntPatternNamespace.request(subject: String): Request =
       Request(subject, extractPathVariables(subject), extractQueryParameters(subject))
 
-  /**
-   * Builds a mapping's target subject by URL-encoding each part and joining them under a leading
-   * `/`, mirroring how [AntPatternNamespace.extractPathVariables] URL-decodes the parts of an
-   * incoming subject.
-   */
-  private fun List<String>.toMappingSubject(): String =
-      joinToString(separator = "/", prefix = "/") {
-        URLEncoder.encode(it, AntPatternNamespace.CHARSET).replace("+", "%20")
-      }
-
   private data class ServiceInfo(
       val service: Service,
       val serviceConfig: ServiceConfig,
   )
 
-  private data class MappingInfo(val state: StateFlow<List<String>?>, val job: Job)
+  private data class MappingInfo(val state: StateFlow<Subject?>, val job: Job)
 
   private data class ChannelInfo<R : Any>(val job: Job, val fromClientChannel: Channel<R>) {
     fun cancel() {
@@ -139,7 +129,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindActiveMapping(
       configure: ConfigBlock<ActiveConfig.Mapping>,
       namespace: AntPatternNamespace,
-      supplier: (Request) -> Flow<List<String>>,
+      supplier: (Request) -> Flow<Subject>,
   ) {
     val config = with(configure) { ActiveConfig.Mapping().apply { invoke() } }
     val namespace = namespace.withUsernameDecoding(config.objectMappings)
@@ -158,11 +148,11 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
           }
 
           override fun onRequest(request: RequestEvent) {
-            fun publishMapping(value: List<String>) {
+            fun publishMapping(value: Subject) {
               publisher.publishMappingMessage(
                   publisher.messageFactory.createMappingMessage(
                       request.subject,
-                      value.toMappingSubject(),
+                      value.path,
                   ),
               )
             }
@@ -448,7 +438,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   fun bindBroadcastMapping(
       configure: ConfigBlock<BroadcastConfig.Mapping>,
       namespace: AntPatternNamespace,
-      flow: Flow<BroadcastEvent<List<String>>>,
+      flow: Flow<BroadcastEvent<Subject>>,
   ) {
     val config = with(configure) { BroadcastConfig.Mapping().apply { invoke() } }
     serviceInfo?.registerNamespace(namespace, emptyMap())
@@ -482,7 +472,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                 val message =
                     publisher.messageFactory.createMappingMessage(
                         it.subject,
-                        it.value.toMappingSubject(),
+                        it.value.path,
                     )
                 cachedEvents?.put(it.subject, message)
 

@@ -107,10 +107,10 @@ constructor(pattern: String, val rawPathVariables: Set<String> = emptySet()) : N
    *
    * @param subject The subject to extract variables from. Its path portion must match the
    *   [pattern].
-   * @return A map of path variable names to their extracted values.
+   * @return A map of path variable names to their extracted values, in pattern order.
    * @throws IllegalStateException If the subject does not match the pattern.
    */
-  fun extractPathVariables(subject: String): Map<String, String> {
+  fun extractPathVariables(subject: String): LinkedHashMap<String, String> {
     val groups =
         checkNotNull(matcher.regex.matchEntire(subject.pathPortion)) {
               "Subject $subject does not match pattern $pattern"
@@ -123,7 +123,7 @@ constructor(pattern: String, val rawPathVariables: Set<String> = emptySet()) : N
             name to if (name in rawPathVariables) value else urlDecode(value)
           }
         }
-        .toMap()
+        .toMap(LinkedHashMap())
   }
 
   /**

@@ -103,11 +103,12 @@ public final class com/caplin/integration/datasourcex/reactive/api/ChannelConfig
 	public final fun setRecordType (Lcom/caplin/integration/datasourcex/reactive/api/RecordType;)V
 }
 
-public final class com/caplin/integration/datasourcex/reactive/api/ChannelRequest {
-	public fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;Ljava/lang/Object;)V
-	public final fun getPath ()Ljava/lang/String;
-	public final fun getPathVariables ()Ljava/util/Map;
-	public final fun getQueryParameters ()Ljava/util/Map;
+public final class com/caplin/integration/datasourcex/reactive/api/ChannelRequest : com/caplin/integration/datasourcex/util/Subject {
+	public fun <init> (Ljava/lang/String;Ljava/util/LinkedHashMap;Ljava/util/Map;Ljava/lang/Object;)V
+	public fun getPath ()Ljava/lang/String;
+	public fun getPathParameters ()Ljava/util/List;
+	public final fun getPathVariables ()Ljava/util/LinkedHashMap;
+	public fun getQueryParameters ()Ljava/util/Map;
 	public final fun getReceive ()Ljava/lang/Object;
 }
 
@@ -207,11 +208,12 @@ public final class com/caplin/integration/datasourcex/reactive/api/RecordType : 
 	public static fun values ()[Lcom/caplin/integration/datasourcex/reactive/api/RecordType;
 }
 
-public final class com/caplin/integration/datasourcex/reactive/api/Request {
-	public fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)V
-	public final fun getPath ()Ljava/lang/String;
-	public final fun getPathVariables ()Ljava/util/Map;
-	public final fun getQueryParameters ()Ljava/util/Map;
+public final class com/caplin/integration/datasourcex/reactive/api/Request : com/caplin/integration/datasourcex/util/Subject {
+	public fun <init> (Ljava/lang/String;Ljava/util/LinkedHashMap;Ljava/util/Map;)V
+	public fun getPath ()Ljava/lang/String;
+	public fun getPathParameters ()Ljava/util/List;
+	public final fun getPathVariables ()Ljava/util/LinkedHashMap;
+	public fun getQueryParameters ()Ljava/util/Map;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/reactive/api/RequestSupplier {
