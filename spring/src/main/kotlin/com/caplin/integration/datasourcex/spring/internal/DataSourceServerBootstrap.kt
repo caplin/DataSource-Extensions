@@ -162,10 +162,10 @@ internal class DataSourceServerBootstrap(
 
           when (dataSourceRequestType) {
             is RequestType.Channel -> {
-              fun <I : Any> createFlow(subject: String, receiveFlow: Flow<Any>): Flow<I> =
+              fun <I : Any> createFlow(path: String, receiveFlow: Flow<Any>): Flow<I> =
                   flow {
                         val sendFlow = AtomicReference<Flow<I>>()
-                        val route = routeMatcher.parseRoute(subject)
+                        val route = routeMatcher.parseRoute(path)
                         handleMessage(
                                 MessageBuilder.createMessage(
                                     receiveFlow,
@@ -180,12 +180,12 @@ internal class DataSourceServerBootstrap(
                       }
                       .onStart {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} started"
+                          "$path matching ${destinationMessageCondition.patterns} started"
                         }
                       }
                       .onCompletion {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} completed"
+                          "$path matching ${destinationMessageCondition.patterns} completed"
                         }
                       }
 
@@ -235,10 +235,10 @@ internal class DataSourceServerBootstrap(
             }
 
             is RequestType.Stream -> {
-              fun <I : Any> createFlow(subject: String) =
+              fun <I : Any> createFlow(path: String) =
                   flow {
                         val sendFlow = AtomicReference<Flow<I>>()
-                        val route = routeMatcher.parseRoute(subject)
+                        val route = routeMatcher.parseRoute(path)
                         handleMessage(
                                 MessageBuilder.createMessage(
                                     emptyPayload,
@@ -252,12 +252,12 @@ internal class DataSourceServerBootstrap(
                       }
                       .onStart {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} started"
+                          "$path matching ${destinationMessageCondition.patterns} started"
                         }
                       }
                       .onCompletion {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} completed"
+                          "$path matching ${destinationMessageCondition.patterns} completed"
                         }
                       }
 

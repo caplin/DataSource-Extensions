@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.time.withTimeoutOrNull
 
 internal class Container<T : Any>(
-    private val containerSubject: String,
+    private val containerPath: String,
     private val config: ActiveContainerConfig,
     private val supplier: (String) -> Flow<ContainerEvent<T>>,
     internal val scope: CoroutineScope,
@@ -47,26 +47,24 @@ internal class Container<T : Any>(
 
   private val containerState: Flow<ContainerState<T>> =
       flow {
-            logger.info { "Creating container $containerSubject" }
+            logger.info { "Creating container $containerPath" }
             emit(ContainerState.Initialising)
             var rows = persistentMapOf<String, MutableStateFlow<T>>()
 
-            supplier(containerSubject)
+            supplier(containerPath)
                 .onStart { emit(ContainerEvent.Bulk(emptyList())) }
                 .bufferingDebounce(config.structureDebounce)
                 .collect { containerEvents ->
                   rows =
                       rows.mutate { mutableRows ->
                         fun handleEvent(event: ContainerEvent.RowEvent<T>) {
-                          val rowSubject =
-                              "$containerSubject${config.rowPathSuffix}/${URLEncoder.encode(event.key, Charsets.UTF_8)}"
+                          val rowPath =
+                              "$containerPath${config.rowPathSuffix}/${URLEncoder.encode(event.key, Charsets.UTF_8)}"
                           when (event) {
-                            is ContainerEvent.RowEvent.Remove -> mutableRows.remove(rowSubject)
+                            is ContainerEvent.RowEvent.Remove -> mutableRows.remove(rowPath)
                             is ContainerEvent.RowEvent.Upsert ->
-                                mutableRows[rowSubject]?.let { it.value = event.value }
-                                    ?: run {
-                                      mutableRows[rowSubject] = MutableStateFlow(event.value)
-                                    }
+                                mutableRows[rowPath]?.let { it.value = event.value }
+                                    ?: run { mutableRows[rowPath] = MutableStateFlow(event.value) }
                           }
                         }
 
@@ -85,14 +83,14 @@ internal class Container<T : Any>(
           .distinctUntilChanged()
           .onCompletion {
             if (it == null) {
-              logger.info { "Completing container $containerSubject" }
+              logger.info { "Completing container $containerPath" }
               emit(ContainerState.Completed())
             } else if (it is CancellationException) {
-              logger.info { "Cancelling container $containerSubject" }
+              logger.info { "Cancelling container $containerPath" }
             }
           }
           .catch { e ->
-            logger.warn(e) { "Unhandled exception in container $containerSubject" }
+            logger.warn(e) { "Unhandled exception in container $containerPath" }
             emit(ContainerState.Completed(e))
           }
           .shareIn(
@@ -122,12 +120,12 @@ internal class Container<T : Any>(
         }
   }
 
-  fun getRowFlow(rowSubject: String): Flow<T> = flow {
+  fun getRowFlow(rowPath: String): Flow<T> = flow {
     val rowFlow =
         withTimeoutOrNull(config.rowRequestTimeout) {
           containerState
               .filterIsInstance<ContainerState.Content<T>>()
-              .map { content -> content.records[rowSubject] }
+              .map { content -> content.records[rowPath] }
               .filterNotNull()
               .first()
         }

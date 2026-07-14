@@ -99,12 +99,12 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                       objectMappings.filterValues { it in USERNAME_OBJECT_MAP_TOKENS }.keys
           )
 
-  /** Decomposes [subject] into a [Request] using this namespace's extraction rules. */
-  private fun AntPatternNamespace.request(subject: String): Request =
+  /** Decomposes [path] into a [Request] using this namespace's extraction rules. */
+  private fun AntPatternNamespace.request(path: String): Request =
       Request(
-          extractPathParameters(subject),
-          extractPathVariables(subject),
-          extractQueryParameters(subject),
+          extractPathParameters(path),
+          extractPathVariables(path),
+          extractQueryParameters(path),
       )
 
   private data class ServiceInfo(
@@ -164,12 +164,12 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
             }
 
             subscriptions
-                .computeIfAbsent(request.subject) { subject ->
+                .computeIfAbsent(request.subject) { path ->
                   val state =
-                      supplier(namespace.request(subject))
+                      supplier(namespace.request(path))
                           .catch {
-                            subscriptions.remove(subject)
-                            publisher.publishNotFound(subject)
+                            subscriptions.remove(path)
+                            publisher.publishNotFound(path)
                           }
                           .stateIn(
                               dataSource,
@@ -203,8 +203,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     with(JsonContext()) {
-      bindActiveSubjects(namespace, { supplier(namespace.request(it)) }) { subject, value ->
-        createMessage(subject, value)
+      bindActiveSubjects(namespace, { supplier(namespace.request(it)) }) { path, value ->
+        createMessage(path, value)
       }
     }
   }
@@ -220,8 +220,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     with(RecordContext(config.images, config.recordType)) {
-      bindActiveSubjects(namespace, { supplier(namespace.request(it)) }) { subject, value ->
-        createMessage(subject, value)
+      bindActiveSubjects(namespace, { supplier(namespace.request(it)) }) { path, value ->
+        createMessage(path, value)
       }
     }
   }
@@ -238,8 +238,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
           namespace,
           config,
           { supplier(namespace.request(it)) },
-      ) { subject, value ->
-        createMessage(subject, value)
+      ) { path, value ->
+        createMessage(path, value)
       }
     }
   }
@@ -256,8 +256,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
           namespace,
           config,
           { supplier(namespace.request(it)) },
-      ) { subject, value ->
-        createMessage(subject, value)
+      ) { path, value ->
+        createMessage(path, value)
       }
     }
   }
@@ -482,10 +482,10 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
               .onSuccess {
                 val message =
                     publisher.messageFactory.createMappingMessage(
-                        it.subject,
+                        it.path,
                         it.value.path,
                     )
-                cachedEvents?.put(it.subject, message)
+                cachedEvents?.put(it.path, message)
 
                 publisher.publishMappingMessage(message)
               }
@@ -537,8 +537,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
           upstreamChannel.onReceiveCatching { result ->
             result
                 .onSuccess {
-                  val message = publisher.messageFactory.createMessage(it.subject, it.value)
-                  cachedEvents?.put(it.subject, message)
+                  val message = publisher.messageFactory.createMessage(it.path, it.value)
+                  cachedEvents?.put(it.path, message)
 
                   // Implementation of this appears to set the image flag and publish to all peers,
                   // so we don't
@@ -563,8 +563,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   private fun <T : Any> bindContainers(
       containerSubjectPattern: AntPatternNamespace,
       config: ActiveContainerConfig,
-      createFlow: (containerSubject: String) -> Flow<ContainerEvent<T>>,
-      createMessage: CachedMessageFactory.(subject: String, value: T) -> Message,
+      createFlow: (containerPath: String) -> Flow<ContainerEvent<T>>,
+      createMessage: CachedMessageFactory.(path: String, value: T) -> Message,
   ) {
     val rowPattern =
         AntPatternNamespace("${containerSubjectPattern.pattern}${config.rowPathSuffix}/{itemId}")
@@ -587,20 +587,16 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
             publisher = cachingPublisher
           }
 
-          override fun onRequest(subject: String): Unit =
+          override fun onRequest(path: String): Unit =
               with(publisher) {
-                val containerSubject =
-                    subject
-                        .split("/")
-                        .dropLast(1)
-                        .joinToString("/")
-                        .removeSuffix(config.rowPathSuffix)
+                val containerPath =
+                    path.split("/").dropLast(1).joinToString("/").removeSuffix(config.rowPathSuffix)
 
-                val container = containers[containerSubject]
+                val container = containers[containerPath]
                 val job =
                     if (container == null) {
-                      logger.warn { "Container $containerSubject does not exist" }
-                      publishNotFound(subject)
+                      logger.warn { "Container $containerPath does not exist" }
+                      publishNotFound(path)
                       null
                     } else {
 
@@ -611,24 +607,24 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                       // the record, as we assume
                       // that the removeElement is enough.
                       container
-                          .getRowFlow(subject)
-                          .map { value -> cachedMessageFactory.createMessage(subject, value) }
+                          .getRowFlow(path)
+                          .map { value -> cachedMessageFactory.createMessage(path, value) }
                           .onCompletion { throwable ->
                             if (throwable == null) {
-                              logger.warn { "Row $subject does not exist" }
-                              publishNotFound(subject)
+                              logger.warn { "Row $path does not exist" }
+                              publishNotFound(path)
                             }
                           }
                           .onEach { message -> publish(message) }
                           .launchIn(container.scope)
                     }
 
-                job?.apply { invokeOnCompletion { subscriptions.remove(subject) } }
-                    ?.also { subscriptions[subject] = it }
+                job?.apply { invokeOnCompletion { subscriptions.remove(path) } }
+                    ?.also { subscriptions[path] = it }
               }
 
-          override fun onDiscard(subject: String) {
-            subscriptions.remove(subject)?.cancel()
+          override fun onDiscard(path: String) {
+            subscriptions.remove(path)?.cancel()
           }
         },
     )
@@ -645,50 +641,49 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
             publisher = cachingPublisher
           }
 
-          override fun onRequest(subject: String): Unit =
+          override fun onRequest(path: String): Unit =
               with(publisher) {
                 dataSource
                     .launch {
                       val container =
                           Container(
-                              containerSubject = subject,
+                              containerPath = path,
                               config = config,
                               supplier = createFlow,
                               scope = this,
                           )
-                      containers[subject] = container
+                      containers[path] = container
                       try {
                         container.containerEventsFlow
                             .onCompletion { throwable ->
-                              if (throwable == null) publishNotFound(subject)
+                              if (throwable == null) publishNotFound(path)
                             }
                             .catch { throwable ->
-                              publishNotFound(subject)
-                              logger.warn(throwable) { "Unhandled exception in $subject" }
+                              publishNotFound(path)
+                              logger.warn(throwable) { "Unhandled exception in $path" }
                             }
                             .collect { containerEvents ->
                               val containerMessage =
-                                  cachedMessageFactory.createContainerMessage(subject).apply {
+                                  cachedMessageFactory.createContainerMessage(path).apply {
                                     isDoNotAuthenticate = true
                                     containerEvents.forEach { containerEvent ->
                                       when (containerEvent) {
                                         is InternalContainerEvent.Inserted -> {
                                           logger.debug {
-                                            "Inserted row ${containerEvent.subject} in $subject"
+                                            "Inserted row ${containerEvent.path} in $path"
                                           }
                                           when (config.insertAt) {
-                                            InsertAt.HEAD ->
-                                                insertElement(containerEvent.subject, 0)
+                                            InsertAt.HEAD -> insertElement(containerEvent.path, 0)
 
-                                            InsertAt.TAIL -> addElement(containerEvent.subject)
+                                            InsertAt.TAIL -> addElement(containerEvent.path)
                                           }
                                         }
 
                                         is InternalContainerEvent.Removed -> {
                                           logger.debug {
-                                            "Removed row ${containerEvent.subject} in $subject"
+                                            "Removed row ${containerEvent.path} in $path"
                                           }
-                                          removeElement(containerEvent.subject)
+                                          removeElement(containerEvent.path)
                                         }
                                       }
                                     }
@@ -696,16 +691,16 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                               publish(containerMessage)
                             }
                       } finally {
-                        containers.remove(subject)
+                        containers.remove(path)
                       }
                       cancel()
                     }
-                    .apply { invokeOnCompletion { subscriptions.remove(subject) } }
-                    .also { job -> subscriptions[subject] = job }
+                    .apply { invokeOnCompletion { subscriptions.remove(path) } }
+                    .also { job -> subscriptions[path] = job }
               }
 
-          override fun onDiscard(subject: String) {
-            subscriptions.remove(subject)?.cancel()
+          override fun onDiscard(path: String) {
+            subscriptions.remove(path)?.cancel()
           }
         },
     )
@@ -713,8 +708,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
 
   private fun <T : Any> bindActiveSubjects(
       namespace: AntPatternNamespace,
-      createFlow: (subject: String) -> Flow<T>,
-      createMessage: CachedMessageFactory.(subject: String, value: T) -> Message,
+      createFlow: (path: String) -> Flow<T>,
+      createMessage: CachedMessageFactory.(path: String, value: T) -> Message,
   ) {
     dataSource.createCachingPublisher(
         namespace,
@@ -728,40 +723,40 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
             publisher = cachingPublisher
           }
 
-          override fun onRequest(subject: String) {
-            check(!subscriptions.containsKey(subject)) {
-              "Multiple subscriptions to the same subject ($subject)"
+          override fun onRequest(path: String) {
+            check(!subscriptions.containsKey(path)) {
+              "Multiple subscriptions to the same subject ($path)"
             }
-            subscriptions[subject] =
-                flow { emitAll(createFlow(subject)) }
-                    .map { t -> publisher.cachedMessageFactory.createMessage(subject, t) }
+            subscriptions[path] =
+                flow { emitAll(createFlow(path)) }
+                    .map { t -> publisher.cachedMessageFactory.createMessage(path, t) }
                     .onEach { message -> publisher.publish(message) }
                     .onCompletion { throwable ->
-                      if (throwable == null) publisher.publishNotFound(subject)
+                      if (throwable == null) publisher.publishNotFound(path)
                     }
                     .catch { throwable ->
-                      logger.warn(throwable) { "Unhandled exception in $subject" }
-                      publisher.publishNotFound(subject)
+                      logger.warn(throwable) { "Unhandled exception in $path" }
+                      publisher.publishNotFound(path)
                     }
                     .launchIn(dataSource)
-                    .apply { invokeOnCompletion { subscriptions.remove(subject) } }
+                    .apply { invokeOnCompletion { subscriptions.remove(path) } }
           }
 
-          override fun onDiscard(subject: String) {
-            subscriptions.remove(subject)?.cancel()
+          override fun onDiscard(path: String) {
+            subscriptions.remove(path)?.cancel()
           }
         },
     )
   }
 
-  private fun CachingPublisher.publishNotFound(subject: String) {
+  private fun CachingPublisher.publishNotFound(path: String) {
     publishSubjectErrorEvent(
-        cachedMessageFactory.createSubjectErrorEvent(subject, SubjectError.NotFound),
+        cachedMessageFactory.createSubjectErrorEvent(path, SubjectError.NotFound),
     )
   }
 
-  private fun Publisher.publishNotFound(subject: String) {
-    publishSubjectErrorEvent(messageFactory.createSubjectErrorEvent(subject, SubjectError.NotFound))
+  private fun Publisher.publishNotFound(path: String) {
+    publishSubjectErrorEvent(messageFactory.createSubjectErrorEvent(path, SubjectError.NotFound))
   }
 
   private fun logBind(

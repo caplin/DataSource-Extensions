@@ -5,6 +5,6 @@ import com.caplin.datasource.messaging.json.JsonMessage
 
 internal class JsonContext {
 
-  fun CachedMessageFactory.createMessage(subject: String, value: Any): JsonMessage =
-      createJsonMessage(subject, value)
+  fun CachedMessageFactory.createMessage(path: String, value: Any): JsonMessage =
+      createJsonMessage(path, value)
 }

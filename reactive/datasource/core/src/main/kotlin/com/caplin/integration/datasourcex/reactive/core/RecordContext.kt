@@ -18,19 +18,19 @@ internal class RecordContext(
         isImage = images
       }
 
-  internal fun CachedMessageFactory.createMessage(subject: String, fields: Map<out Any, Any>) =
+  internal fun CachedMessageFactory.createMessage(path: String, fields: Map<out Any, Any>) =
       when (recordType) {
-        RecordType.GENERIC -> createGenericMessage(subject)
-        RecordType.TYPE1 -> createRecordType1Message(subject)
+        RecordType.GENERIC -> createGenericMessage(path)
+        RecordType.TYPE1 -> createRecordType1Message(path)
       }.apply {
         fields.forEach { (key, value) -> setField(key.toString(), value.toString()) }
         isImage = images
       }
 
-  internal fun MessageFactory.createMessage(subject: String, fields: Map<out Any, Any>) =
+  internal fun MessageFactory.createMessage(path: String, fields: Map<out Any, Any>) =
       when (recordType) {
-        RecordType.GENERIC -> createGenericMessage(subject)
-        RecordType.TYPE1 -> createRecordType1Message(subject)
+        RecordType.GENERIC -> createGenericMessage(path)
+        RecordType.TYPE1 -> createRecordType1Message(path)
       }.apply {
         fields.forEach { (key, value) -> setField(key.toString(), value.toString()) }
         isImage = images

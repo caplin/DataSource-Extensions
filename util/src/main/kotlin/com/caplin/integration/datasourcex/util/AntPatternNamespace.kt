@@ -103,23 +103,21 @@ constructor(pattern: String, val rawPathVariables: Set<String> = emptySet()) : N
 
   private val matcher = AntRegexPathMatcher(pattern)
 
-  override fun match(subject: String): Boolean =
-      matcher.regex.matchEntire(subject.pathPortion) != null
+  override fun match(path: String): Boolean = matcher.regex.matchEntire(path.pathPortion) != null
 
   /**
    * Extracts path variables from a matching subject. Values are URL-decoded, except for any listed
    * in [rawPathVariables] which are returned verbatim. Any trailing `?query` is ignored, so a
    * subject that carries query parameters yields the same path variables as the query-less subject.
    *
-   * @param subject The subject to extract variables from. Its path portion must match the
-   *   [pattern].
+   * @param path The subject to extract variables from. Its path portion must match the [pattern].
    * @return A map of path variable names to their extracted values, in pattern order.
    * @throws IllegalStateException If the subject does not match the pattern.
    */
-  fun extractPathVariables(subject: String): LinkedHashMap<String, String> {
+  fun extractPathVariables(path: String): LinkedHashMap<String, String> {
     val groups =
-        checkNotNull(matcher.regex.matchEntire(subject.pathPortion)) {
-              "Subject $subject does not match pattern $pattern"
+        checkNotNull(matcher.regex.matchEntire(path.pathPortion)) {
+              "Subject $path does not match pattern $pattern"
             }
             .groups
 
@@ -136,21 +134,21 @@ constructor(pattern: String, val rawPathVariables: Set<String> = emptySet()) : N
    * Splits the path portion of a subject into its URL-decoded segments, in order. Any trailing
    * `?query` is ignored.
    *
-   * @param subject The subject to extract path parameters from.
+   * @param path The subject to extract path parameters from.
    * @return The subject's path parts, decoded.
    */
-  fun extractPathParameters(subject: String): List<String> =
-      subject.pathPortion.split('/').filter(String::isNotEmpty).map(::urlDecode)
+  fun extractPathParameters(path: String): List<String> =
+      path.pathPortion.split('/').filter(String::isNotEmpty).map(::urlDecode)
 
   /**
    * Extracts the query parameters from the optional trailing `?a=b&c=d` portion of a subject.
    *
-   * @param subject The subject to extract query parameters from.
+   * @param path The subject to extract query parameters from.
    * @return A map of query parameter names to values, or an empty map when the subject has no
    *   query.
    */
-  fun extractQueryParameters(subject: String): SortedMap<String, String> =
-      parseQueryString(subject.substringAfter('?', ""))
+  fun extractQueryParameters(path: String): SortedMap<String, String> =
+      parseQueryString(path.substringAfter('?', ""))
 
   /** Returns a copy of this namespace with [rawPathVariables] replaced. */
   fun copy(rawPathVariables: Set<String> = this.rawPathVariables): AntPatternNamespace =
