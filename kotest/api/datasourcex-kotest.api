@@ -1,0 +1,99 @@
+public final class com/caplin/integration/kotest/ExtensionsKt {
+	public static final fun getAwaitConnected (Lcom/caplin/integration/streamlinkx/StreamLinkConnection;)Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/caplin/integration/kotest/LiberatorContainerExtension : io/kotest/core/extensions/MountableExtension, io/kotest/core/listeners/AfterProjectListener, io/kotest/core/listeners/TestListener {
+	public static final field DEFAULT_BASE_IMAGE Ljava/lang/String;
+	public static final field LIBERATOR_DATA_SOURCE_PORT I
+	public static final field LIBERATOR_HTTP_PORT I
+	public fun <init> ()V
+	public fun <init> (Lcom/caplin/integration/kotest/LiberatorContainerExtension$ContainerConfig;Ltools/jackson/databind/ObjectMapper;)V
+	public synthetic fun <init> (Lcom/caplin/integration/kotest/LiberatorContainerExtension$ContainerConfig;Ltools/jackson/databind/ObjectMapper;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun afterAny (Lio/kotest/core/test/TestCase;Lio/kotest/engine/test/TestResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterContainer (Lio/kotest/core/test/TestCase;Lio/kotest/engine/test/TestResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterEach (Lio/kotest/core/test/TestCase;Lio/kotest/engine/test/TestResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterInvocation (Lio/kotest/core/test/TestCase;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterProject (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterSpec (Lio/kotest/core/spec/Spec;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun afterTest (Lio/kotest/core/test/TestCase;Lio/kotest/engine/test/TestResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeAny (Lio/kotest/core/test/TestCase;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeContainer (Lio/kotest/core/test/TestCase;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeEach (Lio/kotest/core/test/TestCase;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeInvocation (Lio/kotest/core/test/TestCase;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeSpec (Lio/kotest/core/spec/Spec;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun beforeTest (Lio/kotest/core/test/TestCase;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun finalizeSpec (Lkotlin/reflect/KClass;Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun mount (Lkotlin/jvm/functions/Function1;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$Liberator;
+	public synthetic fun mount (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public fun prepareSpec (Lkotlin/reflect/KClass;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/caplin/integration/kotest/LiberatorContainerExtension$Config {
+	public fun <init> ()V
+}
+
+public abstract interface class com/caplin/integration/kotest/LiberatorContainerExtension$ContainerConfig {
+	public abstract fun getContainer ()Lorg/testcontainers/containers/GenericContainer;
+	public abstract fun getDataSourcePort ()I
+	public abstract fun getHttpPort ()I
+	public abstract fun getKeymasterConfiguration ()Lcom/caplin/keymaster/IKeyMasterConfiguration;
+}
+
+public final class com/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig : com/caplin/integration/kotest/LiberatorContainerExtension$ContainerConfig {
+	public fun <init> (Lcom/caplin/keymaster/IKeyMasterConfiguration;IILorg/testcontainers/containers/GenericContainer;)V
+	public final fun component1 ()Lcom/caplin/keymaster/IKeyMasterConfiguration;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()Lorg/testcontainers/containers/GenericContainer;
+	public final fun copy (Lcom/caplin/keymaster/IKeyMasterConfiguration;IILorg/testcontainers/containers/GenericContainer;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig;
+	public static synthetic fun copy$default (Lcom/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig;Lcom/caplin/keymaster/IKeyMasterConfiguration;IILorg/testcontainers/containers/GenericContainer;ILjava/lang/Object;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContainer ()Lorg/testcontainers/containers/GenericContainer;
+	public fun getDataSourcePort ()I
+	public fun getHttpPort ()I
+	public fun getKeymasterConfiguration ()Lcom/caplin/keymaster/IKeyMasterConfiguration;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig : com/caplin/integration/kotest/LiberatorContainerExtension$ContainerConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/io/InputStream;
+	public final fun component2 ()Ljava/io/InputStream;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig;
+	public static synthetic fun copy$default (Lcom/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig;Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAdapterConfig ()Ljava/io/InputStream;
+	public final fun getBaseImage ()Ljava/lang/String;
+	public final fun getBeforeScript ()Ljava/io/InputStream;
+	public fun getContainer ()Lorg/testcontainers/containers/GenericContainer;
+	public fun getDataSourcePort ()I
+	public final fun getExtraFiles ()Ljava/util/Map;
+	public fun getHttpPort ()I
+	public fun getKeymasterConfiguration ()Lcom/caplin/keymaster/IKeyMasterConfiguration;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/kotest/LiberatorContainerExtension$Liberator {
+	public fun <init> (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;IILorg/testcontainers/containers/ContainerState;)V
+	public final fun component1 ()Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()Lorg/testcontainers/containers/ContainerState;
+	public final fun connect (Ljava/lang/String;)Lcom/caplin/integration/streamlinkx/StreamLinkConnection;
+	public final fun copy (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;IILorg/testcontainers/containers/ContainerState;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$Liberator;
+	public static synthetic fun copy$default (Lcom/caplin/integration/kotest/LiberatorContainerExtension$Liberator;Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;IILorg/testcontainers/containers/ContainerState;ILjava/lang/Object;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$Liberator;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContainerState ()Lorg/testcontainers/containers/ContainerState;
+	public final fun getDataSourcePort ()I
+	public final fun getHttpPort ()I
+	public final fun getStreamLinkConnectionFactory ()Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

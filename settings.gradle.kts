@@ -65,6 +65,10 @@ project(":reactive:streamlink").projectDir = file("reactive/streamlink/kotlin")
 
 project(":reactive:streamlink").name = "sl4jx-kotlin"
 
+include("kotest")
+
+project(":kotest").name = "datasourcex-kotest"
+
 include("spring")
 
 project(":spring").name = "spring-boot-starter-datasource"

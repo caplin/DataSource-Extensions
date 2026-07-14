@@ -45,6 +45,10 @@ reactive/datasource/reactivestreams ← Bind DSL for org.reactivestreams.Publish
 reactive/streamlink/kotlin ← sl4jx-kotlin — Flow-based StreamLink client wrapper
                              (StreamLink + KeyMaster). Depends on datasourcex-util for Subject.
 
+kotest                ← datasourcex-kotest — Liberator-in-a-container Kotest harness
+                        (LiberatorContainerExtension) for StreamLink client tests. Client-side
+                        only: api-depends on sl4jx-kotlin + testcontainers, no datasourcex
+                        runtime dependency. Its docker-backed integrationTest is not in `check`.
 spring                ← spring-boot-starter-datasource (depends on reactive/datasource/kotlin)
 util                  ← datasourcex-util — FlowMap, custom Flow operators, AntPatternNamespace,
                         Subject, Fory serialization helpers. `api`-depends on the DataSource

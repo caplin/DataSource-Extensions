@@ -22,6 +22,9 @@ kotest = "6.2.2"
 turbine = "1.2.1"
 mockk = "1.14.11"
 
+# testcontainers is managed by the Spring Boot BOM; kotest-extensions-testcontainers tracks the
+# kotest core version line (io.kotest:… at 6.2.x, depending on testcontainers 2.x).
+
 # Spring BOM should manage other dependencies versions.
 
 # Plugins
@@ -54,6 +57,9 @@ kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = 
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-extensions-spring = { module = "io.kotest:kotest-extensions-spring", version.ref = "kotest" }
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-extensions-testcontainers = { module = "io.kotest:kotest-extensions-testcontainers", version.ref = "kotest" }
+testcontainers = { module = "org.testcontainers:testcontainers" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
