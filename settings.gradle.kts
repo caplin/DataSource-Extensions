@@ -31,21 +31,31 @@ project(":util").name = "datasourcex-util"
 
 include("reactive:core")
 
+project(":reactive:core").projectDir = file("reactive/datasource/core")
+
 project(":reactive:core").name = "datasourcex-reactive-core"
 
 include("reactive:api")
+
+project(":reactive:api").projectDir = file("reactive/datasource/api")
 
 project(":reactive:api").name = "datasourcex-reactive-api"
 
 include("reactive:java-flow")
 
+project(":reactive:java-flow").projectDir = file("reactive/datasource/java-flow")
+
 project(":reactive:java-flow").name = "datasourcex-java-flow"
 
 include("reactive:kotlin")
 
+project(":reactive:kotlin").projectDir = file("reactive/datasource/kotlin")
+
 project(":reactive:kotlin").name = "datasourcex-kotlin"
 
 include("reactive:reactivestreams")
+
+project(":reactive:reactivestreams").projectDir = file("reactive/datasource/reactivestreams")
 
 project(":reactive:reactivestreams").name = "datasourcex-reactivestreams"
 

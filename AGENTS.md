@@ -35,36 +35,36 @@ The repo is typically checked out on Windows. PowerShell uses `.\gradlew.bat`; B
 ### Module layout and dependency direction
 
 ```
-reactive/api          ← config DSL types (ActiveConfig, ChannelConfig, ContainerEvent, …)
-reactive/core         ← Binder + IFlowAdapter — does the real DataSource SDK plumbing
-                        Everything funnels through here as kotlinx.coroutines Flow
-reactive/kotlin       ← Bind DSL for Flow                    } each contributes a Bind facade
-reactive/java-flow    ← Bind DSL for java.util.concurrent.Flow.Publisher
-reactive/reactivestreams ← Bind DSL for org.reactivestreams.Publisher
+reactive/datasource/api          ← config DSL types (ActiveConfig, ChannelConfig, ContainerEvent, …)
+reactive/datasource/core         ← Binder + IFlowAdapter — does the real DataSource SDK plumbing
+                                   Everything funnels through here as kotlinx.coroutines Flow
+reactive/datasource/kotlin       ← Bind DSL for Flow                    } each contributes a Bind facade
+reactive/datasource/java-flow    ← Bind DSL for java.util.concurrent.Flow.Publisher
+reactive/datasource/reactivestreams ← Bind DSL for org.reactivestreams.Publisher
 
-spring                ← spring-boot-starter-datasource (depends on reactive/kotlin)
+spring                ← spring-boot-starter-datasource (depends on reactive/datasource/kotlin)
 util                  ← datasourcex-util — FlowMap, custom Flow operators, AntPatternNamespace,
                         Fory serialization helpers. No DataSource SDK dependency.
 examples/             ← spring-java, spring-kotlin, spring-kotlin-chat — manual smoke tests
 api-docs/             ← aggregated Dokka site (published to GitHub Pages from main)
 ```
 
-The published Maven coordinates use the module's renamed name (`datasourcex-kotlin`, `spring-boot-starter-datasource`, etc.), not the Gradle path — set up in `settings.gradle.kts`.
+The five reactive modules sit under `reactive/datasource/` on disk so the StreamLink SDK family can sit beside them under `reactive/` later. A `projectDir` override in `settings.gradle.kts` relocates only the directory; the `include("reactive:kotlin")` coordinate, the resulting project path (`:reactive:datasourcex-kotlin`, `:reactive:datasourcex-reactive-core`, etc. — set by the `.name` overrides), and the published Maven coordinates are all unchanged. Published coordinates use the renamed name (`datasourcex-kotlin`, `spring-boot-starter-datasource`, etc.), not the include path.
 
 ### Code generation (read this before editing reactive modules)
 
-The three `reactive/{kotlin,java-flow,reactivestreams}` modules are NOT three parallel hand-written implementations. Each runs a `generateApi` Gradle task (defined in `buildSrc/src/main/kotlin/GenerateApi.kt`, applied via `common-reactive-library`) that emits Kotlin source for the `Bind`, `BindActive`, `BindActiveContainer`, `BindChannel`, `BindBroadcast` DSL classes plus their `Mapping`/`Json`/`Record` flavours.
+The three `reactive/datasource/{kotlin,java-flow,reactivestreams}` modules are NOT three parallel hand-written implementations. Each runs a `generateApi` Gradle task (defined in `buildSrc/src/main/kotlin/GenerateApi.kt`, applied via `common-reactive-library`) that emits Kotlin source for the `Bind`, `BindActive`, `BindActiveContainer`, `BindChannel`, `BindBroadcast` DSL classes plus their `Mapping`/`Json`/`Record` flavours.
 
 Each module's `build.gradle.kts` sets the variant: `tasks.generateApi { publisherType = "kotlin" | "java" | "reactivestreams" }`.
 
 Implications:
-- If you grep for `BindActiveJson` and find nothing, that's because it's generated. Run `./gradlew :reactive:datasourcex-kotlin:generateApi` and look in `reactive/kotlin/build/generated/sources/generateApi/main/kotlin/`.
+- If you grep for `BindActiveJson` and find nothing, that's because it's generated. Run `./gradlew :reactive:datasourcex-kotlin:generateApi` and look in `reactive/datasource/kotlin/build/generated/sources/generateApi/main/kotlin/`.
 - The shape of the generated DSL lives in `buildSrc/src/main/kotlin/{Active,ActiveContainer,Channel,Broadcast,Functions}.kt`. Edit those to change the generated API, not the build output.
-- All three published variants share the runtime path through `reactive/core/Binder`. `IFlowAdapter` is the small bridge that converts each library's publisher type to/from `Flow<Any>`.
+- All three published variants share the runtime path through `reactive/datasource/core/Binder`. `IFlowAdapter` is the small bridge that converts each library's publisher type to/from `Flow<Any>`.
 
 ### Spring starter
 
-`spring` depends on `reactive/kotlin` and exposes endpoints via custom annotations on top of Spring Messaging:
+`spring` depends on `reactive/datasource/kotlin` and exposes endpoints via custom annotations on top of Spring Messaging:
 - `@DataService` marks a controller. `@DataMessageMapping("/subject/{var}")` maps a subject pattern to a method (analogous to `@MessageMapping`).
 - `@IngressDestinationVariable` extracts path variables.
 - Methods return `Flow<T>` / `Flux<T>` / `Publisher<T>` for active subjects, or accept/return `Flow` pairs for channels.
