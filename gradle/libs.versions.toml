@@ -11,6 +11,11 @@ fory = "1.1.0"
 
 # Caplin Dependencies
 datasource = "8.0.12-1871-367ddb14"
+streamlink = "8.0.7-1825-026106f"
+keymaster = "8.0.3-559-041a628"
+
+# Logging (kotlin-logging is not managed by the Spring Boot BOM; slf4j is)
+kotlin-logging = "7.0.13"
 
 # Test Dependencies
 kotest = "6.2.2"
@@ -39,6 +44,11 @@ jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.r
 
 # Caplin Dependencies
 datasource = { module = "com.caplin.platform.integration.java:datasource", version.ref = "datasource" }
+streamlink = { module = "com.caplin.streamlink:StreamLinkJava", version.ref = "streamlink" }
+keymaster = { module = "com.caplin.platform.KeyMaster:KeyMasterMain", version.ref = "keymaster" }
+
+# Logging
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 
 # Test Dependencies
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }

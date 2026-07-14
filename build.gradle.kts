@@ -17,6 +17,7 @@ dependencies {
   kover(project(":reactive:datasourcex-java-flow"))
   kover(project(":reactive:datasourcex-kotlin"))
   kover(project(":reactive:datasourcex-reactivestreams"))
+  kover(project(":reactive:sl4jx-kotlin"))
   kover(project(":spring-boot-starter-datasource"))
   kover(project(":datasourcex-util"))
 }

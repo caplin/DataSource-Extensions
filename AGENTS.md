@@ -42,14 +42,18 @@ reactive/datasource/kotlin       ← Bind DSL for Flow                    } each
 reactive/datasource/java-flow    ← Bind DSL for java.util.concurrent.Flow.Publisher
 reactive/datasource/reactivestreams ← Bind DSL for org.reactivestreams.Publisher
 
+reactive/streamlink/kotlin ← sl4jx-kotlin — Flow-based StreamLink client wrapper
+                             (StreamLink + KeyMaster). Depends on datasourcex-util for Subject.
+
 spring                ← spring-boot-starter-datasource (depends on reactive/datasource/kotlin)
 util                  ← datasourcex-util — FlowMap, custom Flow operators, AntPatternNamespace,
-                        Fory serialization helpers. No DataSource SDK dependency.
+                        Subject, Fory serialization helpers. `api`-depends on the DataSource
+                        server SDK (`api(libs.datasource)`).
 examples/             ← spring-java, spring-kotlin, spring-kotlin-chat — manual smoke tests
 api-docs/             ← aggregated Dokka site (published to GitHub Pages from main)
 ```
 
-The five reactive modules sit under `reactive/datasource/` on disk so the StreamLink SDK family can sit beside them under `reactive/` later. A `projectDir` override in `settings.gradle.kts` relocates only the directory; the `include("reactive:kotlin")` coordinate, the resulting project path (`:reactive:datasourcex-kotlin`, `:reactive:datasourcex-reactive-core`, etc. — set by the `.name` overrides), and the published Maven coordinates are all unchanged. Published coordinates use the renamed name (`datasourcex-kotlin`, `spring-boot-starter-datasource`, etc.), not the include path.
+The five datasource reactive modules sit under `reactive/datasource/` on disk so the StreamLink SDK family can sit beside them under `reactive/streamlink/`. A `projectDir` override in `settings.gradle.kts` relocates only the directory; the `include("reactive:kotlin")` coordinate, the resulting project path (`:reactive:datasourcex-kotlin`, `:reactive:datasourcex-reactive-core`, `:reactive:sl4jx-kotlin`, etc. — set by the `.name` overrides), and the published Maven coordinates are all unchanged. Published coordinates use the renamed name (`datasourcex-kotlin`, `sl4jx-kotlin`, `spring-boot-starter-datasource`, etc.), not the include path.
 
 ### Code generation (read this before editing reactive modules)
 

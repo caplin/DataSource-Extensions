@@ -59,6 +59,12 @@ project(":reactive:reactivestreams").projectDir = file("reactive/datasource/reac
 
 project(":reactive:reactivestreams").name = "datasourcex-reactivestreams"
 
+include("reactive:streamlink")
+
+project(":reactive:streamlink").projectDir = file("reactive/streamlink/kotlin")
+
+project(":reactive:streamlink").name = "sl4jx-kotlin"
+
 include("spring")
 
 project(":spring").name = "spring-boot-starter-datasource"
