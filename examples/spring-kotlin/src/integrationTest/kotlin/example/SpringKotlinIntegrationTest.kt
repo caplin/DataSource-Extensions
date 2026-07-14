@@ -1,6 +1,7 @@
 package example
 
 import app.cash.turbine.test
+import com.caplin.integration.datasourcex.util.LifecycleDataSource
 import com.caplin.integration.datasourcex.util.Subject
 import com.caplin.integration.kotest.LiberatorContainerExtension
 import com.caplin.integration.streamlinkx.StreamLinkConnection.Companion.getSubject
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeout
+import org.springframework.beans.factory.getBean
 import org.springframework.boot.builder.SpringApplicationBuilder
 
 /**
@@ -41,10 +43,13 @@ class SpringKotlinIntegrationTest :
                   )
           autoClose(AutoCloseable { application.close() })
 
+          val dataSource = application.getBean<LifecycleDataSource>()
+
           val streamLink = liberator.connect("alice")
           autoClose(streamLink)
 
           beforeSpec {
+            dataSource.awaitConnected()
             streamLink.awaitConnected()
             // Gate on the adapter being discovered end-to-end: the first public update only arrives
             // once the adapter has connected out to Liberator and registered its namespaces. Retry

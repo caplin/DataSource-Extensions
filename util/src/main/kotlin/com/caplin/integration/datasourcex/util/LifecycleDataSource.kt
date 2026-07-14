@@ -14,11 +14,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 
-interface SimpleDataSource : DataSource, AutoCloseable {
+interface LifecycleDataSource : DataSource, AutoCloseable {
 
   companion object {
-    operator fun invoke(dataSource: DataSource): SimpleDataSource =
-        object : SimpleDataSource, DataSource by dataSource {
+    operator fun invoke(dataSource: DataSource): LifecycleDataSource =
+        object : LifecycleDataSource, DataSource by dataSource {
 
           private val _state =
               MutableSharedFlow<Map<Peer, PeerStatus>>(

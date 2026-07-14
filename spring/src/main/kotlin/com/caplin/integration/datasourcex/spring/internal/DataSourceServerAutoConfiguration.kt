@@ -1,6 +1,6 @@
 package com.caplin.integration.datasourcex.spring.internal
 
-import com.caplin.datasource.DataSource
+import com.caplin.integration.datasourcex.util.LifecycleDataSource
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -15,7 +15,7 @@ internal class DataSourceServerAutoConfiguration {
   @ConditionalOnMissingBean
   @Bean
   fun dataSourceServerBootstrap(
-      dataSource: DataSource,
+      dataSource: LifecycleDataSource,
       dataSourceMessageHandler: DataSourceMessageHandler,
       dataSourceInfo: DataSourceInfo,
       @Value($$"${caplin.datasource.decode-username-object-mappings:false}")

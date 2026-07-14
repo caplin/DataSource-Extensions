@@ -5,6 +5,7 @@ import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATAS
 import com.caplin.datasource.internal.configuration.AttributeConfiguration.DATASRC_NAME
 import com.caplin.datasource.messaging.json.JsonHandler
 import com.caplin.integration.datasourcex.spring.DataSourceConfigurationProperties
+import com.caplin.integration.datasourcex.util.LifecycleDataSource
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Discovery
 import com.caplin.integration.datasourcex.util.SimpleDataSourceConfig.Peer
 import com.caplin.integration.datasourcex.util.SimpleDataSourceFactory.createDataSource
@@ -21,6 +22,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Primary
 import tools.jackson.databind.ObjectMapper as Jackson3ObjectMapper
 
 @AutoConfiguration
@@ -51,7 +53,7 @@ internal class DataSourceAutoConfiguration {
       createJackson2JsonHandler(objectMapper)
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(DataSource::class)
   fun dataSource(
       jsonHandler: JsonHandler<*>,
       dataSourceConfigurationProperties: DataSourceConfigurationProperties,
@@ -113,6 +115,14 @@ internal class DataSourceAutoConfiguration {
         }
         .apply { extraConfiguration.jsonHandler = jsonHandler }
   }
+
+  // Primary so every by-type DataSource lookup resolves to the wrapper. The wrapper's own
+  // dataSource parameter still binds to the raw bean — Spring excludes self-references from
+  // autowire candidates.
+  @Bean
+  @Primary
+  fun lifecycleDataSource(dataSource: DataSource): LifecycleDataSource =
+      LifecycleDataSource(dataSource)
 
   @Bean
   fun dataSourceInfo(

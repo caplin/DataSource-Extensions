@@ -1,6 +1,5 @@
 package com.caplin.integration.datasourcex.spring.internal
 
-import com.caplin.datasource.DataSource
 import com.caplin.datasource.Service
 import com.caplin.integration.datasourcex.reactive.api.ActiveContainerConfig.Companion.ITEMS_SUFFIX_DEFAULT
 import com.caplin.integration.datasourcex.reactive.api.DataSourceSettings
@@ -11,6 +10,7 @@ import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationV
 import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeMessageCondition.RequestType
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
+import com.caplin.integration.datasourcex.util.LifecycleDataSource
 import com.caplin.integration.datasourcex.util.Subject.Companion.path
 import com.caplin.integration.datasourcex.util.getLogger
 import java.time.Duration
@@ -40,7 +40,7 @@ import org.springframework.util.RouteMatcher
  * [org.springframework.messaging.handler.annotation.MessageMapping] with DataSource.
  */
 internal class DataSourceServerBootstrap(
-    private val dataSource: DataSource,
+    private val dataSource: LifecycleDataSource,
     private val dataSourceMessageHandler: DataSourceMessageHandler?,
     private val dataSourceInfo: DataSourceInfo,
     private val decodeUsernameObjectMappings: Boolean = false,

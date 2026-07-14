@@ -16,6 +16,7 @@
       <module name="datasourcex.examples.spring-kotlin-chat" options="-parameters" />
       <module name="datasourcex.examples.spring-kotlin-chat.main" options="-parameters" />
       <module name="datasourcex.examples.spring-kotlin-chat.test" options="-parameters" />
+      <module name="datasourcex.examples.spring-kotlin.integrationTest" options="-parameters" />
       <module name="datasourcex.examples.spring-kotlin.main" options="-parameters" />
       <module name="datasourcex.examples.spring-kotlin.test" options="-parameters" />
       <module name="datasourcex.examples.spring.main" options="-parameters" />
