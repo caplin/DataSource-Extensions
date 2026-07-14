@@ -428,7 +428,7 @@ private constructor(
                   val event = UpdateEvent(change)
                   channel.trySendBlocking(event).onFailure {
                     if (it !is CancellationException) kLogger.error(it) { "Failed to send $event" }
-                    if (it != null && it !is CancellationException) throw it
+                    if (it != null) throw it
                   }
                 }
               }
