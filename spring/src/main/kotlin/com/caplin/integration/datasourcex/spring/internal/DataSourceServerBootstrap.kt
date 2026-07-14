@@ -11,6 +11,7 @@ import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationV
 import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeMessageCondition.RequestType
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
+import com.caplin.integration.datasourcex.util.Subject.Companion.path
 import com.caplin.integration.datasourcex.util.getLogger
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference

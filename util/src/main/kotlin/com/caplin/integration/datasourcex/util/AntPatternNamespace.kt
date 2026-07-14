@@ -5,6 +5,7 @@ import com.caplin.datasource.namespace.Namespace
 import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.util.SortedMap
 
 /**
  * An implementation of [Namespace] that matches subjects based on Ant style path patterns.
@@ -39,10 +40,15 @@ constructor(pattern: String, val rawPathVariables: Set<String> = emptySet()) : N
      * Names and values are URL-decoded. A parameter with no `=` (e.g. `flag`) or an empty value
      * (e.g. `empty=`) maps to an empty string. When a key repeats, the last value wins.
      */
-    private fun parseQueryString(query: String): Map<String, String> =
-        query.split("&").filter(String::isNotEmpty).associate { parameter ->
-          urlDecode(parameter.substringBefore('=')) to urlDecode(parameter.substringAfter('=', ""))
-        }
+    private fun parseQueryString(query: String): SortedMap<String, String> =
+        query
+            .split("&")
+            .filter(String::isNotEmpty)
+            .associate { parameter ->
+              urlDecode(parameter.substringBefore('=')) to
+                  urlDecode(parameter.substringAfter('=', ""))
+            }
+            .toSortedMap()
 
     private fun urlDecode(value: String): String = URLDecoder.decode(value, CHARSET)
 
@@ -127,13 +133,23 @@ constructor(pattern: String, val rawPathVariables: Set<String> = emptySet()) : N
   }
 
   /**
+   * Splits the path portion of a subject into its URL-decoded segments, in order. Any trailing
+   * `?query` is ignored.
+   *
+   * @param subject The subject to extract path parameters from.
+   * @return The subject's path parts, decoded.
+   */
+  fun extractPathParameters(subject: String): List<String> =
+      subject.pathPortion.split('/').filter(String::isNotEmpty).map(::urlDecode)
+
+  /**
    * Extracts the query parameters from the optional trailing `?a=b&c=d` portion of a subject.
    *
    * @param subject The subject to extract query parameters from.
    * @return A map of query parameter names to values, or an empty map when the subject has no
    *   query.
    */
-  fun extractQueryParameters(subject: String): Map<String, String> =
+  fun extractQueryParameters(subject: String): SortedMap<String, String> =
       parseQueryString(subject.substringAfter('?', ""))
 
   /** Returns a copy of this namespace with [rawPathVariables] replaced. */

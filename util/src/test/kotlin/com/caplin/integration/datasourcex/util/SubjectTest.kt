@@ -1,5 +1,6 @@
 package com.caplin.integration.datasourcex.util
 
+import com.caplin.integration.datasourcex.util.Subject.Companion.path
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 

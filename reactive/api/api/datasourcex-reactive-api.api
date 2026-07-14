@@ -104,11 +104,10 @@ public final class com/caplin/integration/datasourcex/reactive/api/ChannelConfig
 }
 
 public final class com/caplin/integration/datasourcex/reactive/api/ChannelRequest : com/caplin/integration/datasourcex/util/Subject {
-	public fun <init> (Ljava/lang/String;Ljava/util/LinkedHashMap;Ljava/util/Map;Ljava/lang/Object;)V
-	public fun getPath ()Ljava/lang/String;
+	public fun <init> (Ljava/util/List;Ljava/util/LinkedHashMap;Ljava/util/SortedMap;Ljava/lang/Object;)V
 	public fun getPathParameters ()Ljava/util/List;
 	public final fun getPathVariables ()Ljava/util/LinkedHashMap;
-	public fun getQueryParameters ()Ljava/util/Map;
+	public fun getQueryParameters ()Ljava/util/SortedMap;
 	public final fun getReceive ()Ljava/lang/Object;
 }
 
@@ -209,11 +208,10 @@ public final class com/caplin/integration/datasourcex/reactive/api/RecordType : 
 }
 
 public final class com/caplin/integration/datasourcex/reactive/api/Request : com/caplin/integration/datasourcex/util/Subject {
-	public fun <init> (Ljava/lang/String;Ljava/util/LinkedHashMap;Ljava/util/Map;)V
-	public fun getPath ()Ljava/lang/String;
+	public fun <init> (Ljava/util/List;Ljava/util/LinkedHashMap;Ljava/util/SortedMap;)V
 	public fun getPathParameters ()Ljava/util/List;
 	public final fun getPathVariables ()Ljava/util/LinkedHashMap;
-	public fun getQueryParameters ()Ljava/util/Map;
+	public fun getQueryParameters ()Ljava/util/SortedMap;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/reactive/api/RequestSupplier {

@@ -41,6 +41,7 @@ import com.caplin.integration.datasourcex.reactive.api.ServiceConfig
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
 import com.caplin.integration.datasourcex.util.Subject
+import com.caplin.integration.datasourcex.util.Subject.Companion.path
 import com.caplin.integration.datasourcex.util.getLogger
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -100,7 +101,11 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
 
   /** Decomposes [subject] into a [Request] using this namespace's extraction rules. */
   private fun AntPatternNamespace.request(subject: String): Request =
-      Request(subject, extractPathVariables(subject), extractQueryParameters(subject))
+      Request(
+          extractPathParameters(subject),
+          extractPathVariables(subject),
+          extractQueryParameters(subject),
+      )
 
   private data class ServiceInfo(
       val service: Service,
@@ -133,6 +138,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   ) {
     val config = with(configure) { ActiveConfig.Mapping().apply { invoke() } }
     val namespace = namespace.withUsernameDecoding(config.objectMappings)
+    logBind("active mapping", namespace, config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     dataSource.createActivePublisher(
@@ -193,6 +199,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   ) {
     val config = with(configure) { ActiveConfig.Json().apply { invoke() } }
     val namespace = namespace.withUsernameDecoding(config.objectMappings)
+    logBind("active JSON", namespace, config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     with(JsonContext()) {
@@ -209,6 +216,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   ) {
     val config = with(configure) { ActiveConfig.Record().apply { invoke() } }
     val namespace = namespace.withUsernameDecoding(config.objectMappings)
+    logBind("active record", namespace, config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     with(RecordContext(config.images, config.recordType)) {
@@ -261,6 +269,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   ) {
     val config = with(configure) { ChannelConfig.Record().apply { invoke() } }
     val namespace = namespace.withUsernameDecoding(config.objectMappings)
+    logBind("record channel", namespace, config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     val type = config.channelType
@@ -321,7 +330,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                 val sendToClientJob =
                     supplier(
                             ChannelRequest(
-                                channel.subject,
+                                namespace.extractPathParameters(channel.subject),
                                 namespace.extractPathVariables(channel.subject),
                                 namespace.extractQueryParameters(channel.subject),
                                 fromClientChannel.consumeAsFlow(),
@@ -358,6 +367,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   ) {
     val config = with(configure) { ChannelConfig.Json().apply { invoke() } }
     val namespace = namespace.withUsernameDecoding(config.objectMappings)
+    logBind("JSON channel", namespace, config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     val type = config.channelType
@@ -406,7 +416,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                 val sendToClientJob =
                     supplier(
                             ChannelRequest(
-                                channel.subject,
+                                namespace.extractPathParameters(channel.subject),
                                 namespace.extractPathVariables(channel.subject),
                                 namespace.extractQueryParameters(channel.subject),
                                 fromClientChannel.consumeAsFlow(),
@@ -441,6 +451,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
       flow: Flow<BroadcastEvent<Subject>>,
   ) {
     val config = with(configure) { BroadcastConfig.Mapping().apply { invoke() } }
+    logBind("broadcast mapping", namespace)
     serviceInfo?.registerNamespace(namespace, emptyMap())
 
     dataSource.launch {
@@ -496,6 +507,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
       flow: Flow<BroadcastEvent<Map<String, String>>>,
   ) {
     val config = with(configure) { BroadcastConfig.Record().apply { invoke() } }
+    logBind("broadcast record", namespace)
     serviceInfo?.registerNamespace(namespace, emptyMap())
 
     with(RecordContext(true, config.recordType)) {
@@ -556,7 +568,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   ) {
     val rowPattern =
         AntPatternNamespace("${containerSubjectPattern.pattern}${config.rowPathSuffix}/{itemId}")
-    logger.info { "Using item pattern $rowPattern for container pattern $containerSubjectPattern" }
+    logBind("active container", containerSubjectPattern, config.objectMappings)
+    logBind("container row", rowPattern)
 
     serviceInfo?.registerNamespace(containerSubjectPattern, config.objectMappings)
     serviceInfo?.registerNamespace(rowPattern, emptyMap())
@@ -751,6 +764,28 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
     publishSubjectErrorEvent(messageFactory.createSubjectErrorEvent(subject, SubjectError.NotFound))
   }
 
+  private fun logBind(
+      what: String,
+      namespace: AntPatternNamespace,
+      objectMappings: Map<String, String>? = null,
+  ) {
+    logger.info {
+      buildString {
+        append(
+            "Binding $what to namespace '${namespace.pattern}' " +
+                "(posix '${namespace.posixExtendedPattern}')",
+        )
+        serviceInfo?.let { info ->
+          append(" on service '${info.serviceConfig.name}'")
+          objectMappings
+              ?.takeIf(Map<String, String>::isNotEmpty)
+              ?.let(namespace::getObjectMap)
+              ?.let { append(", object map '${it.fromPattern}' -> '${it.toPattern}'") }
+        }
+      }
+    }
+  }
+
   private fun ServiceInfo.registerNamespace(
       antPatternNamespace: AntPatternNamespace,
       mappings: Map<String, String>?,
@@ -774,5 +809,13 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
     service.setType(CONTRIB)
 
     dataSource.createService(service)
+    logger.info {
+      "Created service '${serviceConfig.name}' " +
+          "(remoteLabelPattern=${serviceConfig.remoteLabelPattern}, " +
+          "discardTimeout=${serviceConfig.discardTimeout}, " +
+          "throttleTime=${serviceConfig.throttleTime}, " +
+          "requiredState=${serviceConfig.requiredState}, " +
+          "ifLabelPatterns=${serviceConfig.ifLabelPatterns}, type=$CONTRIB)"
+    }
   }
 }

@@ -164,6 +164,7 @@ abstract class GenerateApi : DefaultTask() {
           val packageName = "$rootPackageName.${publisherType.packageName}"
           val fileBuilder =
               FileSpec.builder(packageName, bindTypeName)
+                  .apply { if (publishTypeName != "Broadcast") addImport(pathMemberName) }
                   .addAnnotation(
                       AnnotationSpec.builder(Suppress::class)
                           .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)

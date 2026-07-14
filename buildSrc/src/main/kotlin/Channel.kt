@@ -102,7 +102,7 @@ object Channel : FunctionProvider {
             .addParameter(channelRequestSupplierParameter)
             .addCode(
                 """
-                            %N.%N(%N, %N,%L) { request -> %N.asFlow(with(%N) { %T(request.path, request.pathVariables, request.queryParameters, %N.asPublisher(request.receive)).invoke() }) }
+                            %N.%N(%N, %N,%L) { request -> %N.asFlow(with(%N) { %T(request.pathParameters, request.pathVariables, request.queryParameters, %N.asPublisher(request.receive)).invoke() }) }
                         """
                     .trimIndent(),
                 binderProperty,
