@@ -68,10 +68,10 @@ interface StreamLinkConnection : StreamLink, AutoCloseable {
   }
 
   /**
-   * Subscribes to the container at [subject], emitting a [ContainerEvent] for each row add, remove
-   * or clear as its membership changes.
+   * Subscribes to the container at [subject], emitting a [ContainerChangeEvent] for each row add,
+   * remove or clear as its membership changes.
    */
-  fun getContainer(subject: Subject): Flow<ContainerEvent>
+  fun getContainer(subject: Subject): Flow<ContainerChangeEvent>
 
   /**
    * Opens a record channel on [subject], sending each emitted field map from [send] to the server

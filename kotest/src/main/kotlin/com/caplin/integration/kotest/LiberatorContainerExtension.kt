@@ -83,7 +83,7 @@ class LiberatorContainerExtension(
    * @param extraFiles additional files to copy into the container, keyed by destination path.
    * @param baseImage the base Docker image the Liberator image is built from.
    */
-  data class DefaultContainerConfig(
+  class DefaultContainerConfig(
       val adapterConfig: InputStream? = null,
       val beforeScript: InputStream? = null,
       val extraFiles: Map<String, InputStream> = mutableMapOf(),
@@ -121,7 +121,7 @@ class LiberatorContainerExtension(
    * A [ContainerConfig] for running against a container and KeyMaster configuration you supply
    * yourself, rather than the one built by [DefaultContainerConfig].
    */
-  data class CustomContainerConfig(
+  class CustomContainerConfig(
       override val keymasterConfiguration: IKeyMasterConfiguration,
       override val httpPort: Int,
       override val dataSourcePort: Int,
@@ -140,7 +140,7 @@ class LiberatorContainerExtension(
    * @property httpPort the host port mapped to the container's HTTP/RTTP port.
    * @property containerState the underlying Testcontainers container state.
    */
-  data class Liberator(
+  class Liberator(
       val streamLinkConnectionFactory: StreamLinkConnectionFactory,
       val dataSourcePort: Int,
       val httpPort: Int,

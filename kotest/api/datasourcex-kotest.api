@@ -41,32 +41,16 @@ public abstract interface class com/caplin/integration/kotest/LiberatorContainer
 
 public final class com/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig : com/caplin/integration/kotest/LiberatorContainerExtension$ContainerConfig {
 	public fun <init> (Lcom/caplin/keymaster/IKeyMasterConfiguration;IILorg/testcontainers/containers/GenericContainer;)V
-	public final fun component1 ()Lcom/caplin/keymaster/IKeyMasterConfiguration;
-	public final fun component2 ()I
-	public final fun component3 ()I
-	public final fun component4 ()Lorg/testcontainers/containers/GenericContainer;
-	public final fun copy (Lcom/caplin/keymaster/IKeyMasterConfiguration;IILorg/testcontainers/containers/GenericContainer;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig;
-	public static synthetic fun copy$default (Lcom/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig;Lcom/caplin/keymaster/IKeyMasterConfiguration;IILorg/testcontainers/containers/GenericContainer;ILjava/lang/Object;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$CustomContainerConfig;
-	public fun equals (Ljava/lang/Object;)Z
 	public fun getContainer ()Lorg/testcontainers/containers/GenericContainer;
 	public fun getDataSourcePort ()I
 	public fun getHttpPort ()I
 	public fun getKeymasterConfiguration ()Lcom/caplin/keymaster/IKeyMasterConfiguration;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig : com/caplin/integration/kotest/LiberatorContainerExtension$ContainerConfig {
 	public fun <init> ()V
 	public fun <init> (Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/io/InputStream;
-	public final fun component2 ()Ljava/io/InputStream;
-	public final fun component3 ()Ljava/util/Map;
-	public final fun component4 ()Ljava/lang/String;
-	public final fun copy (Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig;
-	public static synthetic fun copy$default (Lcom/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig;Ljava/io/InputStream;Ljava/io/InputStream;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$DefaultContainerConfig;
-	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAdapterConfig ()Ljava/io/InputStream;
 	public final fun getBaseImage ()Ljava/lang/String;
 	public final fun getBeforeScript ()Ljava/io/InputStream;
@@ -75,25 +59,14 @@ public final class com/caplin/integration/kotest/LiberatorContainerExtension$Def
 	public final fun getExtraFiles ()Ljava/util/Map;
 	public fun getHttpPort ()I
 	public fun getKeymasterConfiguration ()Lcom/caplin/keymaster/IKeyMasterConfiguration;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/caplin/integration/kotest/LiberatorContainerExtension$Liberator {
 	public fun <init> (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;IILorg/testcontainers/containers/ContainerState;)V
-	public final fun component1 ()Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
-	public final fun component2 ()I
-	public final fun component3 ()I
-	public final fun component4 ()Lorg/testcontainers/containers/ContainerState;
 	public final fun connect (Ljava/lang/String;)Lcom/caplin/integration/streamlinkx/StreamLinkConnection;
-	public final fun copy (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;IILorg/testcontainers/containers/ContainerState;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$Liberator;
-	public static synthetic fun copy$default (Lcom/caplin/integration/kotest/LiberatorContainerExtension$Liberator;Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;IILorg/testcontainers/containers/ContainerState;ILjava/lang/Object;)Lcom/caplin/integration/kotest/LiberatorContainerExtension$Liberator;
-	public fun equals (Ljava/lang/Object;)Z
 	public final fun getContainerState ()Lorg/testcontainers/containers/ContainerState;
 	public final fun getDataSourcePort ()I
 	public final fun getHttpPort ()I
 	public final fun getStreamLinkConnectionFactory ()Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 

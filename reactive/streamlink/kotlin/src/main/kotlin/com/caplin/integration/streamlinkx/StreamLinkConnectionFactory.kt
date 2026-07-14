@@ -394,7 +394,7 @@ private constructor(
         return receive.consumeAsFlow()
       }
 
-      override fun getContainer(subject: Subject): Flow<ContainerEvent> =
+      override fun getContainer(subject: Subject): Flow<ContainerChangeEvent> =
           getSubject(subject.path) { channel ->
             object : SubscriptionListener by DefaultSubscriptionListener(channel) {
 
@@ -407,15 +407,15 @@ private constructor(
                     object : ContainerModel {
 
                       override fun clear() {
-                        changes = changes.add(Clear)
+                        changes = changes.adding(Clear)
                       }
 
                       override fun insert(index: Int, element: ContainerElement) {
-                        changes = changes.add(Added(index, element.subject))
+                        changes = changes.adding(Added(index, element.subject))
                       }
 
                       override fun remove(index: Int, element: ContainerElement) {
-                        changes = changes.add(Removed(index, element.subject))
+                        changes = changes.adding(Removed(index, element.subject))
                       }
 
                       override fun move(fromIndex: Int, toIndex: Int, element: ContainerElement) {

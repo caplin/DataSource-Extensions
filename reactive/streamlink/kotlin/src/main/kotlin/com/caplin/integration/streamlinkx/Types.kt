@@ -27,7 +27,7 @@ sealed interface Event<out T>
  * An [Event] stream carrying [ContainerChange]s, as produced by
  * [StreamLinkConnection.getContainer].
  */
-typealias ContainerEvent = Event<ContainerChange>
+typealias ContainerChangeEvent = Event<ContainerChange>
 
 /**
  * An [Event] stream carrying record field maps, as produced by [StreamLinkConnection.getSubject].
@@ -48,16 +48,56 @@ sealed interface ContainerChange {
     val path: String
 
     /** A row for [path] was inserted at [index]. */
-    data class Added(
+    class Added(
         override val index: Int,
         override val path: String,
-    ) : RowChange
+    ) : RowChange {
+      override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Added
+
+        if (index != other.index) return false
+        if (path != other.path) return false
+
+        return true
+      }
+
+      override fun hashCode(): Int {
+        var result = index
+        result = 31 * result + path.hashCode()
+        return result
+      }
+
+      override fun toString(): String = "Added(index=$index, path='$path')"
+    }
 
     /** The row for [path] at [index] was removed. */
-    data class Removed(
+    class Removed(
         override val index: Int,
         override val path: String,
-    ) : RowChange
+    ) : RowChange {
+      override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Removed
+
+        if (index != other.index) return false
+        if (path != other.path) return false
+
+        return true
+      }
+
+      override fun hashCode(): Int {
+        var result = index
+        result = 31 * result + path.hashCode()
+        return result
+      }
+
+      override fun toString(): String = "Removed(index=$index, path='$path')"
+    }
   }
 }
 
@@ -152,9 +192,9 @@ class ErrorEvent(
 fun Flow<ContainerChange>.runningFold(): Flow<PersistentList<String>> =
     runningFold(persistentListOf()) { list, event ->
       when (event) {
-        is Added -> list.add(event.path)
-        is Removed -> list.remove(event.path)
-        Clear -> list.clear()
+        is Added -> list.adding(event.path)
+        is Removed -> list.removing(event.path)
+        Clear -> list.cleared()
       }
     }
 
