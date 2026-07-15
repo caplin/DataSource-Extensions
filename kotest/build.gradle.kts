@@ -32,3 +32,10 @@ testing {
 // Keep the docker-backed integration test off `check`: Kover otherwise triggers every Test task
 // when generating coverage, which `check` depends on.
 kover { currentProject { instrumentation { disabledForTestTasks.add("integrationTest") } } }
+
+dokka {
+  dokkaSourceSets.configureEach {
+    includes.from("README.md")
+    samples.from(layout.projectDirectory.dir("src/samples/kotlin"))
+  }
+}

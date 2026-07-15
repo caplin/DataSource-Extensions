@@ -24,6 +24,13 @@ dependencies {
   testImplementation(libs.turbine)
 }
 
+dokka {
+  dokkaSourceSets.configureEach {
+    includes.from("README.md")
+    samples.from(layout.projectDirectory.dir("src/samples/kotlin"))
+  }
+}
+
 // TODO This can be removed once PSL-889 is resolved, and we take a new StreamLink.
 publishing {
   publications {
