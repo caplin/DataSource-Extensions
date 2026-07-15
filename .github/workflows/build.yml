@@ -73,6 +73,7 @@ jobs:
             reactive/datasource/java-flow/build/test-results/test/TEST-*.xml
             reactive/datasource/kotlin/build/test-results/test/TEST-*.xml
             reactive/datasource/reactivestreams/build/test-results/test/TEST-*.xml
+            reactive/streamlink/kotlin/build/test-results/test/TEST-*.xml
             spring/build/test-results/test/TEST-*.xml
             util/build/test-results/test/TEST-*.xml
 

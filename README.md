@@ -42,6 +42,24 @@ Then refer to the documentation:
 * [datasourcex-kotlin](https://caplin.github.io/DataSource-Extensions/reactive/datasourcex-kotlin)
 * [datasourcex-java-flow](https://caplin.github.io/DataSource-Extensions/reactive/datasourcex-java-flow)
 
+## StreamLink
+
+`sl4jx-kotlin` is a [Kotlin Flow](https://kotlinlang.org/docs/flow.html)-based client wrapper over
+Caplin's StreamLink and KeyMaster SDKs, for consuming data from a Liberator.
+
+### Usage
+
+Add the following dependency to your project:
+
+```kotlin
+dependencies {
+    implementation("com.caplin.integration.datasourcex:sl4jx-kotlin:<version>")
+}
+```
+
+Then refer to
+the [documentation](https://caplin.github.io/DataSource-Extensions/reactive/sl4jx-kotlin).
+
 ## Spring
 
 This module provides a starter for integrating Caplin DataSource with your
@@ -62,3 +80,21 @@ dependencies {
 Then refer to
 the [documentation](https://caplin.github.io/DataSource-Extensions/spring-boot-starter-datasource),
 [hands-on tutorial](./spring/docs/GUIDE.md) and [examples](./examples).
+
+## Testing
+
+`datasourcex-kotest` is a [Kotest](https://kotest.io/) test-support harness that runs a Liberator in
+a [Testcontainers](https://testcontainers.com/) container for StreamLink client tests.
+
+### Usage
+
+Add the following dependency to your project:
+
+```kotlin
+dependencies {
+    testImplementation("com.caplin.integration.datasourcex:datasourcex-kotest:<version>")
+}
+```
+
+Then refer to
+the [documentation](https://caplin.github.io/DataSource-Extensions/datasourcex-kotest).

@@ -8,6 +8,7 @@ dependencies {
   dokka(project(":reactive:datasourcex-kotlin"))
   dokka(project(":reactive:datasourcex-reactivestreams"))
   dokka(project(":reactive:sl4jx-kotlin"))
+  dokka(project(":datasourcex-kotest"))
   dokka(project(":spring-boot-starter-datasource"))
   dokka(project(":datasourcex-util"))
 }
