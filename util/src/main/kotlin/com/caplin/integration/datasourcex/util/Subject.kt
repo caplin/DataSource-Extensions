@@ -1,5 +1,6 @@
 package com.caplin.integration.datasourcex.util
 
+import com.caplin.integration.datasourcex.util.Subject.Companion.of
 import com.caplin.integration.datasourcex.util.Subject.Companion.path
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -31,14 +32,22 @@ interface Subject {
      */
     @JvmStatic
     @JvmOverloads
-    operator fun invoke(
+    fun of(
         pathParameters: List<String>,
         queryParameters: Map<String, String> = emptyMap(),
     ): Subject = SubjectImpl(pathParameters, queryParameters.toSortedMap())
 
     /** Creates a [Subject] from its path parts, with no query parameters. */
-    @JvmStatic
-    operator fun invoke(vararg pathParameters: String): Subject = invoke(pathParameters.asList())
+    @JvmStatic fun of(vararg pathParameters: String): Subject = of(pathParameters.asList())
+
+    /** Kotlin sugar for [of], so that a [Subject] can be constructed as `Subject(...)`. */
+    operator fun invoke(
+        pathParameters: List<String>,
+        queryParameters: Map<String, String> = emptyMap(),
+    ): Subject = of(pathParameters, queryParameters)
+
+    /** Kotlin sugar for [of], so that a [Subject] can be constructed as `Subject(...)`. */
+    operator fun invoke(vararg pathParameters: String): Subject = of(*pathParameters)
 
     /** The subject's string form, rendered from its path parts and query parameters. */
     @JvmStatic

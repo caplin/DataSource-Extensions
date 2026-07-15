@@ -75,6 +75,16 @@ public final class com/caplin/integration/datasourcex/util/KLogger {
 	public static final fun warn-impl (Lorg/slf4j/Logger;Lkotlin/jvm/functions/Function0;)V
 }
 
+public abstract interface class com/caplin/integration/datasourcex/util/LifecycleDataSource : com/caplin/datasource/DataSource, java/lang/AutoCloseable {
+	public static final field Companion Lcom/caplin/integration/datasourcex/util/LifecycleDataSource$Companion;
+	public abstract fun awaitConnected (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getPeerStates ()Lkotlinx/coroutines/flow/SharedFlow;
+}
+
+public final class com/caplin/integration/datasourcex/util/LifecycleDataSource$Companion {
+	public final fun invoke (Lcom/caplin/datasource/DataSource;)Lcom/caplin/integration/datasourcex/util/LifecycleDataSource;
+}
+
 public final class com/caplin/integration/datasourcex/util/ReadWriteLock {
 	public fun <init> ()V
 	public final fun readLock (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -83,16 +93,6 @@ public final class com/caplin/integration/datasourcex/util/ReadWriteLock {
 	public final fun withWriteLock (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun writeLock (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun writeUnlock ()V
-}
-
-public abstract interface class com/caplin/integration/datasourcex/util/SimpleDataSource : com/caplin/datasource/DataSource, java/lang/AutoCloseable {
-	public static final field Companion Lcom/caplin/integration/datasourcex/util/SimpleDataSource$Companion;
-	public abstract fun awaitConnected (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public abstract fun getPeerStates ()Lkotlinx/coroutines/flow/SharedFlow;
-}
-
-public final class com/caplin/integration/datasourcex/util/SimpleDataSource$Companion {
-	public final fun invoke (Lcom/caplin/datasource/DataSource;)Lcom/caplin/integration/datasourcex/util/SimpleDataSource;
 }
 
 public abstract interface class com/caplin/integration/datasourcex/util/SimpleDataSourceConfig {
@@ -145,8 +145,8 @@ public final class com/caplin/integration/datasourcex/util/SimpleDataSourceConfi
 
 public final class com/caplin/integration/datasourcex/util/SimpleDataSourceFactory {
 	public static final field INSTANCE Lcom/caplin/integration/datasourcex/util/SimpleDataSourceFactory;
-	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;)Lcom/caplin/integration/datasourcex/util/SimpleDataSource;
-	public static synthetic fun createDataSource$default (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/SimpleDataSource;
+	public static final fun createDataSource (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;)Lcom/caplin/integration/datasourcex/util/LifecycleDataSource;
+	public static synthetic fun createDataSource$default (Lcom/caplin/integration/datasourcex/util/SimpleDataSourceConfig;Lcom/caplin/datasource/messaging/json/JsonHandler;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/LifecycleDataSource;
 	public static final fun createJackson2JsonHandler (Lcom/fasterxml/jackson/databind/ObjectMapper;)Lcom/caplin/integration/datasourcex/util/serialization/jackson2/Jackson2JsonHandler;
 	public static final fun createJackson3JsonHandler (Ltools/jackson/databind/ObjectMapper;)Lcom/caplin/integration/datasourcex/util/serialization/jackson3/Jackson3JsonHandler;
 	public final fun getDefaultJackson2JsonHandler ()Lcom/caplin/integration/datasourcex/util/serialization/jackson2/Jackson2JsonHandler;
@@ -160,18 +160,21 @@ public abstract interface class com/caplin/integration/datasourcex/util/Subject 
 	public static fun getPath (Lcom/caplin/integration/datasourcex/util/Subject;)Ljava/lang/String;
 	public abstract fun getPathParameters ()Ljava/util/List;
 	public abstract fun getQueryParameters ()Ljava/util/SortedMap;
-	public static fun invoke (Ljava/util/List;)Lcom/caplin/integration/datasourcex/util/Subject;
-	public static fun invoke (Ljava/util/List;Ljava/util/Map;)Lcom/caplin/integration/datasourcex/util/Subject;
-	public static fun invoke ([Ljava/lang/String;)Lcom/caplin/integration/datasourcex/util/Subject;
+	public static fun of (Ljava/util/List;)Lcom/caplin/integration/datasourcex/util/Subject;
+	public static fun of (Ljava/util/List;Ljava/util/Map;)Lcom/caplin/integration/datasourcex/util/Subject;
+	public static fun of ([Ljava/lang/String;)Lcom/caplin/integration/datasourcex/util/Subject;
 }
 
 public final class com/caplin/integration/datasourcex/util/Subject$Companion {
 	public final fun buildPath (Ljava/util/List;Ljava/util/SortedMap;)Ljava/lang/String;
 	public final fun getPath (Lcom/caplin/integration/datasourcex/util/Subject;)Ljava/lang/String;
-	public final fun invoke (Ljava/util/List;)Lcom/caplin/integration/datasourcex/util/Subject;
 	public final fun invoke (Ljava/util/List;Ljava/util/Map;)Lcom/caplin/integration/datasourcex/util/Subject;
 	public final fun invoke ([Ljava/lang/String;)Lcom/caplin/integration/datasourcex/util/Subject;
 	public static synthetic fun invoke$default (Lcom/caplin/integration/datasourcex/util/Subject$Companion;Ljava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/Subject;
+	public final fun of (Ljava/util/List;)Lcom/caplin/integration/datasourcex/util/Subject;
+	public final fun of (Ljava/util/List;Ljava/util/Map;)Lcom/caplin/integration/datasourcex/util/Subject;
+	public final fun of ([Ljava/lang/String;)Lcom/caplin/integration/datasourcex/util/Subject;
+	public static synthetic fun of$default (Lcom/caplin/integration/datasourcex/util/Subject$Companion;Ljava/util/List;Ljava/util/Map;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/Subject;
 }
 
 public final class com/caplin/integration/datasourcex/util/TimeoutKt {
@@ -521,10 +524,6 @@ public abstract interface class com/caplin/integration/datasourcex/util/flow/Ver
 
 public final class com/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Removed : com/caplin/integration/datasourcex/util/flow/VersionedMapEvent {
 	public fun <init> (Ljava/lang/Object;J)V
-	public final fun component1 ()Ljava/lang/Object;
-	public final fun component2 ()J
-	public final fun copy (Ljava/lang/Object;J)Lcom/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Removed;
-	public static synthetic fun copy$default (Lcom/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Removed;Ljava/lang/Object;JILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Removed;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getKey ()Ljava/lang/Object;
 	public fun getVersion ()J
@@ -534,11 +533,6 @@ public final class com/caplin/integration/datasourcex/util/flow/VersionedMapEven
 
 public final class com/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Upsert : com/caplin/integration/datasourcex/util/flow/VersionedMapEvent {
 	public fun <init> (Ljava/lang/Object;Ljava/lang/Object;J)V
-	public final fun component1 ()Ljava/lang/Object;
-	public final fun component2 ()Ljava/lang/Object;
-	public final fun component3 ()J
-	public final fun copy (Ljava/lang/Object;Ljava/lang/Object;J)Lcom/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Upsert;
-	public static synthetic fun copy$default (Lcom/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Upsert;Ljava/lang/Object;Ljava/lang/Object;JILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/flow/VersionedMapEvent$Upsert;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getKey ()Ljava/lang/Object;
 	public final fun getValue ()Ljava/lang/Object;
@@ -687,10 +681,6 @@ public final class com/caplin/integration/datasourcex/util/store/TxContext$Defau
 
 public final class com/caplin/integration/datasourcex/util/store/Versioned {
 	public fun <init> (Ljava/lang/Object;J)V
-	public final fun component1 ()Ljava/lang/Object;
-	public final fun component2 ()J
-	public final fun copy (Ljava/lang/Object;J)Lcom/caplin/integration/datasourcex/util/store/Versioned;
-	public static synthetic fun copy$default (Lcom/caplin/integration/datasourcex/util/store/Versioned;Ljava/lang/Object;JILjava/lang/Object;)Lcom/caplin/integration/datasourcex/util/store/Versioned;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getValue ()Ljava/lang/Object;
 	public final fun getVersion ()J

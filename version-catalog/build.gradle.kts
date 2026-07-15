@@ -15,6 +15,8 @@ catalog {
   val javaFlow = project(":reactive:datasourcex-java-flow")
   val kotlin = project(":reactive:datasourcex-kotlin")
   val reactiveStreams = project(":reactive:datasourcex-reactivestreams")
+  val streamlinkKotlin = project(":reactive:sl4jx-kotlin")
+  val kotest = project(":datasourcex-kotest")
   versionCatalog {
     version("spring-boot", libs.versions.springBoot.get())
     version(rootProject.name, util.version.toString())
@@ -43,6 +45,16 @@ catalog {
         reactiveStreams.name,
         project.group.toString(),
         reactiveStreams.name,
+    ).versionRef(rootProject.name)
+    library(
+        streamlinkKotlin.name,
+        project.group.toString(),
+        streamlinkKotlin.name,
+    ).versionRef(rootProject.name)
+    library(
+        kotest.name,
+        project.group.toString(),
+        kotest.name,
     ).versionRef(rootProject.name)
     library(
         springBootStarterDataSource.name,

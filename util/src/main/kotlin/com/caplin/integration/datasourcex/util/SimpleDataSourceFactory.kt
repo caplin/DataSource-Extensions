@@ -85,7 +85,7 @@ object SimpleDataSourceFactory {
   fun createDataSource(
       simpleConfig: SimpleDataSourceConfig,
       jsonHandler: JsonHandler<*> = defaultJackson3JsonHandler,
-  ): SimpleDataSource {
+  ): LifecycleDataSource {
     val logPath =
         simpleConfig.logDirectory
             ?: run {
@@ -167,7 +167,7 @@ object SimpleDataSourceFactory {
             """
             .trimMargin()
 
-    return SimpleDataSource(
+    return LifecycleDataSource(
         DataSource.fromConfigString(config, Logger.getLogger(DataSource::class.qualifiedName))
             .apply { extraConfiguration.jsonHandler = jsonHandler },
     )

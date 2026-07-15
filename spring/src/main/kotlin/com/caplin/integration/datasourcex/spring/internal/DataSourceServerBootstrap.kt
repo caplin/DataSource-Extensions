@@ -1,6 +1,5 @@
 package com.caplin.integration.datasourcex.spring.internal
 
-import com.caplin.datasource.DataSource
 import com.caplin.datasource.Service
 import com.caplin.integration.datasourcex.reactive.api.ActiveContainerConfig.Companion.ITEMS_SUFFIX_DEFAULT
 import com.caplin.integration.datasourcex.reactive.api.DataSourceSettings
@@ -11,6 +10,7 @@ import com.caplin.integration.datasourcex.spring.annotations.IngressDestinationV
 import com.caplin.integration.datasourcex.spring.internal.DataSourceRequestTypeMessageCondition.RequestType
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
+import com.caplin.integration.datasourcex.util.LifecycleDataSource
 import com.caplin.integration.datasourcex.util.Subject.Companion.path
 import com.caplin.integration.datasourcex.util.getLogger
 import java.time.Duration
@@ -40,7 +40,7 @@ import org.springframework.util.RouteMatcher
  * [org.springframework.messaging.handler.annotation.MessageMapping] with DataSource.
  */
 internal class DataSourceServerBootstrap(
-    private val dataSource: DataSource,
+    private val dataSource: LifecycleDataSource,
     private val dataSourceMessageHandler: DataSourceMessageHandler?,
     private val dataSourceInfo: DataSourceInfo,
     private val decodeUsernameObjectMappings: Boolean = false,
@@ -162,10 +162,10 @@ internal class DataSourceServerBootstrap(
 
           when (dataSourceRequestType) {
             is RequestType.Channel -> {
-              fun <I : Any> createFlow(subject: String, receiveFlow: Flow<Any>): Flow<I> =
+              fun <I : Any> createFlow(path: String, receiveFlow: Flow<Any>): Flow<I> =
                   flow {
                         val sendFlow = AtomicReference<Flow<I>>()
-                        val route = routeMatcher.parseRoute(subject)
+                        val route = routeMatcher.parseRoute(path)
                         handleMessage(
                                 MessageBuilder.createMessage(
                                     receiveFlow,
@@ -180,12 +180,12 @@ internal class DataSourceServerBootstrap(
                       }
                       .onStart {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} started"
+                          "$path matching ${destinationMessageCondition.patterns} started"
                         }
                       }
                       .onCompletion {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} completed"
+                          "$path matching ${destinationMessageCondition.patterns} completed"
                         }
                       }
 
@@ -235,10 +235,10 @@ internal class DataSourceServerBootstrap(
             }
 
             is RequestType.Stream -> {
-              fun <I : Any> createFlow(subject: String) =
+              fun <I : Any> createFlow(path: String) =
                   flow {
                         val sendFlow = AtomicReference<Flow<I>>()
-                        val route = routeMatcher.parseRoute(subject)
+                        val route = routeMatcher.parseRoute(path)
                         handleMessage(
                                 MessageBuilder.createMessage(
                                     emptyPayload,
@@ -252,12 +252,12 @@ internal class DataSourceServerBootstrap(
                       }
                       .onStart {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} started"
+                          "$path matching ${destinationMessageCondition.patterns} started"
                         }
                       }
                       .onCompletion {
                         logger.info {
-                          "$subject matching ${destinationMessageCondition.patterns} completed"
+                          "$path matching ${destinationMessageCondition.patterns} completed"
                         }
                       }
 

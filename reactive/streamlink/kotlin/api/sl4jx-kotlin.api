@@ -1,0 +1,107 @@
+public abstract interface class com/caplin/integration/streamlinkx/ContainerChange {
+}
+
+public final class com/caplin/integration/streamlinkx/ContainerChange$Clear : com/caplin/integration/streamlinkx/ContainerChange {
+	public static final field INSTANCE Lcom/caplin/integration/streamlinkx/ContainerChange$Clear;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/caplin/integration/streamlinkx/ContainerChange$RowChange : com/caplin/integration/streamlinkx/ContainerChange {
+	public abstract fun getIndex ()I
+	public abstract fun getPath ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/streamlinkx/ContainerChange$RowChange$Added : com/caplin/integration/streamlinkx/ContainerChange$RowChange {
+	public fun <init> (ILjava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getIndex ()I
+	public fun getPath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/streamlinkx/ContainerChange$RowChange$Removed : com/caplin/integration/streamlinkx/ContainerChange$RowChange {
+	public fun <init> (ILjava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getIndex ()I
+	public fun getPath ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/streamlinkx/ErrorEvent : com/caplin/integration/streamlinkx/Event {
+	public fun <init> (Lcom/caplin/streamlink/SubscriptionErrorType;Lcom/caplin/streamlink/ErrorReason;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getReason ()Lcom/caplin/streamlink/ErrorReason;
+	public final fun getType ()Lcom/caplin/streamlink/SubscriptionErrorType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/caplin/integration/streamlinkx/Event {
+}
+
+public final class com/caplin/integration/streamlinkx/StatusEvent : com/caplin/integration/streamlinkx/Event {
+	public fun <init> (Lcom/caplin/streamlink/SubscriptionStatusType;Ljava/lang/String;Ljava/util/Map;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFields ()Ljava/util/Map;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getType ()Lcom/caplin/streamlink/SubscriptionStatusType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/caplin/integration/streamlinkx/StreamLinkConnection : com/caplin/streamlink/StreamLink, java/lang/AutoCloseable {
+	public static final field Companion Lcom/caplin/integration/streamlinkx/StreamLinkConnection$Companion;
+	public fun awaitConnected (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun awaitServiceUp (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getChannel (Lcom/caplin/integration/datasourcex/util/Subject;Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getChannel (Lcom/caplin/integration/datasourcex/util/Subject;Lkotlinx/coroutines/flow/Flow;Lkotlin/reflect/KClass;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getContainer (Lcom/caplin/integration/datasourcex/util/Subject;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getState ()Lkotlinx/coroutines/flow/SharedFlow;
+	public abstract fun getSubject (Lcom/caplin/integration/datasourcex/util/Subject;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getSubject (Lcom/caplin/integration/datasourcex/util/Subject;Lkotlin/reflect/KClass;)Lkotlinx/coroutines/flow/Flow;
+	public abstract fun getUsername ()Ljava/lang/String;
+}
+
+public final class com/caplin/integration/streamlinkx/StreamLinkConnection$Companion {
+}
+
+public final class com/caplin/integration/streamlinkx/StreamLinkConnection$DefaultImpls {
+	public static fun awaitConnected (Lcom/caplin/integration/streamlinkx/StreamLinkConnection;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static fun awaitServiceUp (Lcom/caplin/integration/streamlinkx/StreamLinkConnection;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/caplin/integration/streamlinkx/StreamLinkConnectionFactory {
+	public static final field Companion Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lcom/caplin/keymaster/IKeyMasterConfiguration;Ltools/jackson/databind/ObjectMapper;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun connect (Ljava/lang/String;)Lcom/caplin/integration/streamlinkx/StreamLinkConnection;
+}
+
+public final class com/caplin/integration/streamlinkx/StreamLinkConnectionFactory$Companion {
+	public final fun convertDerToPem ([BLjava/lang/String;)Ljava/lang/String;
+	public static synthetic fun convertDerToPem$default (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory$Companion;[BLjava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
+	public final fun invoke (Ljava/lang/String;Lcom/caplin/keymaster/IKeyMasterConfiguration;Ltools/jackson/databind/ObjectMapper;)Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+	public final fun invoke (Ljava/lang/String;Ljava/io/InputStream;Lcom/caplin/keymaster/KeyMasterHashingAlgorithm;Ltools/jackson/databind/ObjectMapper;)Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+	public final fun invoke (Ljava/lang/String;Ljava/security/PrivateKey;Lcom/caplin/keymaster/KeyMasterHashingAlgorithm;Ltools/jackson/databind/ObjectMapper;)Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+	public static synthetic fun invoke$default (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory$Companion;Ljava/lang/String;Lcom/caplin/keymaster/IKeyMasterConfiguration;Ltools/jackson/databind/ObjectMapper;ILjava/lang/Object;)Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+	public static synthetic fun invoke$default (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory$Companion;Ljava/lang/String;Ljava/io/InputStream;Lcom/caplin/keymaster/KeyMasterHashingAlgorithm;Ltools/jackson/databind/ObjectMapper;ILjava/lang/Object;)Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+	public static synthetic fun invoke$default (Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory$Companion;Ljava/lang/String;Ljava/security/PrivateKey;Lcom/caplin/keymaster/KeyMasterHashingAlgorithm;Ltools/jackson/databind/ObjectMapper;ILjava/lang/Object;)Lcom/caplin/integration/streamlinkx/StreamLinkConnectionFactory;
+}
+
+public final class com/caplin/integration/streamlinkx/TypesKt {
+	public static final fun awaitStatusOk (Lkotlinx/coroutines/flow/Flow;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun filterIsUpdate (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun runningFold (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/caplin/integration/streamlinkx/UpdateEvent : com/caplin/integration/streamlinkx/Event {
+	public fun <init> (Ljava/lang/Object;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPayload ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

@@ -11,11 +11,19 @@ fory = "1.1.0"
 
 # Caplin Dependencies
 datasource = "8.0.12-1871-367ddb14"
+streamlink = "8.0.7-1825-026106f"
+keymaster = "8.0.3-559-041a628"
+
+# Logging (kotlin-logging is not managed by the Spring Boot BOM; slf4j is)
+kotlin-logging = "7.0.13"
 
 # Test Dependencies
 kotest = "6.2.2"
 turbine = "1.2.1"
 mockk = "1.14.11"
+
+# testcontainers is managed by the Spring Boot BOM; kotest-extensions-testcontainers tracks the
+# kotest core version line (io.kotest:… at 6.2.x, depending on testcontainers 2.x).
 
 # Spring BOM should manage other dependencies versions.
 
@@ -39,11 +47,19 @@ jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.r
 
 # Caplin Dependencies
 datasource = { module = "com.caplin.platform.integration.java:datasource", version.ref = "datasource" }
+streamlink = { module = "com.caplin.streamlink:StreamLinkJava", version.ref = "streamlink" }
+keymaster = { module = "com.caplin.platform.KeyMaster:KeyMasterMain", version.ref = "keymaster" }
+
+# Logging
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlin-logging" }
 
 # Test Dependencies
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-extensions-spring = { module = "io.kotest:kotest-extensions-spring", version.ref = "kotest" }
+kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-extensions-testcontainers = { module = "io.kotest:kotest-extensions-testcontainers", version.ref = "kotest" }
+testcontainers = { module = "org.testcontainers:testcontainers" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 

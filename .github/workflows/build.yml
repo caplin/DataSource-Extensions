@@ -68,11 +68,12 @@ jobs:
         if: always()
         with:
           report_paths: |
-            reactive/api/build/test-results/test/TEST-*.xml
-            reactive/core/build/test-results/test/TEST-*.xml
-            reactive/java-flow/build/test-results/test/TEST-*.xml
-            reactive/kotlin/build/test-results/test/TEST-*.xml
-            reactive/reactivestreams/build/test-results/test/TEST-*.xml
+            reactive/datasource/api/build/test-results/test/TEST-*.xml
+            reactive/datasource/core/build/test-results/test/TEST-*.xml
+            reactive/datasource/java-flow/build/test-results/test/TEST-*.xml
+            reactive/datasource/kotlin/build/test-results/test/TEST-*.xml
+            reactive/datasource/reactivestreams/build/test-results/test/TEST-*.xml
+            reactive/streamlink/kotlin/build/test-results/test/TEST-*.xml
             spring/build/test-results/test/TEST-*.xml
             util/build/test-results/test/TEST-*.xml
 
