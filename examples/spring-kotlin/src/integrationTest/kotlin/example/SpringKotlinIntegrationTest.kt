@@ -13,10 +13,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeBlank
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeout
 import org.springframework.beans.factory.getBean
 import org.springframework.boot.builder.SpringApplicationBuilder
@@ -49,20 +46,9 @@ class SpringKotlinIntegrationTest :
           autoClose(streamLink)
 
           beforeSpec {
-            dataSource.awaitConnected()
-            streamLink.awaitConnected()
-            // Gate on the adapter being discovered end-to-end: the first public update only arrives
-            // once the adapter has connected out to Liberator and registered its namespaces. Retry
-            // across the startup race — a subscription before the adapter registers errors out.
             withTimeout(60.seconds) {
-              while (
-                  streamLink
-                      .getSubject<Payload>(Subject("public", "stream", "ready", "0"))
-                      .filterIsUpdate()
-                      .firstOrNull() == null
-              ) {
-                delay(500.milliseconds)
-              }
+              dataSource.awaitConnected()
+              streamLink.awaitConnected()
             }
           }
 
