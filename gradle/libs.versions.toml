@@ -7,7 +7,7 @@ jmh = "1.37"
 jmh-plugin = "0.7.3"
 kotlinpoet = "2.3.0"
 ktfmt = "0.61"
-fory = "1.1.0"
+fory = "1.4.0"
 
 # Caplin Dependencies
 datasource = "8.0.12-1871-367ddb14"
