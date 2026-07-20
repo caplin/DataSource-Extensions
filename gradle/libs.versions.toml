@@ -15,7 +15,7 @@ streamlink = "8.0.7-1825-026106f"
 keymaster = "8.0.3-559-041a628"
 
 # Logging (kotlin-logging is not managed by the Spring Boot BOM; slf4j is)
-kotlin-logging = "7.0.13"
+kotlin-logging = "8.0.4"
 
 # Test Dependencies
 kotest = "6.2.2"
