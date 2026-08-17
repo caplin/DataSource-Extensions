@@ -18,7 +18,7 @@ keymaster = "8.0.3-559-041a628"
 kotlin-logging = "7.0.13"
 
 # Test Dependencies
-kotest = "6.2.2"
+kotest = "6.2.4"
 turbine = "1.2.1"
 mockk = "1.14.11"
 
