@@ -13,8 +13,11 @@ internal class PersistentHashSetSerializer(
     type: Class<PersistentSet<*>>,
 ) : CollectionSerializer<PersistentSet<*>>(typeResolver, type, true) {
 
-  override fun newCollection(readContext: ReadContext): MutableCollection<*> {
-    val numElements = readCollectionSize(readContext.buffer)
+  override fun newCollection(
+      readContext: ReadContext,
+      elementReadAlwaysAdvances: Boolean,
+  ): MutableCollection<*> {
+    val numElements = readCollectionSize(readContext, readContext.buffer, elementReadAlwaysAdvances)
     setNumElements(numElements)
     val set = HashSet<Any?>(numElements)
     readContext.reference(set)
