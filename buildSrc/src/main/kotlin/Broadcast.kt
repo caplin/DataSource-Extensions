@@ -29,10 +29,14 @@ object Broadcast : FunctionProvider {
             .defaultValue("ConfigBlock {}")
             .build()
 
+    val projectedBroadcastEvent =
+        if (publisherType.requiresProjection) WildcardTypeName.producerOf(broadcastEvent)
+        else broadcastEvent
+
     val broadcastEventPublisherParameter =
         ParameterSpec.builder(
                 "publisher",
-                publisherType.className.parameterizedBy(broadcastEvent),
+                publisherType.className.parameterizedBy(projectedBroadcastEvent),
             )
             .build()
 
