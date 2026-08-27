@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 
 object ActiveContainer : FunctionProvider {
@@ -37,10 +38,14 @@ object ActiveContainer : FunctionProvider {
             .defaultValue("ConfigBlock {}")
             .build()
 
+    val projectedContainerEventTypeName =
+        if (publisherType.requiresProjection) WildcardTypeName.producerOf(containerEventTypeName)
+        else containerEventTypeName
+
     val publisherParameter =
         ParameterSpec.builder(
                 "publisher",
-                publisherType.className.parameterizedBy(containerEventTypeName),
+                publisherType.className.parameterizedBy(projectedContainerEventTypeName),
             )
             .build()
 
@@ -48,7 +53,7 @@ object ActiveContainer : FunctionProvider {
         ParameterSpec.builder(
                 "supplier",
                 requestSupplierClassName.parameterizedBy(
-                    publisherType.className.parameterizedBy(containerEventTypeName),
+                    publisherType.className.parameterizedBy(projectedContainerEventTypeName),
                 ),
             )
             .build()
@@ -97,7 +102,7 @@ object ActiveContainer : FunctionProvider {
         ParameterSpec.builder(
                 "supplier",
                 pathVariablesSupplierClassName.parameterizedBy(
-                    publisherType.className.parameterizedBy(containerEventTypeName),
+                    publisherType.className.parameterizedBy(projectedContainerEventTypeName),
                 ),
             )
             .build()
