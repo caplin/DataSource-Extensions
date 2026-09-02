@@ -2,21 +2,21 @@ dependencyResolutionManagement {
   repositories {
     mavenCentral()
     maven {
-      url = uri("https://repository.caplin.com/repository/caplin-release")
+      url = uri("https://artifactory.caplin.com/artifactory/caplin-release")
       credentials {
-        val caplinUsername: String? by settings
-        val caplinPassword: String? by settings
+        val artifactoryUsername: String? by settings
+        val artifactoryPassword: String? by settings
         username =
             checkNotNull(
-                caplinUsername ?: System.getenv("CAPLIN_USERNAME"),
+                artifactoryUsername ?: System.getenv("ARTIFACTORY_USERNAME"),
             ) {
-              "Missing caplinUsername property or CAPLIN_USERNAME environment variable"
+              "Missing artifactoryUsername property or ARTIFACTORY_USERNAME environment variable"
             }
         password =
             checkNotNull(
-                caplinPassword ?: System.getenv("CAPLIN_PASSWORD"),
+                artifactoryPassword ?: System.getenv("ARTIFACTORY_PASSWORD"),
             ) {
-              "Missing caplinPassword property or CAPLIN_PASSWORD environment variable"
+              "Missing artifactoryPassword property or ARTIFACTORY_PASSWORD environment variable"
             }
       }
     }
