@@ -28,7 +28,7 @@ The repo is typically checked out on Windows. PowerShell uses `.\gradlew.bat`; B
 ./gradlew :examples:spring-kotlin:bootRun  # run an example app against a local Liberator
 ```
 
-`CAPLIN_USERNAME` and `CAPLIN_PASSWORD` must be set in the environment (or as `caplinUsername`/`caplinPassword` Gradle properties) — without them, Gradle dependency resolution fails because the Caplin DataSource jar lives in a private Maven repo. See `settings.gradle.kts`.
+`ARTIFACTORY_USERNAME` and `ARTIFACTORY_PASSWORD` must be set in the environment (or as `artifactoryUsername`/`artifactoryPassword` Gradle properties) — without them, Gradle dependency resolution fails because the Caplin DataSource jar lives in a private Maven repo. See `settings.gradle.kts`.
 
 ## Architecture
 

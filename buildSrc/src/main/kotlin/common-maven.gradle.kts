@@ -2,13 +2,14 @@ plugins { id("com.vanniktech.maven.publish") }
 
 group = "com.caplin.integration.datasourcex"
 
-val refName = System.getenv("GITHUB_REF_NAME") ?: "dev"
+val configuredVersion =
+    System.getenv("CI_COMMIT_TAG") ?: System.getenv("CI_COMMIT_REF_SLUG") ?: "dev"
 
-// Pre-release tags (X.Y.Z-rcN) publish as an overwriting SNAPSHOT to stay under Maven Central's
-// monthly release/file limits; a clean X.Y.Z tag publishes a release. See docs/adr/0002.
-version = if (refName.contains('-')) "${refName.substringBefore('-')}-SNAPSHOT" else refName
+version = configuredVersion
 
 mavenPublishing {
+  // Kept registered but not run by default CI — Artifactory is the active publish target.
+  // See the manual, tag-gated publish_maven_central job in .gitlab-ci.yml.
   publishToMavenCentral()
 
   // Only sign when a signing key is configured (as CI does via ORG_GRADLE_PROJECT_signingInMemoryKey).
@@ -53,19 +54,21 @@ mavenPublishing {
 
 publishing {
   repositories {
-    val githubActor = System.getenv("GITHUB_ACTOR")
-    val githubToken = System.getenv("GITHUB_TOKEN")
-    if (githubActor != null && githubToken != null) {
-      maven {
-        name = "GitHubPackages"
-        url =
-            uri(
-                "https://maven.pkg.github.com/caplin/DataSource-Extensions",
-            )
-        credentials {
-          username = githubActor
-          password = githubToken
-        }
+    maven {
+      name = "Artifactory"
+      url =
+          uri(
+              "https://artifactory.caplin.com/artifactory/caplin-${
+            when {
+              "^[0-9]+\\.[0-9]+\\.[0-9]+\$".toRegex().matches(configuredVersion) -> "release"
+              "^[0-9]+\\.[0-9]+\\.[0-9]+-rc[0-9]+\$".toRegex().matches(configuredVersion) -> "rc"
+              else -> "ci"
+            }
+          }",
+          )
+      credentials {
+        username = System.getenv("ARTIFACTORY_USERNAME")
+        password = System.getenv("ARTIFACTORY_PASSWORD")
       }
     }
   }
