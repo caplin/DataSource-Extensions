@@ -5,11 +5,22 @@ group = "com.caplin.integration.datasourcex"
 val configuredVersion =
     System.getenv("CI_COMMIT_TAG") ?: System.getenv("CI_COMMIT_REF_SLUG") ?: "dev"
 
-version = configuredVersion
+// Maven Central counts releases and files against a monthly quota, so pre-release tags (X.Y.Z-rcN)
+// publish there as an overwriting X.Y.Z-SNAPSHOT to the quota-exempt snapshot repository. Artifactory
+// takes the literal tag version, which is what routes an rc tag to caplin-rc; only the
+// publish_maven_central job passes -PpreReleasesAsSnapshot=true.
+val preReleasesAsSnapshot = providers.gradleProperty("preReleasesAsSnapshot").orNull.toBoolean()
+
+version =
+    if (preReleasesAsSnapshot && configuredVersion.contains('-')) {
+      "${configuredVersion.substringBefore('-')}-SNAPSHOT"
+    } else {
+      configuredVersion
+    }
 
 mavenPublishing {
-  // Kept registered but not run by default CI — Artifactory is the active publish target.
-  // See the manual, tag-gated publish_maven_central job in .gitlab-ci.yml.
+  // Release deployments land staged in the Central Portal and need releasing there by hand;
+  // snapshots upload straight to the snapshot repository. See the publish_maven_central job.
   publishToMavenCentral()
 
   // Only sign when a signing key is configured (as CI does via ORG_GRADLE_PROJECT_signingInMemoryKey).

@@ -78,20 +78,30 @@ publish_libraries:
     - job: "test_libraries"
       artifacts: false
 
-# Maven Central publishing, kept but not wired up: no signing/Sonatype credentials are configured
-# in this project yet, so this only runs when triggered manually.
+# Maven Central publishing. A clean X.Y.Z tag uploads a deployment that stays staged in the Central
+# Portal until released there by hand; an X.Y.Z-rcN tag uploads an overwriting X.Y.Z-SNAPSHOT.
+# SONATYPE_GPG_KEY_BASE64 is a file variable holding the base64-encoded armoured private key.
 publish_maven_central:
   stage: publish
   image: registry.access.redhat.com/ubi9/openjdk-17
+  variables:
+    ORG_GRADLE_PROJECT_signingInMemoryKeyId: "BD2A1230"
+    ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: "$SONATYPE_GPG_PASSWORD"
+    ORG_GRADLE_PROJECT_mavenCentralUsername: "$SONATYPE_USERNAME"
+    ORG_GRADLE_PROJECT_mavenCentralPassword: "$SONATYPE_PASSWORD"
   script:
-    - ./gradlew --console=colored --no-configuration-cache publishToMavenCentral
+    - export ORG_GRADLE_PROJECT_signingInMemoryKey="$(base64 --decode "$SONATYPE_GPG_KEY_BASE64")"
+    - |
+      case "$ORG_GRADLE_PROJECT_signingInMemoryKey" in
+        "-----BEGIN PGP PRIVATE KEY BLOCK-----"*) ;;
+        *) echo "SONATYPE_GPG_KEY_BASE64 did not decode to an armoured PGP private key"; exit 1 ;;
+      esac
+    - ./gradlew --console=colored --no-configuration-cache -PpreReleasesAsSnapshot=true publishToMavenCentral
   cache:
     <<: *gradle_cache
     policy: pull
   rules:
     - if: $CI_COMMIT_TAG
-      when: manual
-  allow_failure: true
   needs:
     - job: "build_libraries"
     - job: "test_libraries"
