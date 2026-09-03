@@ -2,6 +2,16 @@ default:
   tags: ["kubernetes", "shared"]
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
+    # The project's -Xmx4g is the whole container limit, and the Kotlin daemon inherits it as a
+    # second JVM, so a build that runs long enough is OOMKilled. Compile in the Gradle daemon
+    # instead of forking that second JVM, and cap it to leave room for the test JVMs.
+    # GRADLE_USER_HOME properties override the project's, so this stays out of local builds.
+    - mkdir -p "$GRADLE_USER_HOME"
+    - |
+      cat > "$GRADLE_USER_HOME/gradle.properties" <<'PROPS'
+      org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
+      kotlin.compiler.execution.strategy=in-process
+      PROPS
 
 variables:
   KUBERNETES_CPU_REQUEST: "2"
@@ -90,11 +100,23 @@ publish_maven_central:
     ORG_GRADLE_PROJECT_mavenCentralUsername: "$SONATYPE_USERNAME"
     ORG_GRADLE_PROJECT_mavenCentralPassword: "$SONATYPE_PASSWORD"
   script:
-    - export ORG_GRADLE_PROJECT_signingInMemoryKey="$(base64 --decode "$SONATYPE_GPG_KEY_BASE64")"
     - |
+      # Take the key armoured either way round, since only the variable's name says it is encoded.
+      if head -c 5 "$SONATYPE_GPG_KEY_BASE64" | grep -q -- -----; then
+        ORG_GRADLE_PROJECT_signingInMemoryKey="$(cat "$SONATYPE_GPG_KEY_BASE64")"
+      else
+        ORG_GRADLE_PROJECT_signingInMemoryKey="$(base64 --decode "$SONATYPE_GPG_KEY_BASE64")"
+      fi
+      export ORG_GRADLE_PROJECT_signingInMemoryKey
       case "$ORG_GRADLE_PROJECT_signingInMemoryKey" in
-        "-----BEGIN PGP PRIVATE KEY BLOCK-----"*) ;;
-        *) echo "SONATYPE_GPG_KEY_BASE64 did not decode to an armoured PGP private key"; exit 1 ;;
+        *"BEGIN PGP PRIVATE KEY BLOCK"*) ;;
+        *)
+          echo "SONATYPE_GPG_KEY_BASE64 holds neither an armoured PGP private key nor its base64:"
+          echo "  size:          $(wc -c < "$SONATYPE_GPG_KEY_BASE64") bytes"
+          echo "  first 8 chars: $(head -c 8 "$SONATYPE_GPG_KEY_BASE64" | tr -c '[:graph:]' '.')"
+          echo "  expected either -----BEG or its base64 LS0tLS1CRUdJTi"
+          exit 1
+          ;;
       esac
     - ./gradlew --console=colored --no-configuration-cache publishToMavenCentral
   cache:
