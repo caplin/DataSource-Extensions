@@ -110,6 +110,14 @@ publish_maven_central:
       else
         base64 --decode "$SONATYPE_GPG_KEY_BASE64" | tr -d "\r" > "$KEY"
       fi
+      # PowerShell redirection writes UTF-16, which Gradle cannot read. That is unambiguous from
+      # the BOM, so convert it rather than failing.
+      case "$(head -c 2 "$KEY" | od -An -tx1 | tr -d " \n")" in
+        fffe|feff)
+          echo "note: the key was stored as UTF-16, converting to UTF-8"
+          iconv -f UTF-16 -t UTF-8 < "$KEY" > "$KEY.utf8" && mv "$KEY.utf8" "$KEY"
+          ;;
+      esac
       SIZE=$(wc -c < "$KEY")
       NULS=$(( SIZE - $(tr -d "\000" < "$KEY" | wc -c) ))
       echo "signing key: $SIZE bytes, $(wc -l < "$KEY") lines, $NULS NUL bytes"
@@ -124,6 +132,14 @@ publish_maven_central:
       if ! grep -aq "BEGIN PGP PRIVATE KEY BLOCK" "$KEY"; then
         rm -f "$KEY"
         echo "SONATYPE_GPG_KEY_BASE64 holds neither an armoured PGP private key nor its base64."
+        exit 1
+      fi
+      # Armour is line-oriented: a header, a blank line, wrapped payload, a footer.
+      if [ "$(wc -l < "$KEY")" -lt 4 ]; then
+        rm -f "$KEY"
+        echo "The armour has lost its line breaks, so Gradle cannot parse it. Re-store it with:"
+        echo "  gpg --armor --export-secret-keys BD2A1230 > key.asc"
+        echo "  base64 -w0 key.asc      # the file variable takes this output"
         exit 1
       fi
       export ORG_GRADLE_PROJECT_signingInMemoryKey="$(cat "$KEY")"
