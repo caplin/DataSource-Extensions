@@ -95,38 +95,43 @@ publish_maven_central:
   stage: publish
   image: registry.access.redhat.com/ubi9/openjdk-17
   variables:
+    # The key that published every release up to 3.1.0; SONATYPE_GPG_KEY_ID overrides it.
+    ORG_GRADLE_PROJECT_signingInMemoryKeyId: "BD2A1230"
     ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: "$SONATYPE_GPG_PASSWORD"
     ORG_GRADLE_PROJECT_mavenCentralUsername: "$SONATYPE_USERNAME"
     ORG_GRADLE_PROJECT_mavenCentralPassword: "$SONATYPE_PASSWORD"
   script:
     - |
-      # Take the key armoured either way round, since only the variable's name says it is encoded.
+      # Decode through a file rather than a variable: command substitution drops NUL bytes, which
+      # would hide a binary export by silently repairing it into something Gradle still cannot read.
+      KEY=$CI_PROJECT_DIR/.signing-key.asc
       if head -c 5 "$SONATYPE_GPG_KEY_BASE64" | grep -q -- -----; then
-        ORG_GRADLE_PROJECT_signingInMemoryKey="$(cat "$SONATYPE_GPG_KEY_BASE64")"
+        tr -d "\r" < "$SONATYPE_GPG_KEY_BASE64" > "$KEY"
       else
-        ORG_GRADLE_PROJECT_signingInMemoryKey="$(base64 --decode "$SONATYPE_GPG_KEY_BASE64")"
+        base64 --decode "$SONATYPE_GPG_KEY_BASE64" | tr -d "\r" > "$KEY"
       fi
-      # Armour is line-oriented and a stray CR makes it unreadable.
-      ORG_GRADLE_PROJECT_signingInMemoryKey="$(printf '%s' "$ORG_GRADLE_PROJECT_signingInMemoryKey" | tr -d '\r')"
-      export ORG_GRADLE_PROJECT_signingInMemoryKey
-      # Only select a subkey when told which one; otherwise sign with the key's own signing key.
+      SIZE=$(wc -c < "$KEY")
+      NULS=$(( SIZE - $(tr -d "\000" < "$KEY" | wc -c) ))
+      echo "signing key: $SIZE bytes, $(wc -l < "$KEY") lines, $NULS NUL bytes"
+      echo "first line:  $(head -n 1 "$KEY" | tr -c "[:graph:] " . | cut -c1-72)"
+      echo "last line:   $(grep -a . "$KEY" | tail -n 1 | tr -c "[:graph:] " . | cut -c1-72)"
+      if [ "$NULS" -ne 0 ]; then
+        rm -f "$KEY"
+        echo "The key is binary, so Gradle cannot read it. Store the armoured form instead:"
+        echo "  gpg --armor --export-secret-keys BD2A1230 | base64 -w0"
+        exit 1
+      fi
+      if ! grep -aq "BEGIN PGP PRIVATE KEY BLOCK" "$KEY"; then
+        rm -f "$KEY"
+        echo "SONATYPE_GPG_KEY_BASE64 holds neither an armoured PGP private key nor its base64."
+        exit 1
+      fi
+      export ORG_GRADLE_PROJECT_signingInMemoryKey="$(cat "$KEY")"
+      rm -f "$KEY"
+      # Select a subkey only when told which one, otherwise sign with whichever key can sign.
       if [ -n "$SONATYPE_GPG_KEY_ID" ]; then
         export ORG_GRADLE_PROJECT_signingInMemoryKeyId="$SONATYPE_GPG_KEY_ID"
       fi
-      case "$ORG_GRADLE_PROJECT_signingInMemoryKey" in
-        *"BEGIN PGP PRIVATE KEY BLOCK"*) ;;
-        *)
-          echo "SONATYPE_GPG_KEY_BASE64 holds neither an armoured PGP private key nor its base64:"
-          echo "  size:          $(wc -c < "$SONATYPE_GPG_KEY_BASE64") bytes"
-          echo "  first 8 chars: $(head -c 8 "$SONATYPE_GPG_KEY_BASE64" | tr -c '[:graph:]' '.')"
-          echo "  expected either -----BEG or its base64 LS0tLS1CRUdJTi"
-          exit 1
-          ;;
-      esac
-      # Structure only, no key material: enough to tell a bad key from a bad key id or passphrase.
-      echo "signing key: $(printf '%s' "$ORG_GRADLE_PROJECT_signingInMemoryKey" | wc -l) armour lines," \
-        "key id ${ORG_GRADLE_PROJECT_signingInMemoryKeyId:-<none, using the key's own>}," \
-        "passphrase $([ -n "$ORG_GRADLE_PROJECT_signingInMemoryKeyPassword" ] && echo set || echo EMPTY)"
     - ./gradlew --console=colored --no-configuration-cache publishToMavenCentral
   cache:
     <<: *gradle_cache
