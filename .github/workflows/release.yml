@@ -17,11 +17,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
-            PRERELEASE_FLAG="--prerelease"
+            PRERELEASE=true
           else
-            PRERELEASE_FLAG=""
+            PRERELEASE=false
           fi
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "${GITHUB_REF_NAME}" \
-            --generate-notes \
-            $PRERELEASE_FLAG
+          # A tag can arrive more than once, since a moved tag mirrors across as another push and
+          # the release it made survives the tag deletion.
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release edit "${GITHUB_REF_NAME}" --prerelease=$PRERELEASE
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "${GITHUB_REF_NAME}" \
+              --generate-notes \
+              --prerelease=$PRERELEASE
+          fi
