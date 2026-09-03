@@ -9,7 +9,7 @@ default:
     - mkdir -p "$GRADLE_USER_HOME"
     - |
       cat > "$GRADLE_USER_HOME/gradle.properties" <<'PROPS'
-      org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
+      org.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=1g
       kotlin.compiler.execution.strategy=in-process
       PROPS
 
@@ -95,7 +95,6 @@ publish_maven_central:
   stage: publish
   image: registry.access.redhat.com/ubi9/openjdk-17
   variables:
-    ORG_GRADLE_PROJECT_signingInMemoryKeyId: "BD2A1230"
     ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: "$SONATYPE_GPG_PASSWORD"
     ORG_GRADLE_PROJECT_mavenCentralUsername: "$SONATYPE_USERNAME"
     ORG_GRADLE_PROJECT_mavenCentralPassword: "$SONATYPE_PASSWORD"
@@ -107,7 +106,13 @@ publish_maven_central:
       else
         ORG_GRADLE_PROJECT_signingInMemoryKey="$(base64 --decode "$SONATYPE_GPG_KEY_BASE64")"
       fi
+      # Armour is line-oriented and a stray CR makes it unreadable.
+      ORG_GRADLE_PROJECT_signingInMemoryKey="$(printf '%s' "$ORG_GRADLE_PROJECT_signingInMemoryKey" | tr -d '\r')"
       export ORG_GRADLE_PROJECT_signingInMemoryKey
+      # Only select a subkey when told which one; otherwise sign with the key's own signing key.
+      if [ -n "$SONATYPE_GPG_KEY_ID" ]; then
+        export ORG_GRADLE_PROJECT_signingInMemoryKeyId="$SONATYPE_GPG_KEY_ID"
+      fi
       case "$ORG_GRADLE_PROJECT_signingInMemoryKey" in
         *"BEGIN PGP PRIVATE KEY BLOCK"*) ;;
         *)
@@ -118,6 +123,10 @@ publish_maven_central:
           exit 1
           ;;
       esac
+      # Structure only, no key material: enough to tell a bad key from a bad key id or passphrase.
+      echo "signing key: $(printf '%s' "$ORG_GRADLE_PROJECT_signingInMemoryKey" | wc -l) armour lines," \
+        "key id ${ORG_GRADLE_PROJECT_signingInMemoryKeyId:-<none, using the key's own>}," \
+        "passphrase $([ -n "$ORG_GRADLE_PROJECT_signingInMemoryKeyPassword" ] && echo set || echo EMPTY)"
     - ./gradlew --console=colored --no-configuration-cache publishToMavenCentral
   cache:
     <<: *gradle_cache
