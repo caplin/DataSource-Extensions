@@ -96,7 +96,7 @@ publish_maven_central:
         "-----BEGIN PGP PRIVATE KEY BLOCK-----"*) ;;
         *) echo "SONATYPE_GPG_KEY_BASE64 did not decode to an armoured PGP private key"; exit 1 ;;
       esac
-    - ./gradlew --console=colored --no-configuration-cache -PpreReleasesAsSnapshot=true publishToMavenCentral
+    - ./gradlew --console=colored --no-configuration-cache publishToMavenCentral
   cache:
     <<: *gradle_cache
     policy: pull

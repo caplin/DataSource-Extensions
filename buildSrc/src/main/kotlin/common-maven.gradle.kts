@@ -5,18 +5,16 @@ group = "com.caplin.integration.datasourcex"
 val configuredVersion =
     System.getenv("CI_COMMIT_TAG") ?: System.getenv("CI_COMMIT_REF_SLUG") ?: "dev"
 
-// Maven Central counts releases and files against a monthly quota, so pre-release tags (X.Y.Z-rcN)
-// publish there as an overwriting X.Y.Z-SNAPSHOT to the quota-exempt snapshot repository. Artifactory
-// takes the literal tag version, which is what routes an rc tag to caplin-rc; only the
-// publish_maven_central job passes -PpreReleasesAsSnapshot=true.
-val preReleasesAsSnapshot = providers.gradleProperty("preReleasesAsSnapshot").orNull.toBoolean()
+val releaseTag = "^[0-9]+\\.[0-9]+\\.[0-9]+$".toRegex()
 
+val preReleaseTag = "^([0-9]+\\.[0-9]+\\.[0-9]+)-rc[0-9]+$".toRegex()
+
+// A pre-release tag (X.Y.Z-rcN) publishes as an overwriting X.Y.Z-SNAPSHOT, to caplin-ci and to Maven
+// Central's snapshot repository — neither counts against Central's monthly release quota. A clean
+// X.Y.Z tag releases.
 version =
-    if (preReleasesAsSnapshot && configuredVersion.contains('-')) {
-      "${configuredVersion.substringBefore('-')}-SNAPSHOT"
-    } else {
-      configuredVersion
-    }
+    preReleaseTag.matchEntire(configuredVersion)?.let { "${it.groupValues[1]}-SNAPSHOT" }
+        ?: configuredVersion
 
 mavenPublishing {
   // Release deployments land staged in the Central Portal and need releasing there by hand;
@@ -67,16 +65,10 @@ publishing {
   repositories {
     maven {
       name = "Artifactory"
-      url =
-          uri(
-              "https://artifactory.caplin.com/artifactory/caplin-${
-            when {
-              "^[0-9]+\\.[0-9]+\\.[0-9]+\$".toRegex().matches(configuredVersion) -> "release"
-              "^[0-9]+\\.[0-9]+\\.[0-9]+-rc[0-9]+\$".toRegex().matches(configuredVersion) -> "rc"
-              else -> "ci"
-            }
-          }",
-          )
+      // caplin-release is immutable, so it takes release tags only; caplin-ci handles snapshots and
+      // so takes everything else — rc tags and branch builds alike.
+      val repository = if (releaseTag.matches(configuredVersion)) "release" else "ci"
+      url = uri("https://artifactory.caplin.com/artifactory/caplin-$repository")
       credentials {
         username = System.getenv("ARTIFACTORY_USERNAME")
         password = System.getenv("ARTIFACTORY_PASSWORD")
