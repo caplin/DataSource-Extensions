@@ -15,6 +15,10 @@ fun Fory.registerDataSourceSerializers(preserveExceptionTypes: Boolean = false):
     check(config.trackingRef()) {
       "Tracking references must be enabled for exception types preservation"
     }
+    check(!config.isScopedMetaShareEnabled) {
+      "Scoped meta share is incompatible with exception types preservation; use " +
+          "CompatibleMode.SCHEMA_CONSISTENT (or disable meta share) on the Fory instance"
+    }
     registerSerializerFactory(ThrowableSerializerFactory)
   }
 

@@ -1,14 +1,14 @@
 [versions]
 springBoot = "3.5.15"
 kotlin = "2.2.0"
-kotlinCollectionsImmutable = "0.5.0"
+kotlinCollectionsImmutable = "0.5.2"
 jackson3 = "3.2.0"
 zjsonpatch = "0.6.2"
 jmh = "1.37"
 jmh-plugin = "0.7.3"
 kotlinpoet = "2.3.0"
 ktfmt = "0.61"
-fory = "1.1.0"
+fory = "1.7.1"
 
 # Caplin Dependencies
 datasource = "8.0.12-1871-367ddb14"

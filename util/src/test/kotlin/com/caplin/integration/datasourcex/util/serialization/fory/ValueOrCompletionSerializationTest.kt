@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.apache.fory.Fory
+import org.apache.fory.config.CompatibleMode
 import org.apache.fory.config.Language
 
 class CustomException(val customMessage: String) : Exception(customMessage)
@@ -31,6 +32,7 @@ class ValueOrCompletionSerializationTest :
               Fory.builder()
                   .withLanguage(Language.JAVA)
                   .requireClassRegistration(false)
+                  .withCompatibleMode(CompatibleMode.SCHEMA_CONSISTENT)
                   .withRefTracking(true)
                   .build()
                   .registerDataSourceSerializers(preserveExceptionTypes = true)

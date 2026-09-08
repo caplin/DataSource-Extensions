@@ -13,8 +13,11 @@ internal class PersistentHashMapSerializer(
     type: Class<PersistentMap<*, *>>,
 ) : MapSerializer<PersistentMap<*, *>>(typeResolver, type, true) {
 
-  override fun newMap(readContext: ReadContext): MutableMap<*, *> {
-    val numElements = readMapSize(readContext.buffer)
+  override fun newMap(
+      readContext: ReadContext,
+      entryReadAlwaysAdvances: Boolean,
+  ): MutableMap<*, *> {
+    val numElements = readMapSize(readContext, readContext.buffer, entryReadAlwaysAdvances)
     setNumElements(numElements)
     val map = HashMap<Any?, Any?>(numElements)
     readContext.reference(map)
