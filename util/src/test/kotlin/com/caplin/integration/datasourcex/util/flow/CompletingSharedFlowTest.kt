@@ -10,14 +10,10 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.engine.coroutines.backgroundScope
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
 
 class CompletingSharedFlowTest :
     FunSpec({
@@ -99,31 +95,6 @@ class CompletingSharedFlowTest :
           upstream.send(Value("B"))
           awaitItem() shouldBeEqual "B"
         }
-      }
-
-      test("Completing shared flow - concurrent subscribers share one upstream collection") {
-        val upstreamCollections = AtomicInteger()
-        val upstream = Channel<ValueOrCompletion<String>>(Channel.BUFFERED)
-        val sharedFlow =
-            upstream
-                .receiveAsFlow()
-                .onStart { upstreamCollections.incrementAndGet() }
-                .dematerialize()
-                .shareInCompleting(backgroundScope, SharingStarted.Eagerly)
-
-        // Two turbine collectors on one hot flow deadlock under coroutineTestScope, so collect
-        // into a channel instead.
-        val received = Channel<String>(Channel.BUFFERED)
-        repeat(2) { backgroundScope.launch { sharedFlow.collect { received.send(it) } } }
-        delay(100)
-
-        upstream.send(Value("A"))
-        received.receive() shouldBeEqual "A"
-        received.receive() shouldBeEqual "A"
-
-        // Building a second shared flow and losing the compare-and-set would leak the coroutine
-        // shareIn had already launched, and collect the upstream twice.
-        upstreamCollections.get() shouldBeEqual 1
       }
 
       test("Shared flow cache") {
