@@ -19,7 +19,7 @@ The simplest way to get started is to configure either of the following properti
 a DataSource.
 
 * To connect to another Peer directly, such as Liberator, specify: `caplin.datasource.managed.peer.outgoing`
-* To connect via Discovery, specify: `caplin.datasource.managed.discovery.address`
+* To connect via Discovery, specify: `caplin.datasource.managed.discovery.hostname`
 
 Additional configuration options and their defaults can be seen in [com.caplin.integration.datasourcex.spring.DataSourceConfigurationProperties].
 
