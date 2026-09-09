@@ -14,7 +14,6 @@ class StreamLinkTest :
 
           context("As admin user") {
             val streamLink = liberator.connect("admin")
-            streamLink.connect()
             streamLink.awaitConnected()
 
             test("Can fetch /SYSTEM/INFO") {

@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transformWhile
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Similar to [SharedFlow], but completion and error events are also propagated to the downstream
@@ -181,25 +183,23 @@ fun <T> Flow<T>.shareInCompleting(
     replay: Int = 0,
 ): CompletingSharedFlow<T> {
   val reference = AtomicReference<SharedFlow<Any?>>()
+  // shareIn launches into `scope` as a side effect, so a lost compare-and-set would leak the
+  // coroutine it started. Serialise construction instead, and only ever build the one we keep.
+  val mutex = Mutex()
 
   return InternalCompletingSharedFlow {
-    var sharedFlow: SharedFlow<Any?>? = null
-    while (sharedFlow == null) {
-      val current = reference.get()
-      if (current != null) sharedFlow = current
-
-      val computedSharedFlow: SharedFlow<Any?> =
-          materializeUnboxed()
-              .transformWhile {
-                emit(it)
-                it !is Completion
-              }
-              .onCompletion { reference.set(null) }
-              .shareIn(scope, started, replay)
-
-      if (reference.compareAndSet(null, computedSharedFlow)) sharedFlow = computedSharedFlow
-    }
-    sharedFlow
+    reference.get()
+        ?: mutex.withLock {
+          reference.get()
+              ?: materializeUnboxed()
+                  .transformWhile {
+                    emit(it)
+                    it !is Completion
+                  }
+                  .onCompletion { reference.set(null) }
+                  .shareIn(scope, started, replay)
+                  .also { reference.set(it) }
+        }
   }
 }
 

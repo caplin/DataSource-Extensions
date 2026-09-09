@@ -229,6 +229,7 @@ private constructor(
         )
 
     sl.connect()
+    connected.store(true)
 
     val state =
         callbackFlow {

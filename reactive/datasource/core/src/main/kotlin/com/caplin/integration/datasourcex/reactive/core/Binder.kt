@@ -619,8 +619,11 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                           .launchIn(container.scope)
                     }
 
-                job?.apply { invokeOnCompletion { subscriptions.remove(path) } }
-                    ?.also { subscriptions[path] = it }
+                // Register the entry before the completion handler: invokeOnCompletion fires
+                // immediately for an already-completed job, so registering first would remove
+                // nothing and then leave a dead job in the map.
+                job?.also { subscriptions[path] = it }
+                    ?.apply { invokeOnCompletion { subscriptions.remove(path) } }
               }
 
           override fun onDiscard(path: String) {
@@ -695,8 +698,8 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                       }
                       cancel()
                     }
-                    .apply { invokeOnCompletion { subscriptions.remove(path) } }
                     .also { job -> subscriptions[path] = job }
+                    .apply { invokeOnCompletion { subscriptions.remove(path) } }
               }
 
           override fun onDiscard(path: String) {
@@ -727,19 +730,19 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
             check(!subscriptions.containsKey(path)) {
               "Multiple subscriptions to the same subject ($path)"
             }
-            subscriptions[path] =
-                flow { emitAll(createFlow(path)) }
-                    .map { t -> publisher.cachedMessageFactory.createMessage(path, t) }
-                    .onEach { message -> publisher.publish(message) }
-                    .onCompletion { throwable ->
-                      if (throwable == null) publisher.publishNotFound(path)
-                    }
-                    .catch { throwable ->
-                      logger.warn(throwable) { "Unhandled exception in $path" }
-                      publisher.publishNotFound(path)
-                    }
-                    .launchIn(dataSource)
-                    .apply { invokeOnCompletion { subscriptions.remove(path) } }
+            flow { emitAll(createFlow(path)) }
+                .map { t -> publisher.cachedMessageFactory.createMessage(path, t) }
+                .onEach { message -> publisher.publish(message) }
+                .onCompletion { throwable ->
+                  if (throwable == null) publisher.publishNotFound(path)
+                }
+                .catch { throwable ->
+                  logger.warn(throwable) { "Unhandled exception in $path" }
+                  publisher.publishNotFound(path)
+                }
+                .launchIn(dataSource)
+                .also { job -> subscriptions[path] = job }
+                .apply { invokeOnCompletion { subscriptions.remove(path) } }
           }
 
           override fun onDiscard(path: String) {
