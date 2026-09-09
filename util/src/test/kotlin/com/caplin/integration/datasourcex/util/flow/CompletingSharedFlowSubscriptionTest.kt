@@ -9,6 +9,7 @@ import io.kotest.datatest.withData
 import io.kotest.engine.coroutines.backgroundScope
 import io.kotest.matchers.equals.shouldBeEqual
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /** Lets virtual time settle so launched collectors reach their suspension points. */
 private suspend fun settle() = delay(100)
@@ -185,6 +187,38 @@ class CompletingSharedFlowSubscriptionTest :
 
           a.terminal.await() shouldBeEqual "IllegalArgumentException"
           b.terminal.await() shouldBeEqual "IllegalArgumentException"
+        }
+      }
+
+      context("a second collection must not compete with the first for the upstream") {
+        test("no value is stolen") {
+          val upstream = Upstream(backgroundScope, Eagerly)
+          val (a, _) = backgroundScope.subscribe(upstream)
+          settle()
+          val (b, _) = backgroundScope.subscribe(upstream)
+          settle()
+
+          val sent = (1..8).map { "v$it" }
+          sent.forEach { upstream.send(it) }
+          settle()
+
+          a.receivedSoFar() shouldBeEqual sent
+          b.receivedSoFar() shouldBeEqual sent
+        }
+
+        test("the completion is not swallowed") {
+          val upstream = Upstream(backgroundScope, Eagerly)
+          val (a, _) = backgroundScope.subscribe(upstream)
+          settle()
+          backgroundScope.subscribe(upstream)
+          settle()
+
+          upstream.send("A")
+          settle()
+          upstream.complete()
+
+          a.next() shouldBeEqual "A"
+          withTimeout(5.seconds) { a.terminal.await() } shouldBeEqual "completed"
         }
       }
 
