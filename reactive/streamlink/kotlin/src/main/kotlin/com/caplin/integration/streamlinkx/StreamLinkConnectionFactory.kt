@@ -29,6 +29,7 @@ import com.caplin.streamlink.JsonEvent
 import com.caplin.streamlink.JsonHandler
 import com.caplin.streamlink.RecordType1Event
 import com.caplin.streamlink.StreamLink
+import com.caplin.streamlink.StreamLinkConfiguration
 import com.caplin.streamlink.StreamLinkFactory
 import com.caplin.streamlink.Subscription
 import com.caplin.streamlink.SubscriptionErrorEvent
@@ -152,7 +153,28 @@ private constructor(
         keymasterConfiguration: IKeyMasterConfiguration,
         objectMapper: ObjectMapper = jacksonObjectMapper(),
     ) = StreamLinkConnectionFactory(liberator, keymasterConfiguration, objectMapper)
+
+    /**
+     * Creates a factory that builds its StreamLink clients with [createStreamLink] rather than
+     * [StreamLinkFactory], so tests can supply one without a Liberator to connect to.
+     */
+    internal fun withStreamLink(
+        liberator: String,
+        keymasterConfiguration: IKeyMasterConfiguration,
+        objectMapper: ObjectMapper = jacksonObjectMapper(),
+        createStreamLink: (StreamLinkConfiguration, CredentialsProvider) -> StreamLink,
+    ) =
+        StreamLinkConnectionFactory(liberator, keymasterConfiguration, objectMapper).apply {
+          this.createStreamLink = createStreamLink
+        }
   }
+
+  /**
+   * Builds the StreamLink client [connect] wraps. Held as a property rather than a constructor
+   * parameter so overriding it in tests does not alter the published constructor signature.
+   */
+  private var createStreamLink: (StreamLinkConfiguration, CredentialsProvider) -> StreamLink =
+      StreamLinkFactory::create
 
   private val kLogger = KotlinLogging.logger {}
 
@@ -200,7 +222,7 @@ private constructor(
             }
 
     val sl =
-        StreamLinkFactory.create(
+        createStreamLink(
             StreamLinkFactory.createConfiguration().apply {
               setLiberatorUrlProvider { liberator }
               setJsonHandler(
