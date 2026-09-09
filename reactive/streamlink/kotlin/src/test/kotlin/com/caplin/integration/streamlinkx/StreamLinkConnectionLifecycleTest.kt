@@ -78,4 +78,16 @@ class StreamLinkConnectionLifecycleTest :
         // The failed reconnect must not have reached the client.
         verify(exactly = 1) { streamLink.connect() }
       }
+
+      test("a disconnected connection still refuses to reconnect") {
+        val streamLink = mockk<StreamLink>(relaxed = true)
+        val connection = factoryReturning(streamLink).connect("admin")
+        connection.disconnect()
+
+        shouldThrow<IllegalStateException> { connection.connect() }
+
+        // Reconnecting must go through the factory, not revive a discarded client.
+        verify(exactly = 1) { streamLink.connect() }
+        verify(exactly = 1) { streamLink.disconnect() }
+      }
     })

@@ -205,8 +205,6 @@ private constructor(
       "Username '$username' contains characters that are not URL-safe; '/' and '?' are not allowed."
     }
 
-    val connected = AtomicBoolean(false)
-
     val token =
         keymaster
             .generateToken(
@@ -251,7 +249,7 @@ private constructor(
         )
 
     sl.connect()
-    connected.store(true)
+    val connected = AtomicBoolean(true)
 
     val state =
         callbackFlow {
@@ -510,9 +508,8 @@ private constructor(
         }
       }
 
-      override fun connect() {
-        check(!connected.load()) { "Create a new connection to reconnect." }
-      }
+      // The factory already connected this client, and a disconnected one is not reusable.
+      override fun connect(): Unit = error("Create a new connection to reconnect.")
 
       override fun disconnect() {
         if (connected.exchange(false)) {
