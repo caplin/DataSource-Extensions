@@ -8,6 +8,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
 import io.kotest.engine.coroutines.backgroundScope
 import io.kotest.matchers.equals.shouldBeEqual
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
 import kotlinx.coroutines.flow.SharingStarted.Companion.Lazily
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -271,6 +273,62 @@ class CompletingSharedFlowSubscriptionTest :
 
         a.next() shouldBeEqual "B"
         b.next() shouldBeEqual "B"
+        upstream.collections.get() shouldBeEqual 2
+      }
+
+      test("a downstream retry after an error recreates the upstream") {
+        val upstream = Upstream(backgroundScope, SharingStarted.WhileSubscribed())
+        val got = CopyOnWriteArrayList<String>()
+        backgroundScope.launch { upstream.shared.retry(1).collect { got.add(it) } }
+        settle()
+
+        upstream.send("A")
+        settle()
+        upstream.fail(IllegalStateException("boom"))
+        settle()
+        upstream.send("B")
+        settle()
+
+        // retry re-collects, the entry having been evicted by the terminal, so the supplier reruns
+        got shouldBeEqual listOf("A", "B")
+        upstream.collections.get() shouldBeEqual 2
+      }
+
+      test("re-collecting a flow held from before joins the current share") {
+        val upstream = Upstream(backgroundScope, SharingStarted.WhileSubscribed())
+        val (first, _) = backgroundScope.subscribe(upstream)
+        settle()
+        upstream.complete()
+        first.terminal.await() shouldBeEqual "completed"
+        settle()
+
+        // a new subscriber rebuilds
+        val (b, _) = backgroundScope.subscribe(upstream)
+        settle()
+        upstream.collections.get() shouldBeEqual 2
+
+        // the original subscriber now re-collects the same flow instance it already held
+        val (again, _) = backgroundScope.subscribe(upstream)
+        settle()
+        upstream.send("B")
+
+        again.next() shouldBeEqual "B"
+        b.next() shouldBeEqual "B"
+        // it joined the live share rather than building a third
+        upstream.collections.get() shouldBeEqual 2
+      }
+
+      test("discarding and immediately resubscribing rebuilds exactly one share") {
+        val upstream = Upstream(backgroundScope, SharingStarted.WhileSubscribed())
+        val (_, job) = backgroundScope.subscribe(upstream)
+        settle()
+
+        job.cancel()
+        val (next, _) = backgroundScope.subscribe(upstream)
+        settle()
+        upstream.send("X")
+
+        next.next() shouldBeEqual "X"
         upstream.collections.get() shouldBeEqual 2
       }
 
