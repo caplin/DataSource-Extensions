@@ -18,7 +18,6 @@ class Samples {
 
                 test("fetches a record from the containerised Liberator") {
                   val connection = liberator.connect("admin")
-                  connection.connect()
                   connection.awaitConnected()
 
                   val info =

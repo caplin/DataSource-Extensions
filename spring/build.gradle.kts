@@ -45,4 +45,4 @@ dokka {
   }
 }
 
-apiValidation { ignoredPackages.add("com.caplin.reactive.datasource.spring.internal") }
+apiValidation { ignoredPackages.add("com.caplin.integration.datasourcex.spring.internal") }

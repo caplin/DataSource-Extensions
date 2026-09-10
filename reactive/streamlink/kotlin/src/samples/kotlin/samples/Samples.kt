@@ -17,7 +17,6 @@ class Samples {
 
     // Connect as a user and wait until the session is established.
     factory.connect("admin").use { connection ->
-      connection.connect()
       connection.awaitConnected()
 
       // Subscribe to a record subject, keeping only updates and printing each field map.
