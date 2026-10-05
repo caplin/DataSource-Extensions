@@ -1,8 +1,8 @@
 default:
-  tags: ["kubernetes", "shared"]
+  tags: ["kubernetes"]
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
-    # The project's -Xmx4g is the whole container limit, and the Kotlin daemon inherits it as a
+    # The project's -Xmx4g is half the container limit, and the Kotlin daemon inherits it as a
     # second JVM, so a build that runs long enough is OOMKilled. Compile in the Gradle daemon
     # instead of forking that second JVM, and cap it to leave room for the test JVMs.
     # GRADLE_USER_HOME properties override the project's, so this stays out of local builds.
@@ -14,10 +14,10 @@ default:
       PROPS
 
 variables:
-  KUBERNETES_CPU_REQUEST: "2"
-  KUBERNETES_CPU_LIMIT: "2"
-  KUBERNETES_MEMORY_REQUEST: "4Gi"
-  KUBERNETES_MEMORY_LIMIT: "4Gi"
+  KUBERNETES_CPU_REQUEST: "4"
+  KUBERNETES_CPU_LIMIT: "4"
+  KUBERNETES_MEMORY_REQUEST: "8Gi"
+  KUBERNETES_MEMORY_LIMIT: "8Gi"
   KUBERNETES_EPHEMERAL_STORAGE_REQUEST: "2Gi"
   KUBERNETES_EPHEMERAL_STORAGE_LIMIT: "5Gi"
 
