@@ -1,5 +1,4 @@
 default:
-  tags: ["kubernetes"]
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
     # The project's -Xmx4g is half the container limit, and the Kotlin daemon inherits it as a
