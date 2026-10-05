@@ -17,6 +17,11 @@ class Jackson3JsonHandlerTest :
         handler.toObject(tree, MapEvent::class.java) shouldBe upsert
       }
 
+      test("toJsonTree returns a tree as it stands") {
+        val tree = handler.toJsonTree(upsert)
+        (handler.toJsonTree(tree) === tree) shouldBe true
+      }
+
       test("parse / format round-trips a tree") {
         val tree = handler.toJsonTree(upsert)
         handler.parse(handler.format(tree)) shouldBe tree

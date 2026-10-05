@@ -199,6 +199,17 @@ public final class com/caplin/integration/datasourcex/reactive/api/JsonText {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/caplin/integration/datasourcex/reactive/api/JsonTree {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lcom/caplin/integration/datasourcex/reactive/api/JsonTree;
+	public static synthetic fun copy$default (Lcom/caplin/integration/datasourcex/reactive/api/JsonTree;Ljava/lang/Object;ILjava/lang/Object;)Lcom/caplin/integration/datasourcex/reactive/api/JsonTree;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTree ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract interface class com/caplin/integration/datasourcex/reactive/api/PathSupplier {
 	public abstract fun invoke (Ljava/lang/String;)Ljava/lang/Object;
 }
