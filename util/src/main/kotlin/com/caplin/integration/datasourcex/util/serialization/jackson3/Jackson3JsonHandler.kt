@@ -11,7 +11,8 @@ import tools.jackson.databind.ObjectMapper
  */
 public class Jackson3JsonHandler(private val objectMapper: ObjectMapper) : JsonHandler<JsonNode> {
 
-  override fun toJsonTree(pojo: Any?): JsonNode = objectMapper.valueToTree(pojo)
+  override fun toJsonTree(pojo: Any?): JsonNode =
+      pojo as? JsonNode ?: objectMapper.valueToTree(pojo)
 
   override fun toObject(jsonTree: JsonNode, userType: Class<*>): Any? =
       objectMapper.treeToValue(jsonTree, userType)

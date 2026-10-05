@@ -202,7 +202,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
     logBind("active JSON", namespace, config.objectMappings)
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
-    with(JsonContext()) {
+    with(JsonContext(dataSource)) {
       bindActiveSubjects(namespace, { supplier(namespace.request(it)) }) { path, value ->
         createMessage(path, value)
       }
@@ -233,7 +233,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   ) {
     val config = with(configure) { ActiveContainerConfig.Json().apply { invoke() } }
     val namespace = namespace.withUsernameDecoding(config.objectMappings)
-    with(JsonContext()) {
+    with(JsonContext(dataSource)) {
       bindContainers(
           namespace,
           config,
@@ -371,7 +371,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
     serviceInfo?.registerNamespace(namespace, config.objectMappings)
 
     val type = config.channelType
-    with(JsonContext()) {
+    with(JsonContext(dataSource)) {
       dataSource.addJsonChannelListener(
           namespace,
           object : JsonChannelListener {
@@ -392,7 +392,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
 
             override fun onMessageReceived(channel: JsonChannel, message: JsonChannelMessage) {
               val channelInfo = getOrInitChannel(channel)
-              channelInfo.fromClientChannel.trySendBlocking(message.getJsonAsType(receiveType))
+              channelInfo.fromClientChannel.trySendBlocking(message.decode(receiveType))
             }
 
             private fun getOrInitChannel(channel: JsonChannel): ChannelInfo<R> {
@@ -422,7 +422,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
                                 fromClientChannel.consumeAsFlow(),
                             ),
                         )
-                        .onEach { value -> channel.send(value) }
+                        .onEach { value -> channel.send(toJsonValue(value)) }
                         .onCompletion { throwable ->
                           // Server flow completed, i.e. Server closed channel
                           fromClientChannel.close()
