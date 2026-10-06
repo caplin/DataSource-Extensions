@@ -40,6 +40,7 @@ import com.caplin.integration.datasourcex.reactive.api.Request
 import com.caplin.integration.datasourcex.reactive.api.ServiceConfig
 import com.caplin.integration.datasourcex.util.AntPatternNamespace
 import com.caplin.integration.datasourcex.util.AntPatternNamespace.Companion.addIncludeNamespace
+import com.caplin.integration.datasourcex.util.AntPatternNamespace.ObjectMap
 import com.caplin.integration.datasourcex.util.Subject
 import com.caplin.integration.datasourcex.util.Subject.Companion.path
 import com.caplin.integration.datasourcex.util.getLogger
@@ -77,6 +78,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
 
   private companion object {
     private val logger = getLogger<Binder>()
+    private val WILDCARD = "%[0-9]+".toRegex()
 
     /** Liberator object-map tokens that inject the requesting user's (un-encoded) name. */
     private val USERNAME_OBJECT_MAP_TOKENS = setOf("%u", "%U")
@@ -110,6 +112,7 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
   private data class ServiceInfo(
       val service: Service,
       val serviceConfig: ServiceConfig,
+      val objectMaps: MutableList<ObjectMap> = mutableListOf(),
   )
 
   private data class MappingInfo(val state: StateFlow<Subject?>, val job: Job)
@@ -789,13 +792,19 @@ private constructor(val dataSource: ScopedDataSource, private val serviceInfo: S
       mappings: Map<String, String>?,
   ) {
     mappings?.takeIf(Map<String, String>::isNotEmpty)?.let {
-      val (fromPattern, toPattern) = antPatternNamespace.getObjectMap(mappings)
-      service.addObjectMap(fromPattern, toPattern)
+      objectMaps += antPatternNamespace.getObjectMap(mappings)
     }
     service.addIncludeNamespace(antPatternNamespace)
   }
 
   private fun ServiceInfo.finalise(dataSource: DataSource) {
+    // Liberator applies the first object map that matches, and a map's wildcards span `/`, so
+    // `/A/%1/%2` would take `/A/B/x/y` from `/A/B/%1/%2`: the map with more of its pattern written
+    // out goes first. Ties keep the order they were bound in.
+    objectMaps
+        .sortedByDescending { it.fromPattern.replace(WILDCARD, "").length }
+        .forEach { (fromPattern, toPattern) -> service.addObjectMap(fromPattern, toPattern) }
+
     (serviceConfig.remoteLabelPattern
             ?: dataSource.configuration.getStringValue(DATASRC_LOCAL_LABEL))
         ?.let(service::setRemoteLabelPattern)
