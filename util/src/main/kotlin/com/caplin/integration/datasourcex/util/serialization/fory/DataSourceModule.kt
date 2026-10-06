@@ -83,4 +83,20 @@ fun Fory.registerPersistentCollectionSerializers(): Fory = apply {
       }
       .getOrNull()
       ?.let { registerSerializer(it, PersistentOrderedSetSerializer::class.java) }
+
+  // A map's `keys` and `values` views have internal types of their own, which Fory writes but
+  // cannot
+  // construct again; they read back as the persistent set or list they stand for.
+  mapOf(
+          "immutableMap.PersistentHashMapKeys" to PersistentHashSetSerializer::class.java,
+          "immutableMap.PersistentHashMapValues" to PersistentListSerializer::class.java,
+          "persistentOrderedMap.PersistentOrderedMapKeys" to
+              PersistentOrderedSetSerializer::class.java,
+          "persistentOrderedMap.PersistentOrderedMapValues" to PersistentListSerializer::class.java,
+      )
+      .forEach { (view, serializer) ->
+        runCatching { Class.forName("kotlinx.collections.immutable.implementations.$view") }
+            .getOrNull()
+            ?.let { registerSerializer(it, serializer) }
+      }
 }
